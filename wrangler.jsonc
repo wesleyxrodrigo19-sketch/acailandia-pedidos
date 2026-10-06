@@ -1,13 +1,13 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "bliss-acaiteria",
+  "name": "acailandia-pedidos",
   "main": "dist/server/index.js",
   "compatibility_date": "2025-02-01",
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "bliss-acaiteria-db",
-      "database_id": "3c4b9613-d1ff-4126-a162-2288a67314bf",
+      "database_name": "acailandia-pedidos-db",
+      "database_id": "c4be6a46-a57b-498c-84fe-80e3148d0c94",
       "migrations_dir": "drizzle"
     }
   ],
