@@ -123,6 +123,29 @@ body.customer-page{background:#f2f5f9;color:#182130}
 .report-filter{display:flex;align-items:end;gap:12px;padding:15px 18px;margin-bottom:18px}.report-filter .field{min-width:180px}.report-filter .primary-btn{min-width:150px}
 .pedeai-panel{border:1px solid #c9d7ff;background:linear-gradient(145deg,#fff 0%,#f4f7ff 100%)}.pedeai-notice{display:grid;gap:4px;margin:0 0 17px;padding:12px 14px;border:1px solid #d7e1ff;border-radius:12px;background:#edf3ff;color:#243a73}.pedeai-notice span{font-size:13px;line-height:1.4}.pedeai-enable{margin-top:16px;padding:12px;border:1px solid #dce4f6;border-radius:12px;background:#fff}.pedeai-enable strong{color:#172b5a}
 .customer-page .brand-strip{background-image:linear-gradient(90deg,rgba(50,17,65,.08),rgba(50,17,65,.08)),url("https://storage.googleapis.com/prod-cardapio-web/uploads/company/image/14701/b274b683REQUISITOS_RV__4_.png");background-position:center;background-size:cover}
+
+/* Paleta Açailandia: roxos do logo aplicados ao cardápio do cliente. */
+body.customer-page{--red:#7e319e;--green:#70208c;background:#f7f3fa}
+.customer-page .customer-shell{background:#f7f3fa}
+.customer-page .xmenu-profile-card.store-profile-card{background:linear-gradient(180deg,#fff 0%,#fff 70%,#faf3fd 100%)}
+.customer-page .xmenu-profile-card .store-profile-logo{box-shadow:0 0 0 2px #7e319e,0 8px 22px rgba(67,21,91,.2)}
+.customer-page .xmenu-profile-card .store-profile-copy h1,.customer-page .store-type{color:#70208c}
+.customer-page .store-summary-line .store-open-label.closed,.customer-page .store-more-info:hover{color:#70208c}
+.customer-page .store-summary-line .store-open-label{color:#5c1978}
+.customer-page .store-info-alert,.customer-page .info-button,.customer-page .cart-top,.customer-page .primary-btn{background:#7e319e;box-shadow:0 7px 18px rgba(92,25,120,.24)}
+.customer-page .catalog-tools{background:rgba(247,243,250,.95);border-bottom-color:#e4d8eb}
+.customer-page .search-box{border-color:#decfe6;box-shadow:0 3px 12px rgba(72,33,88,.07)}
+.customer-page .chip{border-color:#decee7;color:#4f3a5b;background:#fff}
+.customer-page .chip:hover,.customer-page .chip.active{background:#7e319e;border-color:#7e319e;box-shadow:0 7px 17px rgba(92,25,120,.25)}
+.customer-page .rail-controls button{color:#7e319e;border-color:#e2d7e8}
+.customer-page .promo-card,.customer-page .product-row{border-color:#e2d6e9;background:linear-gradient(180deg,#fff 0%,#fcf8ff 100%);box-shadow:0 5px 15px rgba(77,31,94,.08)}
+.customer-page .promo-card:hover,.customer-page .product-row:hover{border-color:#ba8fce;box-shadow:0 10px 24px rgba(91,33,110,.14)}
+.customer-page .price,.customer-page .detail-price{color:#70208c}
+.customer-page .promo-badge{background:#7e319e;box-shadow:0 4px 11px rgba(92,25,120,.3)}
+.customer-page .nav-item.active,.customer-page .nav-item.active .nav-icon{color:#70208c}
+.customer-page .nav-item.active .nav-icon{background:#f2e5f8}
+.customer-page .segmented button.active,.customer-page .info-tabs button.active{background:#7e319e;box-shadow:0 5px 13px rgba(92,25,120,.24)}
+.customer-page button:focus-visible,.customer-page a:focus-visible,.customer-page input:focus-visible,.customer-page textarea:focus-visible,.customer-page select:focus-visible{outline-color:rgba(126,49,158,.42)}
 .visit-history-panel{grid-column:1/-1}.visit-history-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px;padding:15px 18px 18px}.visit-history-list>div:not(.empty){display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;border:1px solid #e1e6ed;border-radius:12px;background:#f7f9fb}.visit-history-list span{color:#5f6876;font-size:13px}.visit-history-list strong{color:#c92127;font-size:14px}.revenue-stats{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media(max-width:1100px){.revenue-stats{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:720px){.closed-catalog-notice.compact{margin-top:8px}.closed-catalog-notice.compact strong{font-size:12px}.report-filter{display:grid;grid-template-columns:1fr 1fr}.report-filter .field{min-width:0}.report-filter .primary-btn{grid-column:1/-1;width:100%}.revenue-stats{grid-template-columns:1fr 1fr}.revenue-stats .stat-visits{grid-column:1/-1}.visit-history-list{grid-template-columns:1fr}}
