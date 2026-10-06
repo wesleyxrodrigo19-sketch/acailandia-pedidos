@@ -1,5 +1,6 @@
 /* Cabeçalho público inspirado na organização visual do cardápio original e recuperação de carrinhos. */
-const JW_COVER="/media/acailandia-logo.svg";
+// Banner público e logo oficiais, cadastrados pela Açailandia PE no RV Pedidos.
+const JW_COVER="https://storage.googleapis.com/prod-cardapio-web/uploads/company/image/14701/b274b683REQUISITOS_RV__4_.png";
 state.admin.abandoned=[];
 state.abandonedCart={id:null,timer:null,saving:false};
 
