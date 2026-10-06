@@ -27,7 +27,22 @@ const ACAILANDIA_PRODUCT_SEED=[
   [14,"Milk shake","Milk 550 ml","Milk shake cremoso.",1800,null,"/media/bliss-dessert.png",0,0,13],
   [15,"Milk shake","Milk 770 ml","Milk shake cremoso.",2100,null,"/media/bliss-dessert.png",0,0,14],
   [16,"Bebidas","Água mineral","Água mineral sem gás.",300,null,"/media/bliss-water.png",0,0,15],
-  [17,"Bebidas","Água mineral com gás","Água mineral com gás.",400,null,"/media/bliss-water.png",0,0,16]
+  [17,"Bebidas","Água mineral com gás","Água mineral com gás.",400,null,"/media/bliss-water.png",0,0,16],
+  [18,"Monte seu pote","Monte seu pote 500 g","Escolha até 5 complementos favoritos grátis. Para adicionar mais, selecione as opções desejadas.",4290,null,"/media/bliss-acai-bowl.png",1,0,17],
+  [19,"Monte seu pote","Monte seu pote 1 kg","Escolha até 5 complementos favoritos grátis. Para adicionar mais, selecione as opções desejadas.",6890,null,"/media/bliss-acai-bowl.png",1,0,18],
+  [20,"Copos trufados","Copo trufado 300 ml","Escolha o sabor: Sensação, Surpresinha de Uva, Brownie, Cookies Oreo, Ouro Branco, Ninhotella, Kit Kat Especial ou Ovomaltine Black.",3190,null,"/media/bliss-dessert.png",1,0,19],
+  [21,"Copos trufados","Copo trufado 400 ml","Escolha o sabor: Sensação, Surpresinha de Uva, Brownie, Cookies Oreo, Ouro Branco, Ninhotella, Kit Kat Especial ou Ovomaltine Black.",3490,null,"/media/bliss-dessert.png",1,0,20],
+  [22,"Açaí na garrafa","Açaí na garrafa 300 ml","Escolha um sabor com mousse ou uma versão trufada.",2000,null,"/media/bliss-acai-bowl.png",0,0,21],
+  [23,"Açaí na garrafa","Açaí na garrafa 500 ml","Escolha um sabor com mousse ou uma versão trufada.",2400,null,"/media/bliss-acai-bowl.png",0,0,22]
+];
+
+const ACAILANDIA_COMPLEMENT_SEED=[
+  [18,["Banana","Morango","Manga","Kiwi","Leite em pó","Leite condensado","Granola","Paçoca","Ovomaltine","Nutella","Creme de ninho"]],
+  [19,["Banana","Morango","Manga","Kiwi","Leite em pó","Leite condensado","Granola","Paçoca","Ovomaltine","Nutella","Creme de ninho"]],
+  [20,["Sensação — Nutella, leite em pó, leite condensado e morangos","Surpresinha de Uva — Ninho, leite em pó, leite condensado e uvas","Brownie Trufado — Nutella, leite em pó, leite condensado e brownie","Cookies Oreo — calda de cookies, leite em pó, leite condensado e Oreo","Ouro Branco — Ninho, leite em pó, leite condensado e Ouro Branco","Ninhotella — Nutella e Ninho, leite em pó, leite condensado e morangos","Kit Kat Especial — Nutella, leite em pó, leite condensado e Kit Kat","Ovomaltine Black — Nutella, leite em pó, leite condensado, Ovomaltine e Choco Power Black"]],
+  [21,["Sensação — Nutella, leite em pó, leite condensado e morangos","Surpresinha de Uva — Ninho, leite em pó, leite condensado e uvas","Brownie Trufado — Nutella, leite em pó, leite condensado e brownie","Cookies Oreo — calda de cookies, leite em pó, leite condensado e Oreo","Ouro Branco — Ninho, leite em pó, leite condensado e Ouro Branco","Ninhotella — Nutella e Ninho, leite em pó, leite condensado e morangos","Kit Kat Especial — Nutella, leite em pó, leite condensado e Kit Kat","Ovomaltine Black — Nutella, leite em pó, leite condensado, Ovomaltine e Choco Power Black"]],
+  [22,["Mousse de Maracujá","Mousse de Maracujá com Calda de Nutella","Mousse de Ninho","Mousse de Ninho com Calda de Nutella","Mousse de Morango","Mousse de Morango com Calda de Nutella","Mousse de Amendoim","Mousse de Amendoim com Calda de Nutella","Leite Condensado com Farinha Láctea","Leite Condensado com Paçoca","Calda de Nutella com Paçoca","Calda de Nutella com Leite em Pó","Calda de Nutella com Ovomaltine","Calda de Nutella com Morango em Calda","Calda de Ninho com Leite em Pó","Calda de Ninho com Ovomaltine","Calda de Ninho com Morango em Calda"]],
+  [23,["Mousse de Maracujá","Mousse de Maracujá com Calda de Nutella","Mousse de Ninho","Mousse de Ninho com Calda de Nutella","Mousse de Morango","Mousse de Morango com Calda de Nutella","Mousse de Amendoim","Mousse de Amendoim com Calda de Nutella","Leite Condensado com Farinha Láctea","Leite Condensado com Paçoca","Calda de Nutella com Paçoca","Calda de Nutella com Leite em Pó","Calda de Nutella com Ovomaltine","Calda de Nutella com Morango em Calda","Calda de Ninho com Leite em Pó","Calda de Ninho com Ovomaltine","Calda de Ninho com Morango em Calda"]]
 ];
 
 const DEFAULT_DELIVERY_FEES=[];
@@ -166,6 +181,7 @@ async function seed(db) {
     (id,category,name,description,price_cents,old_price_cents,image_url,is_featured,is_promo,is_available,sort_order)
     VALUES (?,?,?,?,?,?,?,?,?,1,?)`).bind(...p));
   await db.batch(statements);
+  await db.batch(ACAILANDIA_COMPLEMENT_SEED.map(([id,names]) => db.prepare(`UPDATE products SET complements_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(JSON.stringify(names.map(name=>({name,price_cents:0,max_quantity:1}))),id)));
 }
 
 async function hmac(value, secret) {
