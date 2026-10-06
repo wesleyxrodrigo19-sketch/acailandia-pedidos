@@ -11,29 +11,29 @@ const BLISS_PRODUCT_SEED=[[1,"Garrafinha trufada","Garrafinha trufada 300 ml","A
 // Dados públicos conferidos no cardápio da Açailandia PE (RV Pedidos, 06/10/2026).
 // Fotos e dados de contato podem ser definidos pelo administrador após a implantação.
 const ACAILANDIA_PRODUCT_SEED=[
-  [1,"Copos promocionais","Copo 1 — 300 ml","Açaí, leite condensado, leite em pó, granola e banana.",1890,null,"/media/bliss-acai-bowl.png",1,1,0],
-  [2,"Copos promocionais","Copo 1 — 400 ml","Açaí, leite condensado, leite em pó, granola e banana.",2390,null,"/media/bliss-acai-bowl.png",0,1,1],
-  [3,"Copos promocionais","Copo 2","Açaí, leite em pó, leite condensado e morango. Escolha o tamanho no pedido.",1890,null,"/media/bliss-acai-bowl.png",1,1,2],
-  [4,"Copos promocionais","Copo 3","Açaí, leite condensado, morango e paçoca. Escolha o tamanho no pedido.",1890,null,"/media/bliss-acai-bowl.png",1,1,3],
-  [5,"Copos promocionais","Copo 4","Açaí intercalado de creme de ninho, leite em pó e morango. Escolha o tamanho no pedido.",1890,null,"/media/bliss-dessert.png",1,1,4],
-  [6,"Monte seu combo pote","Combo açaí 500 ml","Escolha 3 complementos grátis. Itens enviados separadamente para preservar a textura.",3990,null,"/media/bliss-acai-bowl.png",1,0,5],
-  [7,"Monte seu combo pote","Combo açaí 1000 ml","Escolha 3 complementos grátis. Itens enviados separadamente para preservar a textura.",5490,null,"/media/bliss-acai-bowl.png",1,0,6],
-  [8,"Monte seu açaí no copo","Monte seu copo","Açaí no copo com até 6 complementos grátis, em uma única embalagem.",2590,null,"/media/bliss-acai-bowl.png",1,0,7],
-  [9,"Potes individuais","Pote de açaí","A partir de R$ 29,90. Escolha seu tamanho e complementos.",2990,null,"/media/bliss-acai-bowl.png",0,0,8],
-  [10,"Potes individuais","Pote de creme","A partir de R$ 28,90. Escolha seu tamanho e sabor.",2890,null,"/media/bliss-dessert.png",0,0,9],
-  [11,"Potes individuais","Pote de sorvete","A partir de R$ 23,00. Escolha seu tamanho e sabor.",2300,null,"/media/bliss-dessert.png",0,0,10],
-  [12,"Milk shake","Milk 330 ml","Milk shake cremoso.",1400,null,"/media/bliss-dessert.png",0,0,11],
-  [13,"Milk shake","Milk 440 ml","Milk shake cremoso.",1600,null,"/media/bliss-dessert.png",0,0,12],
-  [14,"Milk shake","Milk 550 ml","Milk shake cremoso.",1800,null,"/media/bliss-dessert.png",0,0,13],
-  [15,"Milk shake","Milk 770 ml","Milk shake cremoso.",2100,null,"/media/bliss-dessert.png",0,0,14],
-  [16,"Bebidas","Água mineral","Água mineral sem gás.",300,null,"/media/bliss-water.png",0,0,15],
-  [17,"Bebidas","Água mineral com gás","Água mineral com gás.",400,null,"/media/bliss-water.png",0,0,16],
-  [18,"Monte seu pote","Monte seu pote 500 g","Escolha até 5 complementos favoritos grátis. Para adicionar mais, selecione as opções desejadas.",4290,null,"/media/bliss-acai-bowl.png",1,0,17],
-  [19,"Monte seu pote","Monte seu pote 1 kg","Escolha até 5 complementos favoritos grátis. Para adicionar mais, selecione as opções desejadas.",6890,null,"/media/bliss-acai-bowl.png",1,0,18],
-  [20,"Copos trufados","Copo trufado 300 ml","Escolha o sabor: Sensação, Surpresinha de Uva, Brownie, Cookies Oreo, Ouro Branco, Ninhotella, Kit Kat Especial ou Ovomaltine Black.",3190,null,"/media/bliss-dessert.png",1,0,19],
-  [21,"Copos trufados","Copo trufado 400 ml","Escolha o sabor: Sensação, Surpresinha de Uva, Brownie, Cookies Oreo, Ouro Branco, Ninhotella, Kit Kat Especial ou Ovomaltine Black.",3490,null,"/media/bliss-dessert.png",1,0,20],
-  [22,"Açaí na garrafa","Açaí na garrafa 300 ml","Escolha um sabor com mousse ou uma versão trufada.",2000,null,"/media/bliss-acai-bowl.png",0,0,21],
-  [23,"Açaí na garrafa","Açaí na garrafa 500 ml","Escolha um sabor com mousse ou uma versão trufada.",2400,null,"/media/bliss-acai-bowl.png",0,0,22]
+  [1,"Copos promocionais","Copo 1 — 300 ml","Açaí, leite condensado, leite em pó, granola e banana.",1890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834905/thumb_c51c7f19f060d541-7023-4bb8-bd70-51ec04205da2.jpeg",1,1,0],
+  [2,"Copos promocionais","Copo 1 — 400 ml","Açaí, leite condensado, leite em pó, granola e banana.",2390,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834905/thumb_c51c7f19f060d541-7023-4bb8-bd70-51ec04205da2.jpeg",0,1,1],
+  [3,"Copos promocionais","Copo 2","Açaí, leite em pó, leite condensado e morango. Escolha o tamanho no pedido.",1890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834910/thumb_3b6e2c3666562f5f-ed57-4e5a-9ffc-3091de05fde0.jpeg",1,1,2],
+  [4,"Copos promocionais","Copo 3","Açaí, leite condensado, morango e paçoca. Escolha o tamanho no pedido.",1890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834908/thumb_0415a4adIMG_3050.png",1,1,3],
+  [5,"Copos promocionais","Copo 4","Açaí intercalado de creme de ninho, leite em pó e morango. Escolha o tamanho no pedido.",1890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",1,1,4],
+  [6,"Monte seu combo pote","Combo açaí 500 ml","Escolha 3 complementos grátis. Itens enviados separadamente para preservar a textura.",3990,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",1,0,5],
+  [7,"Monte seu combo pote","Combo açaí 1000 ml","Escolha 3 complementos grátis. Itens enviados separadamente para preservar a textura.",5490,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",1,0,6],
+  [8,"Monte seu açaí no copo","Monte seu copo","Açaí no copo com até 6 complementos grátis, em uma única embalagem.",2590,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834905/thumb_c51c7f19f060d541-7023-4bb8-bd70-51ec04205da2.jpeg",1,0,7],
+  [9,"Potes individuais","Pote de açaí","A partir de R$ 29,90. Escolha seu tamanho e complementos.",2990,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",0,0,8],
+  [10,"Potes individuais","Pote de creme","A partir de R$ 28,90. Escolha seu tamanho e sabor.",2890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",0,0,9],
+  [11,"Potes individuais","Pote de sorvete","A partir de R$ 23,00. Escolha seu tamanho e sabor.",2300,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",0,0,10],
+  [12,"Milk shake","Milk 330 ml","Milk shake cremoso.",1400,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1723792/thumb_306440ebIMG_6071.jpeg",0,0,11],
+  [13,"Milk shake","Milk 440 ml","Milk shake cremoso.",1600,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1723899/thumb_c135d4cdIMG_6071.jpeg",0,0,12],
+  [14,"Milk shake","Milk 550 ml","Milk shake cremoso.",1800,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1723900/thumb_7131f998IMG_6071.jpeg",0,0,13],
+  [15,"Milk shake","Milk 770 ml","Milk shake cremoso.",2100,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1723902/thumb_694c4ebeIMG_6071.jpeg",0,0,14],
+  [16,"Bebidas","Água mineral","Água mineral sem gás.",300,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1916004/thumb_b651a2d718974_1.jpg_agua_mineral.jpg",0,0,15],
+  [17,"Bebidas","Água mineral com gás","Água mineral com gás.",400,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1916005/thumb_c319d4c0image-removebg-preview_1_cbdc38fa-89cd-44e0-a4dd-4338ba6123c7.png",0,0,16],
+  [18,"Monte seu pote","Monte seu pote 500 g","Escolha até 5 complementos favoritos grátis. Para adicionar mais, selecione as opções desejadas.",4290,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",1,0,17],
+  [19,"Monte seu pote","Monte seu pote 1 kg","Escolha até 5 complementos favoritos grátis. Para adicionar mais, selecione as opções desejadas.",6890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",1,0,18],
+  [20,"Copos trufados","Copo trufado 300 ml","Escolha o sabor: Sensação, Surpresinha de Uva, Brownie, Cookies Oreo, Ouro Branco, Ninhotella, Kit Kat Especial ou Ovomaltine Black.",3190,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",1,0,19],
+  [21,"Copos trufados","Copo trufado 400 ml","Escolha o sabor: Sensação, Surpresinha de Uva, Brownie, Cookies Oreo, Ouro Branco, Ninhotella, Kit Kat Especial ou Ovomaltine Black.",3490,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",1,0,20],
+  [22,"Açaí na garrafa","Açaí na garrafa 300 ml","Escolha um sabor com mousse ou uma versão trufada.",2000,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1723792/thumb_306440ebIMG_6071.jpeg",0,0,21],
+  [23,"Açaí na garrafa","Açaí na garrafa 500 ml","Escolha um sabor com mousse ou uma versão trufada.",2400,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1723902/thumb_694c4ebeIMG_6071.jpeg",0,0,22]
 ];
 
 const ACAILANDIA_COMPLEMENT_SEED=[
@@ -181,6 +181,7 @@ async function seed(db) {
     (id,category,name,description,price_cents,old_price_cents,image_url,is_featured,is_promo,is_available,sort_order)
     VALUES (?,?,?,?,?,?,?,?,?,1,?)`).bind(...p));
   await db.batch(statements);
+  await db.batch(ACAILANDIA_PRODUCT_SEED.map(p => db.prepare(`UPDATE products SET image_url=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(p[6],p[0])));
   await db.batch(ACAILANDIA_COMPLEMENT_SEED.map(([id,names]) => db.prepare(`UPDATE products SET complements_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(JSON.stringify(names.map(name=>({name,price_cents:0,max_quantity:1}))),id)));
 }
 
