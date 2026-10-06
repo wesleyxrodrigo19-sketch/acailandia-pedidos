@@ -10,7 +10,7 @@ VALUES ('acailandia','Açailandia PE','Petrolina - PE','','-9.389', '-40.503',1,
 
 UPDATE settings SET
   store_name='Açailandia PE',
-  store_address='Petrolina - PE',
+  address='Petrolina - PE',
   phone='',
   pix_key='',
   pix_merchant_name='ACAILANDIA PE',
