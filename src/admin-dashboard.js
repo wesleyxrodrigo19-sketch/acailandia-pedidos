@@ -168,7 +168,7 @@ function closedCatalogNotice(){
 }
 
 renderCustomer=function(){
-  document.title="Bliss Açaiteria — Cardápio";
+  document.title="Açailandia PE — Cardápio";
   document.body.classList.add("customer-page");
   const closed=!state.catalog.settings.is_open;
   let html=customerApp();

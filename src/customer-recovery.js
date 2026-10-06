@@ -1,5 +1,5 @@
 /* Cabeçalho público inspirado na organização visual do cardápio original e recuperação de carrinhos. */
-const JW_COVER="/media/bliss-acai-bowl.png";
+const JW_COVER="/media/acailandia-logo.svg";
 state.admin.abandoned=[];
 state.abandonedCart={id:null,timer:null,saving:false};
 
@@ -11,11 +11,11 @@ neighborhoodOptions=function(city){
 
 renderStoreHeader=function(settings){
   return `<section class="public-store-hero">
-    <img class="store-cover" src="${JW_COVER}" alt="Fachada da Bliss Açaiteria" width="960" height="349" fetchpriority="high">
+    <img class="store-cover" src="${JW_COVER}" alt="Açailandia PE" width="960" height="349" fetchpriority="high">
     <div class="store-profile-card xmenu-profile-card">
-      <img class="store-profile-logo" src="${JW_LOGO}" alt="Logo Bliss Açaiteria" width="120" height="120" fetchpriority="high">
+      <img class="store-profile-logo" src="${JW_LOGO}" alt="Logo Açailandia PE" width="120" height="120" fetchpriority="high">
       <div class="store-profile-copy">
-        <h1>${esc(settings.store_name||"Bliss Açaiteria")}</h1>
+        <h1>${esc(settings.store_name||"Açailandia PE")}</h1>
         <div class="store-summary-line">
           <span class="store-open-label ${settings.is_open?"":"closed"}">${settings.is_open?"Aberto":"Fechado"}</span>
           <i>•</i><span>📍 Petrolina · PE</span><i>•</i>
@@ -47,11 +47,11 @@ function infoNeighborhoodList(rules,query=""){
 }
 function bindInfoNeighborhoodSearch(settings){const input=$("#info-neighborhood-search"),list=$("#info-neighborhood-list");if(!input||!list)return;const rules=infoNeighborhoodRules(settings);input.oninput=()=>{list.innerHTML=infoNeighborhoodList(rules,input.value)};}
 function infoStoreMarkup(settings){
-  return `<div class="public-info-contact"><img src="${JW_LOGO}" alt=""><h3>Bliss Açaiteria</h3><div class="public-info-list info-store-facts"><div><span><small>Localização</small>${esc(settings.address)}</span></div><div><span><small>Pedido mínimo</small>${money(settings.minimum_order_cents)}</span><strong>${settings.is_open?"Aberto":"Fechado"}</strong></div><div><span><small>Previsão de entrega</small>${esc(eta(settings.delivery_eta))}</span><span><small>Previsão de retirada</small>${esc(eta(settings.pickup_eta))}</span></div></div><a class="primary-btn full" href="tel:${String(settings.phone||"").replace(/\D/g,"")}">Ligar: ${esc(settings.phone)}</a></div>`;
+  return `<div class="public-info-contact"><img src="${JW_LOGO}" alt=""><h3>Açailandia PE</h3><div class="public-info-list info-store-facts"><div><span><small>Localização</small>${esc(settings.address)}</span></div><div><span><small>Pedido mínimo</small>${money(settings.minimum_order_cents)}</span><strong>${settings.is_open?"Aberto":"Fechado"}</strong></div><div><span><small>Previsão de entrega</small>${esc(eta(settings.delivery_eta))}</span><span><small>Previsão de retirada</small>${esc(eta(settings.pickup_eta))}</span></div></div><a class="primary-btn full" href="tel:${String(settings.phone||"").replace(/\D/g,"")}">Ligar: ${esc(settings.phone)}</a></div>`;
 }
 openInfo=function(){
   const settings=state.catalog.settings;
-  layer(`<div class="drawer-header info-drawer-title"><button class="icon-btn" data-close>←</button><div><h2>Mais informações</h2><span class="muted">Tudo sobre a Bliss Açaiteria antes do pedido</span></div></div><div class="drawer-content public-info-drawer"><div class="info-store-mini"><img src="${JW_LOGO}" alt=""><div><strong>Bliss Açaiteria</strong><span>Petrolina · PE</span></div></div><div class="info-tabs" role="tablist"><button class="active" data-info-tab="store">Loja</button><button data-info-tab="fees">Bairros e taxas</button><button data-info-tab="hours">Horários</button></div><div id="info-tab-content">${infoStoreMarkup(settings)}</div></div>`,`drawer info-public-drawer`);
+  layer(`<div class="drawer-header info-drawer-title"><button class="icon-btn" data-close>←</button><div><h2>Mais informações</h2><span class="muted">Tudo sobre a Açailandia PE antes do pedido</span></div></div><div class="drawer-content public-info-drawer"><div class="info-store-mini"><img src="${JW_LOGO}" alt=""><div><strong>Açailandia PE</strong><span>Petrolina · PE</span></div></div><div class="info-tabs" role="tablist"><button class="active" data-info-tab="store">Loja</button><button data-info-tab="fees">Bairros e taxas</button><button data-info-tab="hours">Horários</button></div><div id="info-tab-content">${infoStoreMarkup(settings)}</div></div>`,`drawer info-public-drawer`);
   document.querySelector("[data-close]").onclick=closeLayer;
   document.querySelectorAll("[data-info-tab]").forEach(button=>button.onclick=()=>{
     document.querySelectorAll("[data-info-tab]").forEach(item=>item.classList.toggle("active",item===button));
