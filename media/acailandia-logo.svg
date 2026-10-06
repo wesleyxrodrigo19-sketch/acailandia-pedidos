@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Açailandia PE</title><desc id="desc">Marca de açaí com tigela e folha</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2c0b40"/><stop offset=".52" stop-color="#65116d"/><stop offset="1" stop-color="#a21d6b"/></linearGradient><linearGradient id="bowl" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#a238bd"/><stop offset="1" stop-color="#481161"/></linearGradient></defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <path d="M133 236c7 101 57 159 123 159s116-58 123-159z" fill="url(#bowl)" stroke="#f9dd88" stroke-width="10"/>
+  <path d="M157 237c31-66 167-66 198 0" fill="#7d176f" stroke="#f9dd88" stroke-width="10"/>
+  <circle cx="220" cy="204" r="19" fill="#f6c95a"/><circle cx="270" cy="194" r="22" fill="#ef9d3f"/><circle cx="307" cy="218" r="16" fill="#e95475"/>
+  <path d="M257 149c-17-52 10-93 57-102-1 45-20 76-57 102z" fill="#8bce62" stroke="#f9dd88" stroke-width="7"/>
+  <path d="M247 150c-38-18-54-51-47-88 38 7 59 34 47 88z" fill="#69b957" stroke="#f9dd88" stroke-width="7"/>
+  <text x="256" y="438" text-anchor="middle" fill="#fff5d5" font-family="Arial,sans-serif" font-size="45" font-weight="800">AÇAILANDIA</text><text x="256" y="473" text-anchor="middle" fill="#f9dd88" font-family="Arial,sans-serif" font-size="20" letter-spacing="7">PETROLINA • PE</text>
+</svg>

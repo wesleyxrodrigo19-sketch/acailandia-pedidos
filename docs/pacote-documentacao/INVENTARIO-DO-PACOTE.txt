@@ -1,0 +1,25 @@
+Prime Açaí PDV - pacote de documentação
+
+Manual Completo Prime Acai PDV.docx
+  Manual consolidado de operação, administração, arquitetura, implantação e integrações.
+
+Guia Integracao PedeAI Acai Prime.docx
+  Guia específico para obter credenciais, configurar e homologar a PedeAI.
+
+LEIA-ME.md
+  Índice do pacote e endereços do sistema.
+
+REFERENCIA-TECNICA.md
+  Arquitetura, rotas, banco, comandos e verificação técnica.
+
+BALANCA-PRIX-3.md
+  Instalação e diagnóstico do agente da Toledo Prix 3.
+
+agente-prix3/prix3-bridge.ps1
+  Agente executável no computador do caixa.
+
+agente-prix3/README.md
+  Instruções rápidas originais do agente.
+
+migracoes/*.sql
+  Histórico completo das alterações estruturais e dados de implantação do banco D1.

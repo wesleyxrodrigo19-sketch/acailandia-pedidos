@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "bliss-acaiteria",
+  "main": "dist/server/index.js",
+  "compatibility_date": "2025-02-01",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "bliss-acaiteria-db",
+      "database_id": "3c4b9613-d1ff-4126-a162-2288a67314bf",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

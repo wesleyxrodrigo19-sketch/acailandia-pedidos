@@ -1,0 +1,4 @@
+.old-price{color:#c92127;text-decoration:line-through;text-decoration-thickness:2px;font-size:13px;font-weight:800}
+.product-flavor-note{margin-top:4px;color:#7e319e;font-size:12px;font-weight:800}.flavor-price-editor{border:2px solid #c5a0d2;border-radius:16px;padding:14px;background:#fcf8fd}.flavor-price-editor .panel-head{align-items:flex-start}.flavor-price-editor .admin-complement-row{background:#fff;border-radius:12px;padding:10px;border:1px solid #e6d5eb}.flavor-price-editor [data-complement-max]{max-width:88px}
+.promo-admin-price{display:flex;flex-direction:column;gap:2px;min-width:110px;color:#c92127}.promo-admin-price small{font-size:11px;font-weight:800;text-transform:uppercase}.promo-admin-price strong{font-size:15px}.promotion-value-field[hidden]{display:none}
+.table-card-action{width:100%;font:inherit;text-align:left;cursor:pointer}.table-card-action:hover{filter:brightness(.97);transform:translateY(-1px)}

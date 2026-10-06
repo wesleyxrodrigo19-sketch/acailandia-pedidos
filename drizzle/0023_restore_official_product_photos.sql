@@ -1,0 +1,26 @@
+-- Fotos oficiais em 600 px, usadas pelo Anota na página de detalhes do produto.
+UPDATE products SET image_url = CASE id
+  WHEN 1 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1789071935170blob_600.webp'
+  WHEN 2 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1786994112355blob_600.webp'
+  WHEN 3 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1787860115693blob_600.webp'
+  WHEN 4 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1786205416813blob_600.webp'
+  WHEN 5 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1786205430361blob_600.webp'
+  WHEN 6 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1786205443947blob_600.webp'
+  WHEN 7 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1789072765010blob_600.webp'
+  WHEN 8 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785518921513blob_600.webp'
+  WHEN 9 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785519349421blob_600.webp'
+  WHEN 10 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1786205817961blob_600.webp'
+  WHEN 11 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1786205817961blob_600.webp'
+  WHEN 12 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1789072017755blob_600.webp'
+  WHEN 13 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1789072467814blob_600.webp'
+  WHEN 14 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785520631138blob_600.webp'
+  WHEN 15 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785520741059blob_600.webp'
+  WHEN 16 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785520795411blob_600.webp'
+  WHEN 17 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785520876732blob_600.webp'
+  WHEN 18 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785520911074blob_600.webp'
+  WHEN 19 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785520973807blob_600.webp'
+  WHEN 20 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785521020371blob_600.webp'
+  WHEN 21 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785521061912blob_600.webp'
+  WHEN 22 THEN 'https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785521093905blob_600.webp'
+END
+WHERE id BETWEEN 1 AND 22;

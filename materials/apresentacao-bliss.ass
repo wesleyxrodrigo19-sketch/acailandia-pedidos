@@ -1,0 +1,25 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1280
+PlayResY: 720
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Title,Arial,54,&H00FFFFFF,&H000000FF,&H00410054,&H9B000000,1,0,0,0,100,100,0,0,1,2,2,2,70,70,115,1
+Style: Body,Arial,30,&H00FFFFFF,&H000000FF,&H00410054,&H9B000000,0,0,0,0,100,100,0,0,1,1,1,2,105,105,70,1
+Style: Accent,Arial,34,&H0000D7FF,&H000000FF,&H00410054,&H9B000000,1,0,0,0,100,100,0,0,1,1,1,2,105,105,125,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:06.00,Title,,0,0,0,,BLISS AÇAITERIA
+Dialogue: 0,0:00:02.20,0:00:06.00,Body,,0,0,0,,Sistema completo para pedidos, balcão e delivery
+Dialogue: 0,0:00:06.00,0:00:12.00,Title,,0,0,0,,DOIS ESTABELECIMENTOS
+Dialogue: 0,0:00:08.10,0:00:12.00,Body,,0,0,0,,Controle separado por unidade\NCardápio, pedidos, taxas e faturamento
+Dialogue: 0,0:00:12.00,0:00:18.00,Title,,0,0,0,,CAIXA INTELIGENTE
+Dialogue: 0,0:00:14.10,0:00:18.00,Body,,0,0,0,,Self-service por balança\NDescontos, troco, sangria e fechamento diário
+Dialogue: 0,0:00:18.00,0:00:24.00,Title,,0,0,0,,GESTÃO NA PALMA DA MÃO
+Dialogue: 0,0:00:20.10,0:00:24.00,Body,,0,0,0,,Pedidos em tempo real, alerta sonoro\Ne relatórios por funcionário
+Dialogue: 0,0:00:24.00,0:00:30.00,Accent,,0,0,0,,SEU NEGÓCIO MAIS ORGANIZADO
+Dialogue: 0,0:00:26.20,0:00:30.00,Body,,0,0,0,,Pronto para açaíterias com delivery e balcão

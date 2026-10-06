@@ -1,0 +1,2 @@
+# Legacy snapshots are kept in Git history but omitted from reusable source archives.
+jw-site-v*.tar.gz export-ignore

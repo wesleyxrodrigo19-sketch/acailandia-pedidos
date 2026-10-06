@@ -1,0 +1,7 @@
+-- Sabores obrigatórios e preços conferidos no Anota AI para as garrafinhas trufadas.
+-- O valor do sabor é adicional ao valor exibido para cada tamanho (300 ml ou 500 ml).
+UPDATE products SET
+  description='Escolha 1 sabor: tradicional, premium ou super premium.',
+  complements_json='[{"name":"Ovomaltine (premium)","price_cents":2290,"max_quantity":1},{"name":"Creme de morango (tradicional)","price_cents":2000,"max_quantity":1},{"name":"Nutella (premium)","price_cents":2290,"max_quantity":1},{"name":"Creme de ninho da casa com Nutella (super premium)","price_cents":2390,"max_quantity":1},{"name":"Creme de ninho da casa (super premium)","price_cents":2390,"max_quantity":1},{"name":"Creme de amendoim com Paçoquita (premium)","price_cents":2290,"max_quantity":1},{"name":"Creme de cookies (tradicional)","price_cents":2000,"max_quantity":1},{"name":"Creme de Oreo da casa (super premium)","price_cents":2390,"max_quantity":1},{"name":"Creme de maracujá (premium)","price_cents":2290,"max_quantity":1},{"name":"Creme de maracujá com Nutella (super premium)","price_cents":2390,"max_quantity":1},{"name":"Creme de pistache (super premium)","price_cents":2390,"max_quantity":1},{"name":"Doce de leite (premium)","price_cents":2290,"max_quantity":1},{"name":"Leitinho (tradicional)","price_cents":2000,"max_quantity":1},{"name":"Leite condensado (tradicional)","price_cents":2000,"max_quantity":1},{"name":"Morango com Nutella (premium)","price_cents":2290,"max_quantity":1}]',
+  updated_at=CURRENT_TIMESTAMP
+WHERE id IN (1,2);

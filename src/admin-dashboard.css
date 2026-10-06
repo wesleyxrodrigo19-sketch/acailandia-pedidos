@@ -1,0 +1,128 @@
+/* Navegação recolhível */
+/* Seleção única de sabor nas garrafinhas trufadas. */
+.flavor-options{display:grid;gap:8px}.flavor-choice{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 13px;border:1px solid #d8dee8;border-radius:12px;background:#fff;color:#1f2937;text-align:left;cursor:pointer}.flavor-choice span{display:grid;gap:3px}.flavor-choice strong{font-size:14px}.flavor-choice small{color:#667085;font-size:13px;font-weight:750}.flavor-choice>b{color:#b11f26;font-size:12px}.flavor-choice.selected{border-color:#c92127;background:#fff1f2;box-shadow:0 0 0 2px rgba(201,33,39,.12)}.flavor-choice.selected>b{color:#15803d}
+.admin-shell,.admin-side{transition:grid-template-columns .22s ease,width .22s ease,padding .22s ease}
+.admin-title-group{display:flex;align-items:center;gap:13px;min-width:0}.sidebar-toggle{width:42px;height:42px;border:1px solid #d7dbe0;border-radius:11px;background:#f7f8fa;display:grid;place-content:center;gap:4px;cursor:pointer}.sidebar-toggle span{display:block;width:19px;height:2px;border-radius:9px;background:#1d4ed8}.sidebar-toggle:hover{background:#e9efff;border-color:#bfd0ff}
+.admin-shell.sidebar-collapsed{grid-template-columns:78px 1fr}.admin-shell.sidebar-collapsed .admin-side{padding:22px 10px}.admin-shell.sidebar-collapsed .admin-brand{justify-content:center}.admin-shell.sidebar-collapsed .admin-brand img{width:44px;height:44px}.admin-shell.sidebar-collapsed .admin-brand>div,.admin-shell.sidebar-collapsed .nav-full,.admin-shell.sidebar-collapsed .admin-side-footer{display:none}.admin-shell.sidebar-collapsed .admin-nav button{justify-content:center;padding:13px 8px}.admin-shell.sidebar-collapsed .admin-nav-icon{width:auto;font-size:19px}.admin-nav button.active{background:linear-gradient(135deg,#f3b514,#ffcb3e);color:#17120b;box-shadow:0 7px 18px rgba(243,181,20,.2)}
+.sidebar-mobile-close{display:none;width:100%;margin:0 0 12px;padding:10px;border:1px solid #34363a;border-radius:10px;background:#202226;color:#fff;font-weight:850;text-align:left}.sidebar-mobile-close span{color:#60a5fa;margin-right:8px}
+
+/* Cards vivos e quadro diário */
+.daily-stats{grid-template-columns:repeat(5,minmax(0,1fr))}.daily-stats .stat,.management-summary .stat{color:#fff;border:0;box-shadow:0 12px 24px rgba(17,24,39,.12)}.daily-stats .stat-label,.daily-stats .stat small,.management-summary .stat-label{color:rgba(255,255,255,.82)}.stat-orders{background:linear-gradient(135deg,#2563eb,#60a5fa)}.stat-revenue{background:linear-gradient(135deg,#059669,#34d399)}.stat-online{background:linear-gradient(135deg,#7c3aed,#a78bfa)}.stat-counter{background:linear-gradient(135deg,#ea580c,#fb923c)}.stat-visits{background:linear-gradient(135deg,#db2777,#f472b6)}.stat-cancelled{background:linear-gradient(135deg,#b91c1c,#ef4444)}.stat small{display:block;margin-top:3px;font-size:11px}
+.vivid-board{grid-template-columns:repeat(5,minmax(220px,1fr));overflow-x:auto;padding-bottom:10px}.vivid-board .order-column{padding:10px;border-radius:17px;border:1px solid transparent;min-height:170px}.vivid-board .column-title{padding:2px 5px}.vivid-board .column-body{display:grid;gap:0}.vivid-board .empty{background:rgba(255,255,255,.65);border:1px dashed rgba(31,41,55,.18);border-radius:12px}.new-column{background:#e8f1ff;border-color:#a9c8ff!important}.production-column{background:#fff3d6;border-color:#f5ca70!important}.ready-column{background:#e4f8eb;border-color:#9ee0b4!important}.delivery-column{background:#eee9ff;border-color:#c6b7ff!important}.finished-column{background:#e7f8f6;border-color:#9ddbd4!important}.vivid-board .column-count{background:rgba(255,255,255,.85);box-shadow:0 2px 7px rgba(0,0,0,.08)}
+
+/* Gestão histórica */
+.management-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.management-insights{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}.ranking-list{padding:4px 18px 18px}.ranking-list>div{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid #eceff2}.ranking-list>div:last-child{border-bottom:0}.ranking-list>div>b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#171717;color:#fff}.ranking-list span{display:grid;gap:3px}.ranking-list small{color:var(--muted)}.management-table-panel{overflow:hidden}.management-search{width:min(340px,45vw);min-height:40px;border:1px solid var(--line);border-radius:10px;padding:8px 11px}.management-table-wrap{overflow:auto}.management-table{width:100%;border-collapse:collapse;min-width:1050px}.management-table th,.management-table td{padding:12px 14px;text-align:left;border-bottom:1px solid #eceff2;vertical-align:middle}.management-table th{position:sticky;top:0;background:#f6f7f9;color:#50555d;font-size:12px;text-transform:uppercase;letter-spacing:.04em}.management-table td{font-size:13px}.management-table td small{display:block;color:var(--muted);margin-top:3px}.management-status{display:inline-block;padding:5px 8px;border-radius:999px;background:#e9edf2;font-weight:850;font-size:11px}.management-status.cancelado{background:#fee2e2;color:#991b1b}.management-status.concluido{background:#dcfce7;color:#166534}.management-status.novo{background:#dbeafe;color:#1d4ed8}.management-status.preparando,.management-status.confirmado{background:#fef3c7;color:#92400e}.management-status.pronto{background:#e0f2fe;color:#075985}.management-status.saiu_entrega{background:#ede9fe;color:#5b21b6}
+
+/* Tela exclusiva de bairros */
+#neighborhoods-form .delivery-fee-rule{grid-template-columns:180px minmax(230px,1fr) 140px 42px}.surcharge-box.standalone{margin-top:18px}
+
+@media(max-width:1200px){.daily-stats{grid-template-columns:repeat(3,1fr)}.management-summary{grid-template-columns:repeat(2,1fr)}.management-insights{grid-template-columns:1fr}.vivid-board{grid-template-columns:repeat(5,250px)}}
+@media(max-width:850px){.admin-shell.sidebar-collapsed{grid-template-columns:1fr}.admin-shell.sidebar-open .admin-side{display:block;position:fixed;inset:0 auto 0 0;width:min(310px,84vw);z-index:100;box-shadow:18px 0 45px rgba(0,0,0,.35)}.admin-shell.sidebar-open .admin-side .nav-full{display:inline}.admin-shell.sidebar-open .admin-side .admin-side-footer{display:block}.admin-shell.sidebar-open .sidebar-mobile-close{display:block}.admin-shell.sidebar-open .admin-main,.admin-shell.sidebar-open .admin-mobile-nav{visibility:hidden}.admin-shell.sidebar-open:after{content:"";position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90}.daily-stats{grid-template-columns:repeat(2,1fr)}.management-summary{grid-template-columns:repeat(2,1fr)}.management-table-panel .panel-head{align-items:stretch;flex-direction:column}.management-search{width:100%}#neighborhoods-form .delivery-fee-rule{grid-template-columns:1fr 1fr 80px 38px}}
+@media(max-width:560px){.daily-stats,.management-summary{grid-template-columns:1fr 1fr}.daily-stats .stat-value,.management-summary .stat-value{font-size:22px}.daily-stats .stat-visits{grid-column:1/-1}.admin-topbar{padding:0 12px}.admin-topbar h1{font-size:19px}.live-pill{display:none}#neighborhoods-form .delivery-fee-rule{grid-template-columns:1fr 78px 36px}#neighborhoods-form .delivery-fee-rule .field:first-child{grid-column:1/-1}}
+
+/* Cardápio consultivo durante o fechamento */
+.closed-catalog-notice{width:min(var(--content),calc(100% - 28px));margin:18px auto 4px;padding:22px;border-radius:22px;background:linear-gradient(135deg,#4a1014,#901d25);color:#fff;box-shadow:0 16px 38px rgba(91,17,22,.22)}.closed-catalog-main{display:grid;grid-template-columns:76px minmax(0,1fr) auto;align-items:center;gap:17px}.closed-catalog-main>img{width:76px;height:76px;border-radius:18px;border:3px solid #f5b51b;object-fit:cover}.closed-catalog-notice .closed-pill{margin:0 0 7px;background:#f5b51b;color:#281b00}.closed-catalog-notice h2{font-size:clamp(23px,3.5vw,34px);line-height:1.05;margin:0}.closed-catalog-notice p{margin:8px 0 0;color:#ffe5e7;line-height:1.45}.closed-catalog-notice .secondary-btn{background:#fff;color:#601319;border:0}.closed-catalog-notice details{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.2)}.closed-catalog-notice summary{cursor:pointer;font-weight:900}.closed-hours-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}.closed-hours-grid>div{display:grid;gap:3px;padding:10px;border-radius:10px;background:rgba(255,255,255,.1)}.closed-hours-grid span{font-size:12px;color:#ffd9dc}.closed-hours-grid .day-off strong{color:#ffbdc1}.store-closed-mode [data-product]:disabled{opacity:1;filter:none;cursor:not-allowed}.store-closed-mode [data-product]:disabled:hover{transform:none}.store-closed-mode .bottom-cart,.store-closed-mode .floating-cart{display:none!important}.store-closed-mode .catalog-content:before{content:"Somente consulta • pedidos temporariamente bloqueados";display:block;margin-bottom:20px;padding:11px 14px;border-radius:12px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-weight:900;text-align:center}
+
+/* Pesquisa de bairro no checkout */
+#searchable-neighborhood,#pos-searchable-neighborhood{display:grid;gap:8px}.neighborhood-combobox{position:relative}.neighborhood-combobox>input{width:100%}.neighborhood-suggestions{position:absolute;z-index:120;top:calc(100% + 5px);left:0;right:0;max-height:240px;overflow-y:auto;padding:6px;border:1px solid #d8dde5;border-radius:12px;background:#fff;box-shadow:0 14px 34px rgba(24,32,45,.2);overscroll-behavior:contain}.neighborhood-suggestions button{display:block;width:100%;min-height:43px;padding:10px 12px;border:0;border-bottom:1px solid #edf0f4;background:#fff;color:#202936;text-align:left;font-size:14px;font-weight:750;cursor:pointer}.neighborhood-suggestions button:last-child{border-bottom:0}.neighborhood-suggestions button:hover,.neighborhood-suggestions button:focus{background:#fff0f1;color:#b91f25}.neighborhood-empty{padding:12px;color:var(--muted);font-size:13px;line-height:1.4}.other-neighborhood-field{display:grid;gap:6px;padding:10px;border:1px solid #f0c36a;border-radius:11px;background:#fff9e9}.other-neighborhood-field label{font-size:12px;font-weight:850}.neighborhood-search-help{color:var(--muted);font-size:12px;line-height:1.35}@media(max-width:720px){.neighborhood-suggestions{z-index:1000;margin:0;box-shadow:0 12px 28px rgba(24,32,45,.28)}.neighborhood-suggestions button{min-height:47px;font-size:15px}}
+.checkout .segmented{grid-template-columns:repeat(3,1fr)}.checkout .segmented button{min-width:0;padding:10px 6px;font-size:12px;line-height:1.25}
+@media(max-width:720px){.closed-catalog-main{grid-template-columns:62px 1fr}.closed-catalog-main>img{width:62px;height:62px}.closed-catalog-main>.secondary-btn{grid-column:1/-1;width:100%}.closed-hours-grid{grid-template-columns:1fr 1fr}.closed-catalog-notice{padding:17px}}
+
+/* Experiência do cliente inspirada na organização visual do XMenu. */
+body.customer-page{background:#f2f5f9;color:#182130}
+.customer-page .customer-shell{background:#f2f5f9;color:#182130}
+.customer-page .brand-strip{height:126px;background:linear-gradient(135deg,#16191f 0%,#292126 52%,#8f171d 100%)}
+.customer-page .brand-strip:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 18% 45%,rgba(255,255,255,.1),transparent 25%),linear-gradient(90deg,transparent,rgba(201,33,39,.16));opacity:.8}
+.customer-page .store-card{width:min(1040px,calc(100% - 28px));margin:-50px auto 0;padding:18px 20px;border:1px solid #e1e6ed;border-radius:24px;grid-template-columns:92px 1fr auto;box-shadow:0 12px 34px rgba(27,39,56,.12)}
+.customer-page .store-logo{width:92px;height:92px;object-fit:contain;background:#42144d;border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 2px #f0cb61,0 8px 22px rgba(16,24,40,.18)}
+.customer-page .product-row .product-thumb{object-fit:cover}
+.customer-page .store-name{font-size:clamp(23px,2.4vw,32px);letter-spacing:-.035em;color:#151c27}
+.customer-page .store-type{color:#c92127;font-weight:850}
+.customer-page .store-meta{color:#586273;font-size:14px}
+.customer-page .status-pill{background:#e8f8ee;color:#168248;border:1px solid #ccebd7}
+.customer-page .status-pill.closed{background:#fff0f1;color:#c92127;border-color:#f5c9cc}
+.customer-page .info-button{background:#c92127;box-shadow:0 5px 14px rgba(201,33,39,.24)}
+.customer-page .catalog-tools{top:0;padding-top:15px;background:rgba(242,245,249,.94);border-bottom-color:#dde3eb;box-shadow:0 6px 18px rgba(22,34,51,.05)}
+.customer-page .tools-inner{max-width:1040px;margin:auto;padding:0}
+.customer-page .search-box{min-height:50px;border-color:#dfe5ec;border-radius:16px;box-shadow:0 3px 12px rgba(28,41,60,.06);color:#1f2937}
+.customer-page .search-box input{font-weight:600;color:#1c2532}
+.customer-page .cart-top{background:#c92127;border-radius:16px;box-shadow:0 7px 18px rgba(201,33,39,.22)}
+.customer-page .cart-top:disabled{background:#717987;box-shadow:none;cursor:not-allowed}
+.customer-page .chips{padding-top:12px;gap:9px}
+.customer-page .chip{border-color:#dde3ea;border-radius:999px;padding:10px 16px;color:#253042;font-weight:800;box-shadow:0 2px 7px rgba(24,33,48,.035)}
+.customer-page .chip:hover,.customer-page .chip.active{background:#c92127;color:#fff;border-color:#c92127;box-shadow:0 7px 17px rgba(201,33,39,.22)}
+.customer-page .catalog-content{max-width:1040px;padding-top:17px}
+.customer-page .section h2{color:#17202d;font-weight:950;letter-spacing:-.04em}
+.customer-page .section-count{color:#737d8c;font-weight:700}
+.customer-page .rail-controls button{color:#c92127;border-color:#e3e7ec;box-shadow:0 3px 10px rgba(22,31,44,.06)}
+.customer-page .promo-card,.customer-page .product-row{border-color:#e0e5ec;border-radius:17px;box-shadow:0 5px 15px rgba(26,39,58,.07)}
+.customer-page .promo-card:hover,.customer-page .product-row:hover{border-color:#e9a9ad;box-shadow:0 9px 22px rgba(25,38,56,.1)}
+.customer-page .promo-title,.customer-page .product-title{color:#151d29;font-weight:900}
+.customer-page .promo-desc,.customer-page .product-desc{color:#697384}
+.customer-page .price,.customer-page .detail-price{color:#c92127}
+.customer-page .promo-badge{background:#c92127;box-shadow:0 4px 11px rgba(201,33,39,.28)}
+.customer-page .product-thumb,.customer-page .promo-image{background:#e7ebf0}
+.customer-page .customer-footer{background:#fff;border-top-color:#dfe4eb;color:#182130}
+.customer-page .bottom-nav{border-top-color:#dce2e9;box-shadow:0 -8px 22px rgba(22,34,50,.09)}
+.customer-page .nav-item{color:#6c7582}
+.customer-page .nav-item.active{color:#c92127}
+.customer-page .nav-item.active .nav-icon{background:#fff0f1;color:#c92127}
+.customer-page .drawer,.customer-page .product-detail{background:#f3f6fa;color:#182130}
+.customer-page .drawer-header,.customer-page .drawer-footer,.customer-page .detail-action{background:#fff}
+.customer-page .primary-btn{background:#c92127;color:#fff;box-shadow:0 7px 17px rgba(201,33,39,.2)}
+.customer-page .primary-btn:disabled{background:#9aa1aa;box-shadow:none}
+.customer-page .segmented{background:#e8edf3;border:1px solid #dfe4eb}
+.customer-page .segmented button.active{background:#c92127;color:#fff;box-shadow:0 5px 13px rgba(201,33,39,.2)}
+.customer-page button:focus-visible,.customer-page a:focus-visible,.customer-page input:focus-visible,.customer-page textarea:focus-visible,.customer-page select:focus-visible{outline-color:rgba(201,33,39,.35)}
+
+/* Tela inicial de loja fechada; o cardápio só é exibido após escolha do cliente. */
+.xmenu-closed{min-height:100vh;padding:34px 16px;background:radial-gradient(circle at 50% -10%,#92232a 0,transparent 42%),#11151b}
+.xmenu-closed .closed-card{width:min(560px,100%);padding:31px;background:#fff;color:#182130;border:0;border-radius:27px;box-shadow:0 30px 90px rgba(0,0,0,.42)}
+.xmenu-closed .closed-glow{background:#c92127;opacity:.13}
+.xmenu-closed .closed-card>img{width:104px;height:104px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 3px #c92127,0 9px 24px rgba(20,28,40,.18)}
+.xmenu-closed .closed-pill{background:#fff0f1;color:#c92127;border:1px solid #f5c7ca}
+.xmenu-closed .closed-card h1{color:#171e2a;font-size:clamp(29px,5vw,42px);letter-spacing:-.04em}
+.xmenu-closed .closed-card>p{color:#687283;margin:12px auto 18px;max-width:470px}
+.closed-next{display:grid;gap:4px;margin:0 0 15px;padding:14px 16px;border:1px solid #f1c6c9;border-radius:15px;background:#fff5f5;text-align:left}
+.closed-next strong{color:#a91d23;font-size:15px}.closed-next span{color:#6b5560;font-size:13px;line-height:1.4}
+.xmenu-closed .closed-menu-button{margin-bottom:9px;font-size:16px}
+.xmenu-closed .secondary-btn{background:#eef1f5;color:#263140;margin-bottom:4px}
+.xmenu-closed .hours-summary{margin:19px 0 8px;border:1px solid #e3e7ed;background:#f7f9fb;border-radius:17px}
+.xmenu-closed .hours-summary h2{color:#1b2533}.xmenu-closed .hours-row{border-top-color:#e3e7ed;color:#535e6e}
+.xmenu-closed .closed-contact{color:#758091}
+.closed-catalog-actions{display:grid;gap:8px;min-width:155px}
+.closed-catalog-notice{background:linear-gradient(135deg,#86191f,#c92127);box-shadow:0 15px 36px rgba(139,24,31,.24)}
+.closed-catalog-notice .closed-pill{background:#fff;color:#b31d24}
+.closed-catalog-notice .secondary-btn{color:#971a20;border-radius:12px}
+
+@media(max-width:720px){
+  .customer-page .brand-strip{height:100px}
+  .customer-page .store-card{margin:-38px auto 0;padding:14px;grid-template-columns:74px 1fr;gap:12px}
+  .customer-page .store-logo{width:74px;height:74px}
+  .customer-page .store-status{grid-column:1/-1}
+  .customer-page .catalog-tools{padding:10px 9px}
+  .customer-page .catalog-content{padding:9px 10px 28px}
+  .customer-page .product-row{padding:11px}
+  .closed-catalog-actions{grid-column:1/-1;grid-template-columns:1fr 1fr;width:100%}
+  .xmenu-closed{padding:20px 12px}
+  .xmenu-closed .closed-card{padding:25px 17px}
+}
+
+/* Aviso mínimo dentro do cardápio: a tela completa já aparece antes. */
+.closed-catalog-notice.compact{width:min(1040px,calc(100% - 20px));min-height:48px;margin:12px auto 0;padding:9px 12px;display:flex;align-items:center;gap:10px;border-radius:13px;background:#fff;border:1px solid #f2c7ca;color:#9f1d23;box-shadow:0 4px 12px rgba(32,42,57,.05)}
+.closed-catalog-notice.compact .closed-pill{margin:0;padding:5px 8px;background:#c92127;color:#fff;border:0;font-size:10px;flex:0 0 auto}
+.closed-catalog-notice.compact strong{font-size:13px;line-height:1.25}
+.closed-catalog-notice.compact button{margin-left:auto;border:0;background:transparent;color:#a51d23;font-size:12px;font-weight:900;text-decoration:underline;padding:6px;cursor:pointer}
+.store-closed-mode .catalog-content:before{content:none;display:none}
+
+/* Taxas individuais por bairro e por estabelecimento. */
+.branch-fees-panel{overflow:hidden}.branch-fee-help{margin:0 18px 15px;padding:12px 14px;border:1px solid #d8e4ff;border-radius:12px;background:#f2f6ff;color:#263d73;font-size:13px;line-height:1.45}.branch-fee-table{margin:0 18px 18px;border:1px solid #e0e5ec;border-radius:13px;overflow:auto}.branch-fee-row{min-width:680px;display:grid;grid-template-columns:130px minmax(210px,1fr) 150px 150px;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid #e8ecf1;background:#fff}.branch-fee-row:first-child{border-top:0}.branch-fee-row strong{font-size:13px;color:#222d3d}.branch-fee-row>span{font-size:14px;font-weight:700;color:#303b4c}.branch-fee-row label{display:block}.branch-fee-row input{width:100%;min-height:38px;padding:8px 10px;border:1px solid #cfd7e2;border-radius:9px;background:#fff;font-weight:850;color:#202938}.branch-fee-heading{position:sticky;top:0;z-index:2;background:#f3f6fa;color:#4b5667;font-size:12px;font-weight:900}.branch-fee-heading>span{font-size:12px;color:#4b5667}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:720px){.branch-fee-help,.branch-fee-table{margin-left:12px;margin-right:12px}.branch-fee-row{min-width:620px;grid-template-columns:105px minmax(175px,1fr) 145px 145px}.branch-fee-row>span,.branch-fee-row strong{font-size:13px}}
+
+/* Relatórios de pedidos e visitas por período. */
+.report-filter{display:flex;align-items:end;gap:12px;padding:15px 18px;margin-bottom:18px}.report-filter .field{min-width:180px}.report-filter .primary-btn{min-width:150px}
+.pedeai-panel{border:1px solid #c9d7ff;background:linear-gradient(145deg,#fff 0%,#f4f7ff 100%)}.pedeai-notice{display:grid;gap:4px;margin:0 0 17px;padding:12px 14px;border:1px solid #d7e1ff;border-radius:12px;background:#edf3ff;color:#243a73}.pedeai-notice span{font-size:13px;line-height:1.4}.pedeai-enable{margin-top:16px;padding:12px;border:1px solid #dce4f6;border-radius:12px;background:#fff}.pedeai-enable strong{color:#172b5a}
+.customer-page .brand-strip{background-image:linear-gradient(90deg,rgba(50,17,65,.18),rgba(50,17,65,.18)),url("https://storage.googleapis.com/prod-cardapio-web/uploads/company/image/38099/fe4f7499frente.jpg");background-position:center;background-size:cover}
+.visit-history-panel{grid-column:1/-1}.visit-history-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px;padding:15px 18px 18px}.visit-history-list>div:not(.empty){display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;border:1px solid #e1e6ed;border-radius:12px;background:#f7f9fb}.visit-history-list span{color:#5f6876;font-size:13px}.visit-history-list strong{color:#c92127;font-size:14px}.revenue-stats{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:1100px){.revenue-stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:720px){.closed-catalog-notice.compact{margin-top:8px}.closed-catalog-notice.compact strong{font-size:12px}.report-filter{display:grid;grid-template-columns:1fr 1fr}.report-filter .field{min-width:0}.report-filter .primary-btn{grid-column:1/-1;width:100%}.revenue-stats{grid-template-columns:1fr 1fr}.revenue-stats .stat-visits{grid-column:1/-1}.visit-history-list{grid-template-columns:1fr}}

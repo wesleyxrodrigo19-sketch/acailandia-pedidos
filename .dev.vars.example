@@ -1,0 +1,3 @@
+# Copie para .dev.vars apenas para desenvolvimento local. Nunca envie este arquivo ao Git.
+ADMIN_PIN=troque-por-um-pin-seguro
+SESSION_SECRET=gere-uma-chave-aleatoria-com-pelo-menos-32-caracteres
