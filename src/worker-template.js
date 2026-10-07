@@ -1064,12 +1064,12 @@ async function api(request, env, url) {
     const body = await readJson(request),current=await env.DB.prepare(`SELECT * FROM settings WHERE id=1`).first();
     const hours = Array.isArray(body?.business_hours) ? businessHours(JSON.stringify(body.business_hours)) : businessHours(current.business_hours_json);
     const manualClosed = body?.manual_closed == null ? Boolean(current.manual_closed) : bool(body.manual_closed);
-    await env.DB.batch([
-      env.DB.prepare(`UPDATE settings SET manual_closed=?,manual_closed_reason=?,business_hours_json=?,closing_time=?,updated_at=CURRENT_TIMESTAMP WHERE id=1`).bind(manualClosed?1:0,clean(body?.manual_closed_reason,160),JSON.stringify(hours),hours.find(row=>row.enabled)?.close||"23:20"),
-      auditStatement(env.DB,"availability_changed","settings","1",manualClosed?"Loja fechada manualmente":"Funcionamento da loja atualizado",{ manual_closed:manualClosed,business_hours:hours })
-    ]);
+    const reason=clean(body?.manual_closed_reason,160),serializedHours=JSON.stringify(hours);
+    await env.DB.prepare(`UPDATE settings SET manual_closed=?,manual_closed_reason=?,business_hours_json=?,closing_time=?,updated_at=CURRENT_TIMESTAMP WHERE id=1`).bind(manualClosed?1:0,reason,serializedHours,hours.find(row=>row.enabled)?.close||"23:20").run();
+    // O funcionamento não pode deixar de ser salvo caso o registro de auditoria esteja indisponível.
+    try { await auditStatement(env.DB,"availability_changed","settings","1",manualClosed?"Loja fechada manualmente":"Funcionamento da loja atualizado",{ manual_closed:manualClosed,business_hours:hours }).run(); } catch (_) {}
     await clearCatalogCache();
-    return json({ ok:true,...storeAvailability({...current,manual_closed:manualClosed?1:0,manual_closed_reason:clean(body?.manual_closed_reason,160),business_hours_json:JSON.stringify(hours)}) });
+    return json({ ok:true,...storeAvailability({...current,manual_closed:manualClosed?1:0,manual_closed_reason:reason,business_hours_json:serializedHours}) });
   }
   if (url.pathname === "/api/admin/tables" && request.method === "GET") return json(await tableBoard(env));
   if (url.pathname === "/api/admin/orders" && request.method === "POST") {
