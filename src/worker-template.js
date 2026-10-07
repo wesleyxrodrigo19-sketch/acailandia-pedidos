@@ -875,7 +875,13 @@ async function api(request, env, url) {
     const branch=await cashierBranch(request,env), requestedBranch=validBranch(url.searchParams.get("branch"));
     if(!branch)return json({error:"Acesso não autorizado."},401);
     if(!requestedBranch||requestedBranch!==branch)return json({error:"Este acesso de caixa pertence à outra unidade."},403);
-    return json({branch_id:branch,orders:await listAdminOrders(env,branch),visits:await visitSummary(env,undefined,undefined,branch)});
+    // Métricas e pedidos antigos não podem impedir a abertura do caixa. Algumas
+    // bases criadas antes dos relatórios não possuem todas as colunas auxiliares.
+    const [orders,visits]=await Promise.all([
+      listAdminOrders(env,branch).catch(error=>{console.error("Falha não crítica ao carregar pedidos do caixa",error);return []}),
+      safeVisitSummary(env,undefined,undefined,branch)
+    ]);
+    return json({branch_id:branch,orders,visits});
   }
   if (url.pathname === "/api/cashier/catalog" && request.method === "GET") {
     const branch=await cashierBranch(request,env), requestedBranch=validBranch(url.searchParams.get("branch"));
@@ -897,8 +903,13 @@ async function api(request, env, url) {
   }
   if (url.pathname === "/api/cashier/scale/current" && request.method === "GET") {
     const branch=await cashierBranch(request,env); if(!branch)return json({error:"Acesso não autorizado."},401);
-    const row=await env.DB.prepare(`SELECT scale_last_grams,scale_captured_at,self_service_price_per_kg_cents FROM settings WHERE id=1`).first();
-    return json({grams:int(row?.scale_last_grams),captured_at:row?.scale_captured_at||"",price_per_kg_cents:int(row?.self_service_price_per_kg_cents,3000)});
+    try {
+      const row=await env.DB.prepare(`SELECT scale_last_grams,scale_captured_at,self_service_price_per_kg_cents FROM settings WHERE id=1`).first();
+      return json({grams:int(row?.scale_last_grams),captured_at:row?.scale_captured_at||"",price_per_kg_cents:int(row?.self_service_price_per_kg_cents,3000)});
+    } catch(error) {
+      console.error("Balança ainda não configurada",error);
+      return json({grams:0,captured_at:"",price_per_kg_cents:3000});
+    }
   }
   if (url.pathname === "/api/cashier/orders" && request.method === "POST") {
     const branch=await cashierBranch(request,env); if(!branch)return json({error:"Acesso não autorizado."},401);
