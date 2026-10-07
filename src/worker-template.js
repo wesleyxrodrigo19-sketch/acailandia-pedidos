@@ -37,6 +37,19 @@ const ACAILANDIA_PRODUCT_SEED=[
 ];
 
 const ACAILANDIA_COMPLEMENT_SEED=[
+  [3,["300 ml","400 ml"]],
+  [4,["300 ml","400 ml"]],
+  [5,["300 ml","400 ml"]],
+  [6,["Banana","Morango","Manga","Kiwi","Leite em pó","Leite condensado","Granola","Paçoca","Ovomaltine","Nutella","Creme de ninho"]],
+  [7,["Banana","Morango","Manga","Kiwi","Leite em pó","Leite condensado","Granola","Paçoca","Ovomaltine","Nutella","Creme de ninho"]],
+  [8,["Banana","Morango","Manga","Kiwi","Leite em pó","Leite condensado","Granola","Paçoca","Ovomaltine","Nutella","Creme de ninho"]],
+  [9,["Açaí tradicional","Açaí com leite em pó","Açaí com leite condensado","Açaí com morango","Açaí com paçoca","Açaí com granola"]],
+  [10,["Creme de ninho","Creme de morango","Creme de maracujá","Creme de amendoim","Creme de Oreo"]],
+  [11,["Ninho trufado","Mousse de maracujá","Morango recheado","Ovomaltine","Chocobrownie","Torta de limão"]],
+  [12,["Morango","Ninho","Ovomaltine","Nutella","Paçoca","Oreo","Maracujá"]],
+  [13,["Morango","Ninho","Ovomaltine","Nutella","Paçoca","Oreo","Maracujá"]],
+  [14,["Morango","Ninho","Ovomaltine","Nutella","Paçoca","Oreo","Maracujá"]],
+  [15,["Morango","Ninho","Ovomaltine","Nutella","Paçoca","Oreo","Maracujá"]],
   [18,["Banana","Morango","Manga","Kiwi","Leite em pó","Leite condensado","Granola","Paçoca","Ovomaltine","Nutella","Creme de ninho"]],
   [19,["Banana","Morango","Manga","Kiwi","Leite em pó","Leite condensado","Granola","Paçoca","Ovomaltine","Nutella","Creme de ninho"]],
   [20,["Sensação — Nutella, leite em pó, leite condensado e morangos","Surpresinha de Uva — Ninho, leite em pó, leite condensado e uvas","Brownie Trufado — Nutella, leite em pó, leite condensado e brownie","Cookies Oreo — calda de cookies, leite em pó, leite condensado e Oreo","Ouro Branco — Ninho, leite em pó, leite condensado e Ouro Branco","Ninhotella — Nutella e Ninho, leite em pó, leite condensado e morangos","Kit Kat Especial — Nutella, leite em pó, leite condensado e Kit Kat","Ovomaltine Black — Nutella, leite em pó, leite condensado, Ovomaltine e Choco Power Black"]],
@@ -547,7 +560,7 @@ async function orderManagementReport(env,url) {
     else result.revenue_cents += int(order.total_cents);
     return result;
   }, { total_orders:0,cancelled_orders:0,revenue_cents:0 });
-  return { from,to,branch_id:branchId,orders,products,neighborhoods,summary,visits:await visitSummary(env,from,to,branchId) };
+  return { from,to,branch_id:branchId,orders,products,neighborhoods,summary,visits:await safeVisitSummary(env,from,to,branchId) };
 }
 
 async function tableBoard(env) {
@@ -659,7 +672,7 @@ async function revenueReport(env, url, branchId = "") {
   }
   const splitPayments = (await env.DB.prepare(`SELECT p.method,p.amount_cents FROM order_payments p JOIN orders o ON o.id=p.order_id WHERE o.status != 'cancelado' AND date(datetime(o.created_at,'-3 hours')) BETWEEN ? AND ?${BRANCHES[branchId]?" AND o.branch_id=?":""}`).bind(...params).all()).results;
   for (const payment of splitPayments) byPayment[paymentMethod(payment.method)] += payment.amount_cents || 0;
-  const visits=await visitSummary(env,from,to,branchId);
+  const visits=await safeVisitSummary(env,from,to,branchId);
   return { from, to, total_cents:total, waiter_fee_cents:waiterFees, order_count:rows.length, average_cents:rows.length?Math.round(total/rows.length):0, visit_count:visits.period,visits_by_day:visits.by_day,by_payment:byPayment, by_channel:byChannel };
 }
 

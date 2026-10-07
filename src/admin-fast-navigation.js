@@ -13,7 +13,11 @@ async function openAdminViewFast(view){
   $("#app").innerHTML=adminLayout(adminLoadingScreen(view),"Painel da Açailandia");
   try{
     if(view==="orders") await loadAdminOrders();
-    else if(view==="pos") await Promise.all([state.catalog?Promise.resolve():api("/api/admin/products").then(data=>{state.catalog=data}),state.admin.tables?Promise.resolve():api("/api/admin/tables").then(data=>{state.admin.tables=data})]);
+    else if(view==="pos") {
+      if(!state.catalog)state.catalog=await api("/api/catalog?branch=acailandia");
+      // Mesas são auxiliares: uma indisponibilidade nelas não pode impedir o balcão de abrir.
+      if(!state.admin.tables)api("/api/admin/tables").then(data=>{state.admin.tables=data}).catch(()=>{});
+    }
     else if(view==="products") { if(!state.catalog)state.catalog=await api("/api/admin/products"); }
     else if(view==="revenue") await loadRevenue();
     else if(view==="tables") state.admin.tables=await api("/api/admin/tables");
