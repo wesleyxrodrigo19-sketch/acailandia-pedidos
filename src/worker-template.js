@@ -298,7 +298,7 @@ async function shortOrderCode(db) {
   return `${String(Date.now()).slice(-3)}${String.fromCharCode(65 + crypto.getRandomValues(new Uint8Array(1))[0] % 26)}`;
 }
 
-const BRANCHES={"acailandia":{id:"acailandia",name:"Açailandia PE"}};
+const BRANCHES={"acailandia":{id:"acailandia",name:"Açailandia PE — São Gonçalo"}};
 function validBranch(value){return BRANCHES[value]?value:"acailandia"}
 
 async function getCatalog(env, includeAdminSettings = false, branchId = "acailandia") {
@@ -851,7 +851,7 @@ async function api(request, env, url) {
   }
   if (url.pathname === "/api/admin/logout" && request.method === "POST") return json({ ok:true }, 200, { "set-cookie": "loja_admin=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0" });
   if (url.pathname === "/api/cashier/login" && request.method === "POST") {
-    const body=await readJson(request),branchId=validBranch(body?.branch_id),expected=branchId==="sao-goncalo"?env.CASHIER_SG_PIN:env.CASHIER_DOM_PIN;
+    const body=await readJson(request),branchId=validBranch(body?.branch_id),expected=env.CASHIER_SG_PIN||env.CASHIER_DOM_PIN;
     if(!expected||!env.SESSION_SECRET)return json({error:"O acesso do caixa ainda não foi configurado."},503);
     if(clean(body?.pin,32)!==String(expected))return json({error:"PIN incorreto."},401);
     const expires=String(Date.now()+12*60*60*1000),token=`${branchId}.${expires}.${await hmac(`${branchId}.${expires}.cashier`,env.SESSION_SECRET)}`,secure=url.protocol==="https:"?"; Secure":"";
@@ -1006,9 +1006,8 @@ async function api(request, env, url) {
   if(employeeRoute&&request.method==="PATCH"){const body=await readJson(request),name=clean(body?.name,100);if(!name)return json({error:"Informe o nome do funcionário."},400);await env.DB.prepare(`UPDATE employees SET name=?,is_active=? WHERE id=?`).bind(name,bool(body?.is_active)?1:0,employeeRoute[1]).run();return json({ok:true})}
   if (url.pathname === "/api/admin/employee-purchases" && request.method === "GET") {const from=clean(url.searchParams.get("from"),10)||"2000-01-01",to=clean(url.searchParams.get("to"),10)||"2999-12-31",employeeId=int(url.searchParams.get("employee_id"));const params=[from,to],filter=employeeId?" AND o.employee_id=?":"";if(employeeId)params.push(employeeId);const rows=(await env.DB.prepare(`SELECT o.id,o.created_at,o.employee_id,o.employee_name,o.subtotal_cents,o.discount_cents,o.total_cents,o.payment_method,o.payroll_debit,group_concat(oi.product_name,' • ') AS products FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id WHERE o.employee_id IS NOT NULL AND o.status!='cancelado' AND date(datetime(o.created_at,'-3 hours')) BETWEEN ? AND ?${filter} GROUP BY o.id ORDER BY datetime(o.created_at) DESC`).bind(...params).all()).results||[];const payroll=rows.filter(row=>bool(row.payroll_debit));return json({rows,summary:{all_count:rows.length,count:payroll.length,gross_cents:payroll.reduce((s,row)=>s+int(row.subtotal_cents),0),discount_cents:payroll.reduce((s,row)=>s+int(row.discount_cents),0),total_cents:payroll.reduce((s,row)=>s+int(row.total_cents),0)}})}
   if (url.pathname === "/api/admin/cash-register" && request.method === "GET") {
-    const requested=url.searchParams.get("branch");
-    if(requested&&BRANCHES[requested])return json({branches:{[requested]:await cashRegisterSummary(env.DB,requested)}});
-    return json({branches:{"sao-goncalo":await cashRegisterSummary(env.DB,"sao-goncalo"),"dom-avelar":await cashRegisterSummary(env.DB,"dom-avelar")}});
+    const requested=url.searchParams.get("branch"),branch=BRANCHES[requested]?requested:"acailandia";
+    return json({branches:{[branch]:await cashRegisterSummary(env.DB,branch)}});
   }
   if (url.pathname === "/api/admin/cash-register" && request.method === "POST") {
     const body=await readJson(request),branch=validBranch(body?.branch_id);
@@ -1028,8 +1027,8 @@ async function api(request, env, url) {
     return json({ grams:int(row?.scale_last_grams),captured_at:row?.scale_captured_at||"" });
   }
   if (url.pathname === "/api/admin/orders" && request.method === "GET") {
-    const [visits,saoGoncalo,domAvelar]=await Promise.all([safeVisitSummary(env),safeVisitSummary(env,undefined,undefined,"sao-goncalo"),safeVisitSummary(env,undefined,undefined,"dom-avelar")]);
-    return json({ orders: await listAdminOrders(env), visits:{...visits,branches:{"sao-goncalo":saoGoncalo,"dom-avelar":domAvelar}} });
+    const visits=await safeVisitSummary(env,undefined,undefined,"acailandia");
+    return json({ orders: await listAdminOrders(env,"acailandia"), visits:{...visits,branches:{acailandia:visits}} });
   }
   if (url.pathname === "/api/admin/order-management" && request.method === "GET") return json(await orderManagementReport(env,url));
   if (url.pathname === "/api/admin/neighborhood-fees" && request.method === "GET") {
