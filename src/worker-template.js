@@ -1264,7 +1264,7 @@ export default {
         const headers = new Headers(); object.writeHttpMetadata(headers); headers.set("etag",object.httpEtag); headers.set("cache-control","public, max-age=31536000, immutable");
         return new Response(object.body,{headers});
       }
-      if (["/","/painel","/pedido","/mesas","/dom-avelar","/sao-goncalo","/caixa/dom-avelar","/caixa/sao-goncalo"].includes(url.pathname)) return text(APP_HTML, "text/html", "no-cache");
+      if (["/","/painel","/pedido","/mesas","/caixa","/caixa/sao-goncalo"].includes(url.pathname)) return text(APP_HTML, "text/html", "no-cache");
       return new Response("Não encontrado", { status:404 });
     } catch (error) {
       console.error(error);

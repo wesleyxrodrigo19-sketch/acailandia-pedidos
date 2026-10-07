@@ -294,7 +294,7 @@ loadRevenue=async function(from,to){const params=new URLSearchParams();if(from)p
 const bindAdminOwnerBase=bindAdmin;
 bindAdmin=function(){bindAdminOwnerBase();document.querySelectorAll("[data-owner-branch]").forEach(button=>button.onclick=()=>{state.admin.branchFilter=button.dataset.ownerBranch;renderAdmin()})};
 
-async function boot(){try{if(location.pathname==="/painel")return startAdmin();if(location.pathname==="/mesas")return startPublicTables();if(location.pathname.startsWith("/caixa/"))return startCashier();try{const saved=localStorage.getItem("loja_last_order");if(saved)state.lastOrder={id:saved}}catch{}state.catalog=await api("/api/catalog?branch="+currentBranch());renderCustomer()}catch(e){$("#app").innerHTML=`<div class="boot"><div class="boot-mark">!</div><h2>Não foi possível carregar</h2><p>${esc(e.message)}</p><button class="primary-btn" onclick="location.reload()">Tentar novamente</button></div>`}}
+async function boot(){try{if(location.pathname==="/painel")return startAdmin();if(location.pathname==="/mesas")return startPublicTables();if(location.pathname==="/caixa"||location.pathname.startsWith("/caixa/"))return startCashier();try{const saved=localStorage.getItem("loja_last_order");if(saved)state.lastOrder={id:saved}}catch{}state.catalog=await api("/api/catalog?branch="+currentBranch());renderCustomer()}catch(e){$("#app").innerHTML=`<div class="boot"><div class="boot-mark">!</div><h2>Não foi possível carregar</h2><p>${esc(e.message)}</p><button class="primary-btn" onclick="location.reload()">Tentar novamente</button></div>`}}
 boot();
 
 // Checkout de entrega com cidade e bairro selecionáveis, para evitar endereços incompletos.
