@@ -528,6 +528,13 @@ async function visitSummary(env, from, to, branchId = "") {
   return { today:rows.find(row=>row.visited_on===local.date)?.visits||0,total:rows.reduce((sum,row)=>sum+row.visits,0),period:rows.filter(row=>row.visited_on>=rangeFrom&&row.visited_on<=rangeTo).reduce((sum,row)=>sum+row.visits,0),from:rangeFrom,to:rangeTo,by_day:rows.filter(row=>row.visited_on>=rangeFrom&&row.visited_on<=rangeTo) };
 }
 
+// Métricas de visita não podem impedir o proprietário de gerenciar pedidos.
+async function safeVisitSummary(env, from, to, branchId = "") {
+  const local=brazilCalendar(),rangeFrom=/^\d{4}-\d{2}-\d{2}$/.test(from||"")?from:`${local.date.slice(0,7)}-01`,rangeTo=/^\d{4}-\d{2}-\d{2}$/.test(to||"")?to:local.date;
+  try { return await visitSummary(env,from,to,branchId); }
+  catch (error) { console.error("Falha não crítica nas métricas de visita",error); return {today:0,total:0,period:0,from:rangeFrom,to:rangeTo,by_day:[]}; }
+}
+
 async function orderManagementReport(env,url) {
   const local=brazilCalendar(),from=/^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get("from")||"")?url.searchParams.get("from"):local.date,to=/^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get("to")||"")?url.searchParams.get("to"):local.date;
   const branchId=BRANCHES[url.searchParams.get("branch")]?url.searchParams.get("branch"):"",filter=branchId?" AND branch_id=?":"",orderParams=branchId?[from,to,branchId]:[from,to];
@@ -1021,7 +1028,7 @@ async function api(request, env, url) {
     return json({ grams:int(row?.scale_last_grams),captured_at:row?.scale_captured_at||"" });
   }
   if (url.pathname === "/api/admin/orders" && request.method === "GET") {
-    const [visits,saoGoncalo,domAvelar]=await Promise.all([visitSummary(env),visitSummary(env,undefined,undefined,"sao-goncalo"),visitSummary(env,undefined,undefined,"dom-avelar")]);
+    const [visits,saoGoncalo,domAvelar]=await Promise.all([safeVisitSummary(env),safeVisitSummary(env,undefined,undefined,"sao-goncalo"),safeVisitSummary(env,undefined,undefined,"dom-avelar")]);
     return json({ orders: await listAdminOrders(env), visits:{...visits,branches:{"sao-goncalo":saoGoncalo,"dom-avelar":domAvelar}} });
   }
   if (url.pathname === "/api/admin/order-management" && request.method === "GET") return json(await orderManagementReport(env,url));
