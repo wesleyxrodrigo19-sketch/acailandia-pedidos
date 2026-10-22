@@ -187,6 +187,7 @@ async function proxyImage(requestUrl) {
 }
 
 async function seed(db) {
+  await ensureOperationalColumns(db);
   await ensurePrimeOperationsSchema(db);
   await db.prepare(`INSERT OR IGNORE INTO settings (id) VALUES (1)`).run();
   const settings=await db.prepare(`SELECT delivery_neighborhood_fees_json FROM settings WHERE id=1`).first();
@@ -251,6 +252,7 @@ function cleanComplements(value) {
 
 const ACAI_COMPLEMENT_GROUPS = new Set(["base","cream","topping","fruit","extra"]);
 let primeOperationsSchemaReady = false;
+let operationalColumnsReady = false;
 function cleanFlavors(value) { const source=Array.isArray(value)?value:parseJson(value,[]),seen=new Set(),result=[]; for(const raw of source){const name=clean(raw,80),key=name.toLocaleLowerCase("pt-BR");if(name&&!seen.has(key)){seen.add(key);result.push(name)}if(result.length>=40)break}return result; }
 async function ensurePrimeOperationsSchema(db) {
   if(primeOperationsSchemaReady)return;
@@ -259,6 +261,13 @@ async function ensurePrimeOperationsSchema(db) {
   await add("enable_acai_complements","enable_acai_complements INTEGER NOT NULL DEFAULT 0"); await add("enable_acai_extras","enable_acai_extras INTEGER NOT NULL DEFAULT 0"); await add("enable_flavors","enable_flavors INTEGER NOT NULL DEFAULT 0"); await add("flavors_json","flavors_json TEXT NOT NULL DEFAULT '[]'");
   await db.batch([db.prepare(`CREATE TABLE IF NOT EXISTS acai_complements (id INTEGER PRIMARY KEY AUTOINCREMENT,group_id TEXT NOT NULL,name TEXT NOT NULL,price_cents INTEGER NOT NULL DEFAULT 0,sort_order INTEGER NOT NULL DEFAULT 0,is_active INTEGER NOT NULL DEFAULT 1,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`),db.prepare(`CREATE TABLE IF NOT EXISTS fiscal_config (id INTEGER PRIMARY KEY CHECK(id=1),provider TEXT NOT NULL DEFAULT 'focus',environment TEXT NOT NULL DEFAULT 'homologation',enabled INTEGER NOT NULL DEFAULT 0,token_homologation TEXT NOT NULL DEFAULT '',token_production TEXT NOT NULL DEFAULT '',cnpj TEXT NOT NULL DEFAULT '',legal_name TEXT NOT NULL DEFAULT '',trade_name TEXT NOT NULL DEFAULT 'Açailandia PE',state_registration TEXT NOT NULL DEFAULT '',tax_regime TEXT NOT NULL DEFAULT '1',series TEXT NOT NULL DEFAULT '1',csc_id TEXT NOT NULL DEFAULT '',csc_token TEXT NOT NULL DEFAULT '',municipality_code TEXT NOT NULL DEFAULT '',default_cfop TEXT NOT NULL DEFAULT '5102',default_csosn TEXT NOT NULL DEFAULT '102',default_pis_cst TEXT NOT NULL DEFAULT '49',default_cofins_cst TEXT NOT NULL DEFAULT '49',updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`),db.prepare(`INSERT OR IGNORE INTO fiscal_config (id) VALUES (1)`),db.prepare(`CREATE TABLE IF NOT EXISTS product_fiscal (product_id INTEGER PRIMARY KEY,ncm TEXT NOT NULL DEFAULT '',cest TEXT NOT NULL DEFAULT '',cfop TEXT NOT NULL DEFAULT '',csosn TEXT NOT NULL DEFAULT '',pis_cst TEXT NOT NULL DEFAULT '',cofins_cst TEXT NOT NULL DEFAULT '',unit TEXT NOT NULL DEFAULT 'UN',origin TEXT NOT NULL DEFAULT '0',updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`) ]);
   primeOperationsSchemaReady=true;
+}
+async function ensureOperationalColumns(db) {
+  if(operationalColumnsReady)return;
+  const columns=(await db.prepare(`PRAGMA table_info(orders)`).all()).results||[];
+  if(!columns.some(column=>column.name==="table_number"))await db.prepare(`ALTER TABLE orders ADD COLUMN table_number INTEGER`).run();
+  try { await db.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_one_active_table ON orders(table_number) WHERE table_number IS NOT NULL AND status NOT IN ('concluido','cancelado')`).run(); } catch (_) {}
+  operationalColumnsReady=true;
 }
 function digits(value,max=20){return clean(value,max).replace(/\D/g,"").slice(0,max)}
 function fiscalConfigPublic(row){return {...row,enabled:Boolean(row?.enabled),token_homologation:"",token_production:"",token_homologation_configured:Boolean(row?.token_homologation),token_production_configured:Boolean(row?.token_production),csc_token:"",csc_token_configured:Boolean(row?.csc_token)}}
