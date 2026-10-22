@@ -187,6 +187,7 @@ async function proxyImage(requestUrl) {
 }
 
 async function seed(db) {
+  await ensurePrimeOperationsSchema(db);
   await db.prepare(`INSERT OR IGNORE INTO settings (id) VALUES (1)`).run();
   const settings=await db.prepare(`SELECT delivery_neighborhood_fees_json FROM settings WHERE id=1`).first();
   if (!deliveryRules(settings?.delivery_neighborhood_fees_json).length) await db.prepare(`UPDATE settings SET delivery_neighborhood_fees_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=1`).bind(JSON.stringify(DEFAULT_DELIVERY_FEES)).run();
@@ -247,6 +248,21 @@ function cleanComplements(value) {
     max_quantity: Math.max(1, Math.min(20, int(item?.max_quantity, 1)))
   })).filter(item => item.name);
 }
+
+const ACAI_COMPLEMENT_GROUPS = new Set(["base","cream","topping","fruit","extra"]);
+let primeOperationsSchemaReady = false;
+function cleanFlavors(value) { const source=Array.isArray(value)?value:parseJson(value,[]),seen=new Set(),result=[]; for(const raw of source){const name=clean(raw,80),key=name.toLocaleLowerCase("pt-BR");if(name&&!seen.has(key)){seen.add(key);result.push(name)}if(result.length>=40)break}return result; }
+async function ensurePrimeOperationsSchema(db) {
+  if(primeOperationsSchemaReady)return;
+  const columns=(await db.prepare(`PRAGMA table_info(products)`).all()).results||[];
+  const add=async(name,definition)=>{if(!columns.some(column=>column.name===name))await db.prepare(`ALTER TABLE products ADD COLUMN ${definition}`).run();};
+  await add("enable_acai_complements","enable_acai_complements INTEGER NOT NULL DEFAULT 0"); await add("enable_acai_extras","enable_acai_extras INTEGER NOT NULL DEFAULT 0"); await add("enable_flavors","enable_flavors INTEGER NOT NULL DEFAULT 0"); await add("flavors_json","flavors_json TEXT NOT NULL DEFAULT '[]'");
+  await db.batch([db.prepare(`CREATE TABLE IF NOT EXISTS acai_complements (id INTEGER PRIMARY KEY AUTOINCREMENT,group_id TEXT NOT NULL,name TEXT NOT NULL,price_cents INTEGER NOT NULL DEFAULT 0,sort_order INTEGER NOT NULL DEFAULT 0,is_active INTEGER NOT NULL DEFAULT 1,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`),db.prepare(`CREATE TABLE IF NOT EXISTS fiscal_config (id INTEGER PRIMARY KEY CHECK(id=1),provider TEXT NOT NULL DEFAULT 'focus',environment TEXT NOT NULL DEFAULT 'homologation',enabled INTEGER NOT NULL DEFAULT 0,token_homologation TEXT NOT NULL DEFAULT '',token_production TEXT NOT NULL DEFAULT '',cnpj TEXT NOT NULL DEFAULT '',legal_name TEXT NOT NULL DEFAULT '',trade_name TEXT NOT NULL DEFAULT 'Açailandia PE',state_registration TEXT NOT NULL DEFAULT '',tax_regime TEXT NOT NULL DEFAULT '1',series TEXT NOT NULL DEFAULT '1',csc_id TEXT NOT NULL DEFAULT '',csc_token TEXT NOT NULL DEFAULT '',municipality_code TEXT NOT NULL DEFAULT '',default_cfop TEXT NOT NULL DEFAULT '5102',default_csosn TEXT NOT NULL DEFAULT '102',default_pis_cst TEXT NOT NULL DEFAULT '49',default_cofins_cst TEXT NOT NULL DEFAULT '49',updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`),db.prepare(`INSERT OR IGNORE INTO fiscal_config (id) VALUES (1)`),db.prepare(`CREATE TABLE IF NOT EXISTS product_fiscal (product_id INTEGER PRIMARY KEY,ncm TEXT NOT NULL DEFAULT '',cest TEXT NOT NULL DEFAULT '',cfop TEXT NOT NULL DEFAULT '',csosn TEXT NOT NULL DEFAULT '',pis_cst TEXT NOT NULL DEFAULT '',cofins_cst TEXT NOT NULL DEFAULT '',unit TEXT NOT NULL DEFAULT 'UN',origin TEXT NOT NULL DEFAULT '0',updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`) ]);
+  primeOperationsSchemaReady=true;
+}
+function digits(value,max=20){return clean(value,max).replace(/\D/g,"").slice(0,max)}
+function fiscalConfigPublic(row){return {...row,enabled:Boolean(row?.enabled),token_homologation:"",token_production:"",token_homologation_configured:Boolean(row?.token_homologation),token_production_configured:Boolean(row?.token_production),csc_token:"",csc_token_configured:Boolean(row?.csc_token)}}
+async function fiscalSetup(db){await ensurePrimeOperationsSchema(db);const [config,products]=await Promise.all([db.prepare(`SELECT * FROM fiscal_config WHERE id=1`).first(),db.prepare(`SELECT p.id,p.name,p.category,p.is_available,COALESCE(f.ncm,'') ncm,COALESCE(f.cest,'') cest,COALESCE(f.cfop,'') cfop,COALESCE(f.csosn,'') csosn,COALESCE(f.pis_cst,'') pis_cst,COALESCE(f.cofins_cst,'') cofins_cst,COALESCE(f.unit,'UN') unit,COALESCE(f.origin,'0') origin FROM products p LEFT JOIN product_fiscal f ON f.product_id=p.id ORDER BY p.sort_order,p.id`).all()]);const rows=products.results||[],complete=rows.filter(p=>/^\d{8}$/.test(p.ncm)&&/^\d{4}$/.test(p.cfop||config.default_cfop)&&/^\d{3}$/.test(p.csosn||config.default_csosn)).length;return {config:fiscalConfigPublic(config),products:rows,documents:[],readiness:{total:rows.length,complete,missing:rows.length-complete,ready:Boolean(config.cnpj&&config.state_registration&&config.municipality_code&&(config.token_homologation||config.token_production)&&complete===rows.length)}}}
 
 const DEFAULT_HOURS = [
   {day:0,label:"Domingo",enabled:true,open:"17:30",close:"23:20"},
@@ -336,7 +352,8 @@ async function getCatalog(env, includeAdminSettings = false, branchId = "acailan
   return {
     settings: { ...publicSettings, store_name:branch?.name||"Açailandia PE", store_address:branch?.address||publicSettings.store_address, branch_id:branchId, branch_name:branch?.name||BRANCHES[branchId].name, ...storeAvailability(settingsRow), ...(includeAdminSettings?{reception_printer,kitchen_printer,pedeai_enabled:Boolean(pedeai_enabled),pedeai_environment:pedeai_environment||"sandbox",pedeai_store_id:pedeai_store_id||"",pedeai_client_id:pedeai_client_id||"",pedeai_api_base_url:pedeai_api_base_url||"",pedeai_api_token_configured:Boolean(pedeai_api_token),pedeai_webhook_secret_configured:Boolean(pedeai_webhook_secret),pedeai_last_sync_at:pedeai_last_sync_at||"",pedeai_last_error:pedeai_last_error||""}:{}), delivery_neighborhood_fees:neighborhoodFeeRows.results, delivery_rate_tiers:rateRows.results, waiter_fee_enabled:Boolean(settingsRow.waiter_fee_enabled), auto_print_enabled:Boolean(settingsRow.auto_print_enabled), delivery_surcharge_enabled:Boolean(settingsRow.delivery_surcharge_enabled), print_bridge_configured:Boolean(print_bridge_key) },
     categories,
-    products: sortedProducts.map(p => ({ ...p, image_url:hostedImageUrl(p.image_url), complements:cleanComplements(p.complements_json), is_featured:automaticFeatured.has(int(p.id)), is_promo:Boolean(p.is_promo), catalog_available:Boolean(p.is_available), branch_available:Boolean(p.branch_available), is_available:Boolean(p.is_available)&&Boolean(p.branch_available) }))
+    products: sortedProducts.map(p => ({ ...p, image_url:hostedImageUrl(p.image_url), complements:cleanComplements(p.complements_json), flavors:cleanFlavors(p.flavors_json), enable_acai_complements:Boolean(p.enable_acai_complements), enable_acai_extras:Boolean(p.enable_acai_extras), enable_flavors:Boolean(p.enable_flavors), is_featured:automaticFeatured.has(int(p.id)), is_promo:Boolean(p.is_promo), catalog_available:Boolean(p.is_available), branch_available:Boolean(p.branch_available), is_available:Boolean(p.is_available)&&Boolean(p.branch_available) })),
+    acai_complements: includeAdminSettings ? (await env.DB.prepare(`SELECT * FROM acai_complements ORDER BY group_id,sort_order,id`).all()).results : undefined
   };
 }
 
@@ -649,7 +666,11 @@ async function productInput(request, env, current = null) {
     is_available: body.is_available == null ? (current?.is_available ?? 1) : (bool(body.is_available) ? 1 : 0),
     is_featured: body.is_featured == null ? (current?.is_featured ?? 0) : (bool(body.is_featured) ? 1 : 0),
     is_promo: body.is_promo == null ? (current?.is_promo ?? 0) : (bool(body.is_promo) ? 1 : 0),
-    complements_json: body.complements_json == null ? (current?.complements_json || "[]") : JSON.stringify(cleanComplements(body.complements_json))
+    complements_json: body.complements_json == null ? (current?.complements_json || "[]") : JSON.stringify(cleanComplements(body.complements_json)),
+    enable_acai_complements: body.enable_acai_complements == null ? (current?.enable_acai_complements ?? 0) : (bool(body.enable_acai_complements)?1:0),
+    enable_acai_extras: body.enable_acai_extras == null ? (current?.enable_acai_extras ?? 0) : (bool(body.enable_acai_extras)?1:0),
+    enable_flavors: body.enable_flavors == null ? (current?.enable_flavors ?? 0) : (bool(body.enable_flavors)?1:0),
+    flavors_json: body.flavors_json == null ? (current?.flavors_json || "[]") : JSON.stringify(cleanFlavors(body.flavors_json))
   };
 }
 
@@ -1190,13 +1211,25 @@ async function api(request, env, url) {
     return json({ ok:true,payment_status:paymentStatus,payment_method:method,waiter_fee_cents:waiterFee,total_cents:total,discount_cents:discountCents,discount_type:discountType,cash_received_cents:cashReceived,change_for_cents:change,payments:requestedPayments });
   }
   if (url.pathname === "/api/admin/products" && request.method === "GET") return json(await getCatalog(env,true));
+  if(url.pathname==="/api/admin/fiscal/setup"&&request.method==="GET")return json(await fiscalSetup(env.DB));
+  if(url.pathname==="/api/admin/fiscal/config"&&request.method==="PATCH"){
+    const current=await env.DB.prepare(`SELECT * FROM fiscal_config WHERE id=1`).first(),body=await readJson(request),environment=body?.environment==="production"?"production":"homologation";
+    const homologation=clean(body?.token_homologation,300)||current.token_homologation,production=clean(body?.token_production,300)||current.token_production,csc=clean(body?.csc_token,300)||current.csc_token;
+    await env.DB.prepare(`UPDATE fiscal_config SET environment=?,enabled=?,token_homologation=?,token_production=?,cnpj=?,legal_name=?,trade_name=?,state_registration=?,tax_regime=?,series=?,csc_id=?,csc_token=?,municipality_code=?,default_cfop=?,default_csosn=?,default_pis_cst=?,default_cofins_cst=?,updated_at=CURRENT_TIMESTAMP WHERE id=1`).bind(environment,bool(body?.enabled)?1:0,homologation,production,digits(body?.cnpj??current.cnpj,14),clean(body?.legal_name??current.legal_name,160),clean(body?.trade_name??current.trade_name,160),digits(body?.state_registration??current.state_registration,20),["1","2","3"].includes(String(body?.tax_regime))?String(body.tax_regime):current.tax_regime,digits(body?.series??current.series,3)||"1",digits(body?.csc_id??current.csc_id,6),csc,digits(body?.municipality_code??current.municipality_code,7),digits(body?.default_cfop??current.default_cfop,4)||"5102",digits(body?.default_csosn??current.default_csosn,3)||"102",digits(body?.default_pis_cst??current.default_pis_cst,2)||"49",digits(body?.default_cofins_cst??current.default_cofins_cst,2)||"49").run(); return json({ok:true});
+  }
+  const fiscalProduct=url.pathname.match(/^\/api\/admin\/fiscal\/products\/(\d+)$/);
+  if(fiscalProduct&&request.method==="PATCH"){const body=await readJson(request),ncm=digits(body?.ncm,8);if(ncm&&ncm.length!==8)return json({error:"O NCM deve ter exatamente 8 números."},400);await env.DB.prepare(`INSERT INTO product_fiscal (product_id,ncm,cest,cfop,csosn,pis_cst,cofins_cst,unit,origin,updated_at) VALUES (?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(product_id) DO UPDATE SET ncm=excluded.ncm,cest=excluded.cest,cfop=excluded.cfop,csosn=excluded.csosn,pis_cst=excluded.pis_cst,cofins_cst=excluded.cofins_cst,unit=excluded.unit,origin=excluded.origin,updated_at=CURRENT_TIMESTAMP`).bind(fiscalProduct[1],ncm,digits(body?.cest,7),digits(body?.cfop,4),digits(body?.csosn,3),digits(body?.pis_cst,2),digits(body?.cofins_cst,2),clean(body?.unit||"UN",6).toUpperCase(),digits(body?.origin,1)||"0").run();return json({ok:true});}
+  if(url.pathname==="/api/admin/acai-complements"&&request.method==="POST"){const body=await readJson(request),group=clean(body?.group_id,20),name=clean(body?.name,80);if(!ACAI_COMPLEMENT_GROUPS.has(group)||!name)return json({error:"Informe o grupo e o nome do complemento."},400);const next=await env.DB.prepare(`SELECT COALESCE(MAX(sort_order),0)+1 AS value FROM acai_complements`).first(),result=await env.DB.prepare(`INSERT INTO acai_complements (group_id,name,price_cents,sort_order,is_active) VALUES (?,?,?,?,1)`).bind(group,name,group==="extra"?Math.max(0,int(body?.price_cents)):0,int(next?.value)).run();await clearCatalogCache();return json({ok:true,id:result.meta.last_row_id},201);}
+  const acaiComplementRoute=url.pathname.match(/^\/api\/admin\/acai-complements\/(\d+)$/);
+  if(acaiComplementRoute&&request.method==="PATCH"){const current=await env.DB.prepare(`SELECT * FROM acai_complements WHERE id=?`).bind(acaiComplementRoute[1]).first(),body=await readJson(request);if(!current)return json({error:"Complemento não encontrado."},404);const group=body?.group_id==null?current.group_id:clean(body.group_id,20),name=body?.name==null?current.name:clean(body.name,80);if(!ACAI_COMPLEMENT_GROUPS.has(group)||!name)return json({error:"Informe o grupo e o nome do complemento."},400);await env.DB.prepare(`UPDATE acai_complements SET group_id=?,name=?,price_cents=?,is_active=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(group,name,group==="extra"?Math.max(0,int(body?.price_cents,current.price_cents)):0,body?.is_active==null?int(current.is_active):(bool(body.is_active)?1:0),acaiComplementRoute[1]).run();await clearCatalogCache();return json({ok:true});}
+  if(acaiComplementRoute&&request.method==="DELETE"){await env.DB.prepare(`DELETE FROM acai_complements WHERE id=?`).bind(acaiComplementRoute[1]).run();await clearCatalogCache();return json({ok:true});}
   if (url.pathname === "/api/admin/products" && request.method === "POST") {
     try {
       const input = await productInput(request,env);
       if (!input.name || !input.category || input.price_cents <= 0) return json({ error:"Informe nome, categoria e preço válido." },400);
       if (input.is_promo && (!input.old_price_cents || input.old_price_cents <= input.price_cents)) return json({ error:"O valor original deve ser maior que o valor da promoção." },400);
       const next = await env.DB.prepare(`SELECT COALESCE(MAX(sort_order),0)+1 AS value FROM products`).first();
-      const result = await env.DB.prepare(`INSERT INTO products (category,name,description,price_cents,old_price_cents,image_url,is_featured,is_promo,is_available,sort_order,complements_json) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(input.category,input.name,input.description,input.price_cents,input.old_price_cents,input.image_url,input.is_featured,input.is_promo,input.is_available,next.value,input.complements_json).run();
+      const result = await env.DB.prepare(`INSERT INTO products (category,name,description,price_cents,old_price_cents,image_url,is_featured,is_promo,is_available,sort_order,complements_json,enable_acai_complements,enable_acai_extras,enable_flavors,flavors_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(input.category,input.name,input.description,input.price_cents,input.old_price_cents,input.image_url,input.is_featured,input.is_promo,input.is_available,next.value,input.complements_json,input.enable_acai_complements,input.enable_acai_extras,input.enable_flavors,input.flavors_json).run();
       await auditStatement(env.DB,"product_created","product",String(result.meta.last_row_id),`Produto ${input.name} cadastrado`,{ category:input.category,price_cents:input.price_cents }).run();
       await clearCatalogCache();
       return json({ ok:true,id:result.meta.last_row_id },201);
@@ -1210,7 +1243,7 @@ async function api(request, env, url) {
       const input = await productInput(request,env,current);
       if (!input.name || !input.category || input.price_cents <= 0) return json({ error:"Informe nome, categoria e preço válido." },400);
       if (input.is_promo && (!input.old_price_cents || input.old_price_cents <= input.price_cents)) return json({ error:"O valor original deve ser maior que o valor da promoção." },400);
-      await env.DB.prepare(`UPDATE products SET category=?,name=?,description=?,price_cents=?,old_price_cents=?,image_url=?,is_featured=?,is_promo=?,is_available=?,complements_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(input.category,input.name,input.description,input.price_cents,input.old_price_cents,input.image_url,input.is_featured,input.is_promo,input.is_available,input.complements_json,product[1]).run();
+      await env.DB.prepare(`UPDATE products SET category=?,name=?,description=?,price_cents=?,old_price_cents=?,image_url=?,is_featured=?,is_promo=?,is_available=?,complements_json=?,enable_acai_complements=?,enable_acai_extras=?,enable_flavors=?,flavors_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(input.category,input.name,input.description,input.price_cents,input.old_price_cents,input.image_url,input.is_featured,input.is_promo,input.is_available,input.complements_json,input.enable_acai_complements,input.enable_acai_extras,input.enable_flavors,input.flavors_json,product[1]).run();
       await auditStatement(env.DB,"product_updated","product",product[1],`Produto ${input.name} atualizado`,{ category:input.category,price_cents:input.price_cents,is_available:Boolean(input.is_available) }).run();
       await clearCatalogCache();
     } catch (error) { return json({ error:error.message || "Não foi possível editar o produto." },400); }

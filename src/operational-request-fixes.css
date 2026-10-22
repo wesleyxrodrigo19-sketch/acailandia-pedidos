@@ -1,0 +1,2 @@
+.quick-store-toggle{border:0;border-radius:999px;padding:10px 15px;font-weight:900;cursor:pointer}.quick-store-toggle.is-open{background:#fee2e2;color:#991b1b}.quick-store-toggle.is-closed{background:#dcfce7;color:#166534}.quick-store-toggle:disabled{opacity:.55;cursor:wait}
+@media(max-width:700px){.quick-store-toggle{padding:9px 11px;font-size:12px}.admin-top-actions .live-pill{display:none}}

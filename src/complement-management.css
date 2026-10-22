@@ -1,0 +1,3 @@
+.complement-management-table td:first-child{min-width:210px}.complement-actions{display:flex;gap:7px;align-items:center}.complement-actions .danger-btn{padding:8px 10px}.complement-management-table .muted{font-size:12px}
+.complement-paused{opacity:.62;background:#f3f4f6}.complement-paused strong{text-decoration:line-through}
+@media(max-width:700px){.complement-management-table{min-width:700px}.complement-actions{align-items:stretch;flex-direction:column}}

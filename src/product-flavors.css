@@ -1,0 +1,2 @@
+.flavor-editor textarea{min-height:280px;line-height:1.65;resize:vertical}.product-choice-actions [data-product-flavors="edit"]{border-style:dashed}
+.product-editor-actions{display:grid;grid-template-columns:auto 1fr;gap:10px}.product-editor-actions .primary-btn{width:100%}@media(max-width:420px){.product-editor-actions{grid-template-columns:1fr}.product-editor-actions .danger-btn{order:2}}
