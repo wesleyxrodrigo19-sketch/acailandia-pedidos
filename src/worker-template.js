@@ -1084,7 +1084,17 @@ async function api(request, env, url) {
     const visits=await safeVisitSummary(env,undefined,undefined,"acailandia");
     return json({ orders: await listAdminOrders(env,"acailandia"), visits:{...visits,branches:{acailandia:visits}} });
   }
-  if (url.pathname === "/api/admin/order-management" && request.method === "GET") return json(await orderManagementReport(env,url));
+  if (url.pathname === "/api/admin/order-management" && request.method === "GET") {
+    try { return json(await orderManagementReport(env,url)); }
+    catch (error) {
+      console.error("Falha no relatório de gestão", error);
+      const local=brazilCalendar(),branch=validBranch(url.searchParams.get("branch"));
+      let orders=[]; try { orders=await listAdminOrders(env,branch); } catch (_) {}
+      const products=[...orders.flatMap(order=>order.items||[])].reduce((rows,item)=>{const current=rows.find(row=>row.product_name===item.product_name);if(current){current.quantity+=int(item.quantity);current.total_cents+=int(item.quantity)*int(item.unit_price_cents)}else rows.push({product_name:item.product_name,quantity:int(item.quantity),total_cents:int(item.quantity)*int(item.unit_price_cents)});return rows},[]).sort((a,b)=>b.quantity-a.quantity).slice(0,10);
+      const summary={total_orders:orders.length,cancelled_orders:orders.filter(order=>order.status==="cancelado").length,revenue_cents:orders.filter(order=>order.status!=="cancelado").reduce((sum,order=>sum+int(order.total_cents)),0)};
+      return json({ from:local.date,to:local.date,branch_id:branch,orders,products,neighborhoods:[],summary,visits:{today:0,total:0,period:0,from:local.date,to:local.date,by_day:[]},partial:true });
+    }
+  }
   if (url.pathname === "/api/admin/neighborhood-fees" && request.method === "GET") {
     const result=await env.DB.prepare(`SELECT branch_id,city,neighborhood,distance_km,fee_cents FROM branch_neighborhood_fees WHERE branch_id IN ('sao-goncalo','dom-avelar') ORDER BY city,neighborhood,branch_id`).all();
     return json({ fees:result.results||[] });
