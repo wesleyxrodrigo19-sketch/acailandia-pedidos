@@ -45,8 +45,6 @@ const [template, html, css, cashierUiFixesCss, client, cashierPayment, cashRegis
   readFile(path.join(root, "src", "product-flavors.css"), "utf8"),
   readFile(path.join(root, "src", "fiscal-integration.js"), "utf8"),
   readFile(path.join(root, "src", "fiscal-integration.css"), "utf8"),
-  readFile(path.join(root, "src", "self-service-confirmation.js"), "utf8"),
-  readFile(path.join(root, "src", "self-service-confirmation.css"), "utf8"),
   readFile(path.join(root, "src", "table-operations.js"), "utf8"),
 ]);
 
