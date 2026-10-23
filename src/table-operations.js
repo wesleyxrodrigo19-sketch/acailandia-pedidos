@@ -1,5 +1,5 @@
 /* Mesas no padrão operacional: abrir comanda, editar e liberar após o pagamento. */
-if(!document.getElementById('table-operations-style')){const style=document.createElement('style');style.id='table-operations-style';style.textContent='.table-card-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.table-card-actions button{flex:1;min-width:max-content}';document.head.appendChild(style)}
+if(document.head&&typeof document.createElement==='function'&&!document.getElementById('table-operations-style')){const style=document.createElement('style');style.id='table-operations-style';style.textContent='.table-card-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.table-card-actions button{flex:1;min-width:max-content}';document.head.appendChild(style)}
 const tableOperationsBaseBoard=tablesBoardMarkup;
 tablesBoardMarkup=function(data,{admin=false}={}){
   if(!admin)return tableOperationsBaseBoard(data,{admin});
@@ -13,7 +13,7 @@ document.addEventListener('click',async event=>{
   event.preventDefault();event.stopPropagation();
   if(open){
     const tableNumber=Number(open.dataset.tableOpen);
-    state.admin.openTableNumber=tableNumber;state.admin.posCart=[];state.admin.view='pos';renderAdmin();
+    state.admin.openTableNumber=tableNumber;state.admin.posCart=[];await openAdminViewFast('pos');
     const form=$('#pos-form');
     if(form){form.elements.order_type.value='dine_in';form.elements.table_number.value=String(tableNumber);form.elements.order_type.dispatchEvent(new Event('change',{bubbles:true}));form.elements.table_number.dispatchEvent(new Event('change',{bubbles:true}));form.scrollIntoView({behavior:'smooth',block:'center'})}
     return;
