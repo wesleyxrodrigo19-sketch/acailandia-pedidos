@@ -9,8 +9,8 @@
     "preview": "node scripts/preview.mjs",
     "cf:dev": "npm run build && wrangler dev",
     "cf:deploy": "npm run build && wrangler deploy",
-    "cf:d1:migrate": "wrangler d1 migrations apply bliss-acaiteria-db --remote",
-    "cf:d1:migrate:local": "wrangler d1 migrations apply bliss-acaiteria-db --local"
+    "cf:d1:migrate": "wrangler d1 migrations apply acailandia-pedidos-db --remote",
+    "cf:d1:migrate:local": "wrangler d1 migrations apply acailandia-pedidos-db --local"
   },
   "devDependencies": {
     "wrangler": "4.92.0"

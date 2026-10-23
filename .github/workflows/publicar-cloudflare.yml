@@ -43,7 +43,7 @@ jobs:
       - name: Gerar aplicação
         run: npm run build
 
-      - name: Aplicar migrações no banco remoto
+      - name: Aplicar migrações aditivas no banco remoto
         run: npx wrangler d1 migrations apply acailandia-pedidos-db --remote
 
       - name: Publicar Worker
