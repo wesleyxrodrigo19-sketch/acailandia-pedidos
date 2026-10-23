@@ -70,7 +70,7 @@ assert(counterOrdersView().includes("Self-service/Balcão"));
 assert(posView().includes("Açaí Self-service por peso"));
 console.log("Dashboard smoke test passed");`;
 
-source += "\nglobalThis.__appState=state;globalThis.__api=api;globalThis.__setAdminRenderer=fn=>renderAdmin=fn;globalThis.__setOrderEditor=fn=>openOrderEditor=fn;globalThis.__setOrderDetails=fn=>openOrderDetails=fn;globalThis.__setOrderLoader=fn=>loadAdminOrders=fn;";
+source += "\nglobalThis.__appState=state;globalThis.__api=api;globalThis.__navigateAdmin=primeOpsNavigateAdmin;globalThis.__clearApiCache=()=>{apiGetCache.clear();apiGetPending.clear()};globalThis.__setAdminRenderer=fn=>renderAdmin=fn;globalThis.__setOrderEditor=fn=>openOrderEditor=fn;globalThis.__setOrderDetails=fn=>openOrderDetails=fn;globalThis.__setOrderLoader=fn=>loadAdminOrders=fn;";
 eval(source);
 // Exercise the final capture-phase menu guard the same way a real menu click
 // reaches it. Every screen must load its own backing data before navigation.
@@ -128,6 +128,18 @@ async function verifyNavigation(view){
   await global.__api("/api/admin/store-availability",{method:"PATCH",body:"{}"});
   await global.__api("/api/admin/products");
   assert.equal(global.__fetchCount["/api/admin/products"]||0,productFetches+1,"a successful update did not invalidate cached GET responses");
+  // A route with an existing snapshot must paint synchronously even if its
+  // background refresh is deliberately held open by a slow network.
+  global.__clearApiCache();
+  global.__renderCount=0;
+  global.__setAdminRenderer(()=>{global.__renderCount++});
+  let releaseSlowFetch;
+  global.fetch=()=>new Promise(resolve=>{releaseSlowFetch=()=>resolve({ok:true,json:async()=>({products:[],categories:[],settings:global.__appState.catalog.settings})})});
+  const slowNavigation=global.__navigateAdmin("products");
+  assert.equal(global.__renderCount,1,"cached screen did not render before its network refresh completed");
+  releaseSlowFetch();
+  await slowNavigation;
+  assert.equal(global.__renderCount,1,"background refresh unnecessarily rebuilt the screen and could discard user input");
   console.log("Admin navigation smoke test passed (17 screens)");
   process.exit(0);
 })().catch(error=>{console.error(error);process.exit(1)});
