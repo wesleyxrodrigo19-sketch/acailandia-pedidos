@@ -17,6 +17,29 @@ function primeOpsBindEmployees(){document.querySelectorAll('[data-admin-action]'
 // Proteção final para o menu. Este handler roda em capture antes dos handlers
 // individuais; por isso precisa carregar explicitamente os dados de cada tela.
 let primeAdminNavigationRequest=0;
+const primeAdminViewTitles={orders:'Pedidos',management:'Gestão de Pedidos',pos:'Novo pedido no balcão',availability:'Abrir ou fechar a loja',tables:'Controle de mesas',revenue:'Faturamento',products:'Produtos',settings:'Configurações',complements:'Complementos',abandoned:'Carrinhos abandonados',audit:'Auditoria',neighborhoods:'Bairros e taxas',integrations:'Integrações',fiscal:'Fiscal NFC-e','cash-register':'Caixa diário',employees:'Funcionários'};
+function primeOpsRenderNavigationState(view,error){
+  const title=primeAdminViewTitles[view]||'Painel';
+  const message=error?`<p class="muted">${esc(error.message||'Não foi possível carregar esta tela.')}</p><button type="button" class="primary-btn" id="admin-navigation-retry">Tentar novamente</button>`:`<p class="muted">Carregando os dados desta tela…</p>`;
+  const app=$('#app');if(!app)return;
+  app.innerHTML=adminLayout(`<section class="panel" role="status" aria-live="polite" style="min-height:190px;display:grid;place-items:center;text-align:center"><div><strong>${error?'Não foi possível abrir esta tela':`Abrindo ${esc(title)}`}</strong>${message}</div></section>`,title);
+  bindAdmin();
+  const retry=$('#admin-navigation-retry');
+  if(retry)retry.onclick=()=>primeOpsNavigateAdmin(view);
+}
+async function primeOpsNavigateAdmin(view){
+  const request=++primeAdminNavigationRequest;
+  state.admin.view=view;state.admin.sidebarOpen=false;
+  primeOpsRenderNavigationState(view,null);
+  try{
+    await primeOpsLoadAdminView(view);
+    if(request!==primeAdminNavigationRequest)return;
+    renderAdmin();
+  }catch(error){
+    if(request!==primeAdminNavigationRequest)return;
+    primeOpsRenderNavigationState(view,error);
+  }
+}
 async function primeOpsLoadAdminView(view){
   if(view==='orders') await loadAdminOrders();
   else if(view==='pos'){
@@ -45,7 +68,7 @@ async function primeOpsLoadAdminView(view){
   else if(view==='fiscal')await loadFiscalSetup();
   else throw new Error('Esta tela não está disponível no painel.');
 }
-if(!window.__primeAdminNavigationGuard){window.__primeAdminNavigationGuard=true;document.addEventListener('click',async event=>{const button=event.target.closest('[data-admin-view]');if(!button||!state.admin.logged)return;event.preventDefault();event.stopImmediatePropagation();const view=button.dataset.adminView,request=++primeAdminNavigationRequest;try{await primeOpsLoadAdminView(view);if(request!==primeAdminNavigationRequest)return;state.admin.view=view;state.admin.sidebarOpen=false;renderAdmin()}catch(error){if(request===primeAdminNavigationRequest)toast(error.message||'Não foi possível abrir esta tela. Tente novamente.')}} ,true)}
+if(!window.__primeAdminNavigationGuard){window.__primeAdminNavigationGuard=true;document.addEventListener('click',event=>{const button=event.target.closest('[data-admin-view]');if(!button||!state.admin.logged)return;event.preventDefault();event.stopImmediatePropagation();return primeOpsNavigateAdmin(button.dataset.adminView)},true)}
 
 // Caixa operacional completo: unidade e funcionário ficam registrados no turno,
 // e a conferência é exibida antes da confirmação do fechamento.
