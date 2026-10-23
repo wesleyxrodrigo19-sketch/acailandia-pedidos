@@ -30,15 +30,38 @@ function primeOpsRenderNavigationState(view,error){
 async function primeOpsNavigateAdmin(view){
   const request=++primeAdminNavigationRequest;
   state.admin.view=view;state.admin.sidebarOpen=false;
-  primeOpsRenderNavigationState(view,null);
+  const hasSnapshot=primeOpsHasAdminSnapshot(view);
+  // Reuse the last screen immediately. Refresh it in the background so a
+  // normal menu click never has to wait for the network before responding.
+  if(hasSnapshot){
+    try{renderAdmin()}catch{primeOpsRenderNavigationState(view,null)}
+  }else primeOpsRenderNavigationState(view,null);
   try{
     await primeOpsLoadAdminView(view);
     if(request!==primeAdminNavigationRequest)return;
-    renderAdmin();
+    // A first visit still needs its initial render; a cached screen is left
+    // untouched while refreshing so an in-progress form or order is not lost.
+    if(!hasSnapshot)renderAdmin();
   }catch(error){
     if(request!==primeAdminNavigationRequest)return;
-    primeOpsRenderNavigationState(view,error);
+    if(!hasSnapshot)primeOpsRenderNavigationState(view,error);
   }
+}
+function primeOpsHasAdminSnapshot(view){
+  if(view==='orders'||view==='counter-orders')return Array.isArray(state.admin.orders);
+  if(view==='pos')return Boolean(state.catalog?.products&&state.admin.tables);
+  if(['products','settings','availability','complements'].includes(view))return Boolean(state.catalog?.products);
+  if(view==='neighborhoods')return Array.isArray(state.admin.neighborhoodFees);
+  if(view==='tables')return Boolean(state.admin.tables);
+  if(view==='revenue')return Boolean(state.admin.revenue);
+  if(view==='management')return Boolean(state.admin.management);
+  if(view==='audit')return Array.isArray(state.admin.audit);
+  if(view==='cash-register')return Boolean(state.admin.cashRegister);
+  if(view==='employees')return Boolean(state.admin.employeePurchases&&Array.isArray(state.admin.employees));
+  if(view==='abandoned')return Array.isArray(state.admin.abandoned);
+  if(view==='integrations')return Boolean(state.admin.integrationStatus&&state.admin.printStatus);
+  if(view==='fiscal')return Boolean(state.admin.fiscal);
+  return false;
 }
 async function primeOpsLoadAdminView(view){
   if(view==='orders') await loadAdminOrders();
@@ -74,8 +97,22 @@ async function primeOpsLoadAdminView(view){
 function primeOpsWarmAdminCache(){
   if(primeOpsWarmStarted)return;primeOpsWarmStarted=true;
   const from=new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString().slice(0,10),to=new Date().toISOString().slice(0,10);
-  const paths=['/api/admin/products','/api/admin/tables','/api/admin/print-status','/api/admin/revenue?','/api/admin/order-management?branch=acailandia','/api/admin/audit','/api/admin/cash-register?branch=acailandia','/api/admin/employees',`/api/admin/employee-purchases?from=${from}&to=${to}`,'/api/admin/abandoned-carts','/api/admin/integrations/status','/api/admin/fiscal/setup','/api/admin/neighborhood-fees'];
-  setTimeout(()=>{Promise.all(paths.map(path=>api(path).catch(()=>null)))},250);
+  const paths=[
+    ['/api/admin/products',data=>{state.catalog=data}],
+    ['/api/admin/tables',data=>{state.admin.tables=data}],
+    ['/api/admin/print-status',data=>{state.admin.printStatus=data}],
+    ['/api/admin/revenue?',data=>{state.admin.revenue=data}],
+    ['/api/admin/order-management?branch=acailandia',data=>{state.admin.management=data;state.admin.managementBranches={acailandia:data}}],
+    ['/api/admin/audit',data=>{state.admin.audit=data.entries||[]}],
+    ['/api/admin/cash-register?branch=acailandia',data=>{const branch=data.branches?.acailandia||{};state.admin.cashRegister={...branch,branches:data.branches||{acailandia:branch},establishment:{name:'Açailandia PE — São Gonçalo'}}}],
+    ['/api/admin/employees',data=>{state.admin.employees=data.employees||[]}],
+    [`/api/admin/employee-purchases?from=${from}&to=${to}`,data=>{state.admin.employeePurchases=data}],
+    ['/api/admin/abandoned-carts',data=>{state.admin.abandoned=data.carts||[]}],
+    ['/api/admin/integrations/status',data=>{state.admin.integrationStatus=data}],
+    ['/api/admin/fiscal/setup',data=>{state.admin.fiscal=data}],
+    ['/api/admin/neighborhood-fees',data=>{state.admin.neighborhoodFees=data.fees||[]}]
+  ];
+  Promise.all(paths.map(([path,apply])=>api(path).then(apply).catch(()=>null)));
 }
 const primeOpsStartAdmin=startAdmin;
 startAdmin=async function(){await primeOpsStartAdmin();if(state.admin.logged)primeOpsWarmAdminCache()};
