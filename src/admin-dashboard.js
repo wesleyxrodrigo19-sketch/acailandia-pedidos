@@ -50,6 +50,14 @@ ordersView=function(){
 
 state.admin.managementBranches=state.admin.managementBranches||null;
 state.admin.managementBranchFilter="acailandia";
+state.admin.counterOrderFilter=state.admin.counterOrderFilter||"all";
+function counterOrdersView(){
+  const filter=state.admin.counterOrderFilter||"all",today=brazilDateKey();
+  const orders=(state.admin.orders||[]).filter(order=>order.channel==="counter"&&(!order.created_at||brazilDateKey(order.created_at)===today||(order.payment_status==="aberto"&&order.status!=="cancelado"))).sort((a,b)=>String(b.created_at||"").localeCompare(String(a.created_at||"")));
+  const filtered=filter==="pending"?orders.filter(order=>order.payment_status==="aberto"):filter==="paid"?orders.filter(order=>order.payment_status!=="aberto"&&order.status!=="cancelado"):filter==="cancelled"?orders.filter(order=>order.status==="cancelado"):orders;
+  const pending=orders.filter(order=>order.payment_status==="aberto"&&order.status!=="cancelado"),tabs=[["all","Todos"],["pending","Pagamento pendente"],["paid","Pagos"],["cancelled","Cancelados"]];
+  return `<section class="counter-orders-view"><div class="counter-orders-header"><div><span class="eyebrow">ATENDIMENTO PRESENCIAL</span><h2>Self-service/Balcão</h2><p class="muted">Consulte, atualize e finalize somente os pedidos feitos no estabelecimento.</p></div><div class="counter-orders-pending"><span>Pagamentos pendentes</span><strong>${money(pending.reduce((sum,order)=>sum+Number(order.total_cents||0),0))}</strong><small>${pending.length} pedido(s)</small></div></div><div class="counter-orders-tabs">${tabs.map(([value,label])=>`<button type="button" class="${filter===value?"active":""}" data-counter-order-filter="${value}">${label}<span>${value==="all"?orders.length:value==="pending"?pending.length:value==="paid"?orders.filter(order=>order.payment_status!=="aberto"&&order.status!=="cancelado").length:orders.filter(order=>order.status==="cancelado").length}</span></button>`).join("")}</div><div class="counter-orders-grid">${filtered.length?filtered.map(orderCard).join(""):'<div class="empty panel counter-orders-empty">Nenhum pedido de self-service/balcão nesta categoria.</div>'}</div></section>`;
+}
 async function loadOrderManagement(from,to){const query=new URLSearchParams();if(from)query.set("from",from);if(to)query.set("to",to);query.set("branch","acailandia");const report=await api(`/api/admin/order-management?${query}`);state.admin.management=report;state.admin.managementBranches={acailandia:report}}
 function managementDate(value){return new Date(String(value||"").replace(" ","T")+"Z").toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}
 function orderManagementView(){
@@ -127,8 +135,9 @@ setupTableSettings=function(){
 const dashboardAdminNavButtons=adminNavButtons;
 adminNavButtons=function(){
   const management=`<button class="${state.admin.view==="management"?"active":""}" data-admin-view="management"><span class="admin-nav-icon">▦</span><span class="nav-full">Gestão de pedidos</span><span class="nav-short">Gestão</span></button>`;
+  const counterOrders=`<button class="${state.admin.view==="counter-orders"?"active":""}" data-admin-view="counter-orders"><span class="admin-nav-icon">◫</span><span class="nav-full">Self-service/Balcão</span><span class="nav-short">Self/Balcão</span></button>`;
   const neighborhoods=`<button class="${state.admin.view==="neighborhoods"?"active":""}" data-admin-view="neighborhoods"><span class="admin-nav-icon">⌖</span><span class="nav-full">Bairros e taxas</span><span class="nav-short">Bairros</span></button>`;
-  return dashboardAdminNavButtons().replace(/(<button[^>]+data-admin-view="orders"[\s\S]*?<\/button>)/,"$1"+management).replace(/(<button[^>]+data-admin-view="settings")/,neighborhoods+"$1");
+  return dashboardAdminNavButtons().replace(/(<button[^>]+data-admin-view="orders"[\s\S]*?<\/button>)/,"$1"+management+counterOrders).replace(/(<button[^>]+data-admin-view="settings")/,neighborhoods+"$1");
 };
 
 const dashboardAdminLayout=adminLayout;
@@ -143,6 +152,7 @@ adminLayout=function(content,title){
 const dashboardRenderAdmin=renderAdmin;
 renderAdmin=function(){
   if(state.admin.view==="management"){$("#app").innerHTML=adminLayout(orderManagementView(),"Gestão de Pedidos");bindAdmin();return}
+  if(state.admin.view==="counter-orders"){$("#app").innerHTML=adminLayout(counterOrdersView(),"Self-service/Balcão");bindAdmin();return}
   if(state.admin.view==="neighborhoods"){$("#app").innerHTML=adminLayout(neighborhoodsView(),"Bairros e taxas");bindAdmin();bindNeighborhoods();return}
   dashboardRenderAdmin();
 };
@@ -154,6 +164,8 @@ bindAdmin=function(){
   const toggle=$("#sidebar-toggle"),mobileClose=$("#sidebar-mobile-close");if(toggle)toggle.onclick=toggleMenu;if(mobileClose)mobileClose.onclick=toggleMenu;
   document.querySelectorAll("[data-admin-view]").forEach(button=>button.addEventListener("click",()=>{state.admin.sidebarOpen=false}));
   document.querySelectorAll('[data-admin-view="management"]').forEach(button=>button.onclick=async()=>{state.admin.view="management";await loadOrderManagement();renderAdmin()});
+  document.querySelectorAll('[data-admin-view="counter-orders"]').forEach(button=>button.onclick=async()=>{state.admin.view="counter-orders";await loadAdminOrders();renderAdmin()});
+  document.querySelectorAll("[data-counter-order-filter]").forEach(button=>button.onclick=()=>{state.admin.counterOrderFilter=button.dataset.counterOrderFilter;renderAdmin()});
   document.querySelectorAll('[data-admin-view="neighborhoods"]').forEach(button=>button.onclick=async()=>{state.admin.view="neighborhoods";await loadBranchNeighborhoodFees();renderAdmin()});
   if(state.admin.view==="management"){
     $("#management-search").oninput=event=>{const query=event.target.value.trim().toLowerCase();document.querySelectorAll("[data-management-row]").forEach(row=>row.classList.toggle("hidden",!row.dataset.search.includes(query)))};

@@ -605,7 +605,20 @@ async function updateOrderItems(env, orderId, body) {
   const order = await env.DB.prepare(`SELECT * FROM orders WHERE id=?`).bind(orderId).first();
   if (!order) throw new Error("Pedido não encontrado.");
   if (order.status === "cancelado") throw new Error("Não é possível editar um pedido cancelado.");
-  const items = await normalizeOrderItems(env.DB, body?.items);
+  let items = await normalizeOrderItems(env.DB, body?.items);
+  if (Array.isArray(body?.self_service_items)) {
+    const settings = await env.DB.prepare(`SELECT self_service_price_per_kg_cents FROM settings WHERE id=1`).first();
+    const weighted = await counterOrderItems(env, { items:[], self_service_items:body.self_service_items }, settings);
+    items = [...items,...weighted.items];
+  } else {
+    // Edições do editor clássico só enviam produtos do cardápio. Preserve os
+    // itens pesados separadamente para que salvar produtos não apague o açaí.
+    const existing = (await env.DB.prepare(`SELECT product_name,quantity,unit_price_cents,complements_json,notes FROM order_items WHERE order_id=? AND product_id IS NULL ORDER BY id`).bind(orderId).all()).results||[];
+    for (const item of existing) {
+      let complements=[];try{complements=JSON.parse(item.complements_json||"[]")}catch{}
+      items.push({product_id:null,product_name:item.product_name,quantity:item.quantity,unit_price_cents:item.unit_price_cents,complements,notes:item.notes||""});
+    }
+  }
   const subtotal = items.reduce((sum,item) => sum + item.quantity * item.unit_price_cents, 0);
   const waiterFee = order.waiter_fee_cents && order.subtotal_cents ? Math.round(subtotal * order.waiter_fee_cents / order.subtotal_cents) : 0;
   const statements = [env.DB.prepare(`DELETE FROM order_items WHERE order_id=?`).bind(orderId)];
