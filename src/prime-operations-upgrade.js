@@ -23,7 +23,6 @@ function primeOpsRenderNavigationState(view,error){
   const message=error?`<p class="muted">${esc(error.message||'Não foi possível carregar esta tela.')}</p><button type="button" class="primary-btn" id="admin-navigation-retry">Tentar novamente</button>`:`<p class="muted">Carregando os dados desta tela…</p>`;
   const app=$('#app');if(!app)return;
   app.innerHTML=adminLayout(`<section class="panel" role="status" aria-live="polite" style="min-height:190px;display:grid;place-items:center;text-align:center"><div><strong>${error?'Não foi possível abrir esta tela':`Abrindo ${esc(title)}`}</strong>${message}</div></section>`,title);
-  bindAdmin();
   const retry=$('#admin-navigation-retry');
   if(retry)retry.onclick=()=>primeOpsNavigateAdmin(view);
 }
