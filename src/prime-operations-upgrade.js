@@ -68,6 +68,16 @@ async function primeOpsLoadAdminView(view){
   else if(view==='fiscal')await loadFiscalSetup();
   else throw new Error('Esta tela não está disponível no painel.');
 }
+// Antecipe as consultas das telas de gestão depois que a sessão estiver pronta.
+function primeOpsWarmAdminCache(){
+  const from=new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString().slice(0,10),to=new Date().toISOString().slice(0,10);
+  const paths=['/api/admin/products','/api/admin/tables','/api/admin/print-status','/api/admin/revenue?','/api/admin/order-management?branch=acailandia','/api/admin/audit','/api/admin/cash-register?branch=acailandia','/api/admin/employees',`/api/admin/employee-purchases?from=${from}&to=${to}`,'/api/admin/abandoned-carts','/api/admin/integrations/status','/api/admin/fiscal/setup','/api/admin/neighborhood-fees'];
+  setTimeout(()=>{Promise.all(paths.map(path=>api(path).catch(()=>null)))},250);
+}
+const primeOpsStartAdmin=startAdmin;
+startAdmin=async function(){await primeOpsStartAdmin();if(state.admin.logged)primeOpsWarmAdminCache()};
+const primeOpsAdminLogin=adminLogin;
+adminLogin=async function(event){await primeOpsAdminLogin(event);if(state.admin.logged)primeOpsWarmAdminCache()};
 if(!window.__primeAdminNavigationGuard){window.__primeAdminNavigationGuard=true;document.addEventListener('click',event=>{const button=event.target.closest('[data-admin-view]');if(!button||!state.admin.logged)return;event.preventDefault();event.stopImmediatePropagation();return primeOpsNavigateAdmin(button.dataset.adminView)},true)}
 
 // Caixa operacional completo: unidade e funcionário ficam registrados no turno,
