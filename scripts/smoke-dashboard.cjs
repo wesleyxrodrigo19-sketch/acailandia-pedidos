@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 
 global.location = { pathname:"/test" };
 global.__documentListeners=[];
-global.document = { querySelector:()=>null, querySelectorAll:()=>[], addEventListener:(type,handler,options)=>global.__documentListeners.push({type,handler,options}), body:{} };
+global.document = { querySelector:selector=>selector==="#toast"?{textContent:"",classList:{add(){},remove(){}}}:null, querySelectorAll:()=>[], addEventListener:(type,handler,options)=>global.__documentListeners.push({type,handler,options}), body:{} };
 global.window = global;
 global.localStorage = { getItem:()=>null, setItem:()=>{}, removeItem:()=>{} };
 global.fetch = () => new Promise(()=>{});
@@ -59,15 +59,18 @@ assert(promotionCatalog.includes('old-price'));
 assert(productEditor(null).includes('Ativar promoção'));
 assert(productEditor(null).includes('name="old_price"'));
 const adminTableMarkup=tablesBoardMarkup({table_count:2,available_count:1,occupied_count:1,tables:[{number:1,occupied:true,status:"novo",order_id:"123A",customer_name:"Cliente"},{number:2,occupied:false}]},{admin:true});
-assert(adminTableMarkup.includes('data-table-edit-order="123A"'));
+assert(adminTableMarkup.includes('data-table-open="1" data-order-id="123A"'));
 assert(adminTableMarkup.includes('data-table-close="123A"'));
 assert(adminTableMarkup.includes('data-table-open="2"'));
-assert(adminTableMarkup.includes("Abrir / editar"));
+assert(adminTableMarkup.includes("Abrir/Editar"));
 assert(adminTableMarkup.includes("Fechar mesa"));
-assert(posView().includes("Selecionar peso"));
+assert(source.includes("Pagar e fechar mesa"));
+assert(adminNavButtons().includes('data-admin-view="counter-orders"'));
+assert(counterOrdersView().includes("Self-service/Balcão"));
+assert(posView().includes("Açaí Self-service por peso"));
 console.log("Dashboard smoke test passed");`;
 
-source += "\nglobalThis.__appState=state;globalThis.__api=api;globalThis.__setAdminRenderer=fn=>renderAdmin=fn;";
+source += "\nglobalThis.__appState=state;globalThis.__api=api;globalThis.__setAdminRenderer=fn=>renderAdmin=fn;globalThis.__setOrderEditor=fn=>openOrderEditor=fn;globalThis.__setOrderDetails=fn=>openOrderDetails=fn;globalThis.__setOrderLoader=fn=>loadAdminOrders=fn;";
 eval(source);
 // Exercise the final capture-phase menu guard the same way a real menu click
 // reaches it. Every screen must load its own backing data before navigation.
@@ -77,7 +80,7 @@ global.fetch=async input=>{
   global.__fetchCount[path]=(global.__fetchCount[path]||0)+1;
   const payload=path.endsWith("/orders")?{orders:[]}:
     path.endsWith("/products")?{products:[],categories:[],settings:global.__appState.catalog.settings}:
-    path.endsWith("/tables")?{table_count:0,available_count:0,occupied_count:0,tables:[]}:
+    path.endsWith("/tables")?{table_count:1,available_count:1,occupied_count:0,tables:[{number:1,occupied:false}]}:
     path.endsWith("/revenue")?{from:"",to:"",total_cents:0,order_count:0,average_cents:0,by_payment:{},by_channel:{}}:
     path.endsWith("/print-status")?{}:
     path.endsWith("/order-management")?{orders:[],products:[],neighborhoods:[],summary:{},visits:{period:0,by_day:[]}}:
@@ -93,17 +96,31 @@ global.fetch=async input=>{
 };
 global.__appState.admin.logged=true;
 global.__setAdminRenderer(()=>{});
-const navigationGuard=global.__documentListeners.filter(item=>item.type==="click"&&item.options===true).at(-1);
+const navigationGuard=global.__documentListeners.filter(item=>item.type==="click"&&item.options===true&&String(item.handler).includes("[data-admin-view]")).at(-1);
 assert(navigationGuard,"capture-phase navigation guard was not registered");
 async function verifyNavigation(view){
-  const event={target:{closest:()=>({dataset:{adminView:view}})},preventDefault(){},stopImmediatePropagation(){}};
+  const event={target:{closest:selector=>selector==='[data-admin-view]'?{dataset:{adminView:view}}:null},preventDefault(){},stopPropagation(){},stopImmediatePropagation(){}};
   await navigationGuard.handler(event);
   assert.equal(global.__appState.admin.view,view,`menu did not open ${view}`);
 }
 (async()=>{
-  for(const view of ["orders","pos","availability","tables","revenue","products","settings","management","neighborhoods","audit","cash-register","employees","abandoned","integrations","complements","fiscal"]){
+  for(const view of ["orders","counter-orders","pos","availability","tables","revenue","products","settings","management","neighborhoods","audit","cash-register","employees","abandoned","integrations","complements","fiscal"]){
     await verifyNavigation(view);
   }
+  const tableHandler=global.__documentListeners.filter(item=>item.type==="click"&&item.options===true&&String(item.handler).includes("[data-table-open]")).at(-1);
+  assert(tableHandler,"table controls must register a capture-phase click handler");
+  const clickTarget=dataset=>({closest:selector=>selector==="[data-table-open]"?{dataset}:null});
+  await tableHandler.handler({target:clickTarget({tableOpen:"1"}),preventDefault(){},stopPropagation(){}});
+  assert.equal(global.__appState.admin.view,"pos","available table did not open the counter");
+  assert.equal(global.__appState.admin.selectedTableNumber,"1","available table was not selected");
+  let editedOrder="";global.__setOrderEditor(id=>{editedOrder=id});
+  global.__setOrderLoader(async()=>{global.__appState.admin.orders=[{id:"CAIXA-01",channel:"counter",status:"novo",payment_status:"aberto",table_number:1,items:[]}]});
+  await tableHandler.handler({target:clickTarget({tableOpen:"1",orderId:"CAIXA-01"}),preventDefault(){},stopPropagation(){}});
+  assert.equal(editedOrder,"CAIXA-01","occupied table did not open its order editor");
+  let detailsOrder="";global.__setOrderDetails(id=>{detailsOrder=id});
+  const closeTarget={closest:selector=>selector==="[data-table-close]"?{dataset:{tableClose:"CAIXA-01"}}:null};
+  await tableHandler.handler({target:closeTarget,preventDefault(){},stopPropagation(){}});
+  assert.equal(detailsOrder,"CAIXA-01","unpaid table close did not open its payment/details flow");
   assert.equal(global.__appState.admin.cashRegister.active,null,"cash screen did not unwrap the Açailandia branch response");
   const productFetches=global.__fetchCount["/api/admin/products"]||0;
   await verifyNavigation("products");
@@ -111,7 +128,7 @@ async function verifyNavigation(view){
   await global.__api("/api/admin/store-availability",{method:"PATCH",body:"{}"});
   await global.__api("/api/admin/products");
   assert.equal(global.__fetchCount["/api/admin/products"]||0,productFetches+1,"a successful update did not invalidate cached GET responses");
-  console.log("Admin navigation smoke test passed (16 screens)");
+  console.log("Admin navigation smoke test passed (17 screens)");
   process.exit(0);
 })().catch(error=>{console.error(error);process.exit(1)});
 assert(!fs.readFileSync(`${__dirname}/../src/worker-template.js`,"utf8").includes('Pagamento: ${paymentLabel(order.payment_method)} •'));
