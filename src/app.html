@@ -11,9 +11,22 @@
   <link rel="stylesheet" href="/app.css?v=20260925-2">
 </head>
 <body>
+  <script>
+    (function(w,d){
+      if(w.location.pathname!=="/"&&w.location.pathname!=="/pedido")return;
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;
+      s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+      (w,d,'script','https://connect.facebook.net/en_US/fbevents.js');
+      w.fbq('init','1575719814357253');
+      w.fbq('track','PageView');
+    })(window,document);
+  </script>
   <div id="app"><div class="boot"><div class="boot-mark">✦</div><p>Carregando cardápio...</p></div></div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="/app.js?v=20260925-2" defer></script>
 </body>
 </html>
-
