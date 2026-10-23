@@ -1,4 +1,3 @@
-Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 /* Operação do proprietário: entrega completa, exclusão protegida, auditoria e vias de impressão. */
 state.admin.audit=[];
 

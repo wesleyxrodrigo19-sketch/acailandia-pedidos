@@ -1,4 +1,3 @@
-Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 /* Fluxo de pesagem do balcão: leitura automática ou peso manual auditado. */
 const selfServiceBasePosView=posView;
 posView=function(){return selfServiceBasePosView().replace("<h2>Self-service</h2>","<h2>Açaí Self-service</h2>").replace("Coloque o açaí na Prix 3 e use a leitura automática.","Leia o peso na Prix 3 ou informe o peso líquido manualmente.").replace("Ler balança e adicionar","Selecionar peso")};

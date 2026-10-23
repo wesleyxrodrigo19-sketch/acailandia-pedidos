@@ -1,4 +1,3 @@
-Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 /* Mesas no padrão operacional: abrir comanda, editar e liberar após o pagamento. */
 if(!document.getElementById('table-operations-style')){const style=document.createElement('style');style.id='table-operations-style';style.textContent='.table-card-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.table-card-actions button{flex:1;min-width:max-content}';document.head.appendChild(style)}
 const tableOperationsBaseBoard=tablesBoardMarkup;

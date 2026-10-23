@@ -1,4 +1,3 @@
-Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 import { mkdir, readFile, writeFile, rm, readdir, cp } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
