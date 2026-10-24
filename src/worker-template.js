@@ -198,6 +198,7 @@ async function seed(db) {
   await db.batch(statements);
   await db.batch(ACAILANDIA_PRODUCT_SEED.map(p => db.prepare(`UPDATE products SET image_url=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(p[6],p[0])));
   await db.batch(ACAILANDIA_COMPLEMENT_SEED.map(([id,names]) => db.prepare(`UPDATE products SET complements_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(JSON.stringify(names.map(name=>({name,price_cents:0,max_quantity:1}))),id)));
+  await db.batch([[20,ACAILANDIA_RV_FLAVORS.slice(0,8)],[21,ACAILANDIA_RV_FLAVORS.slice(0,8)],[22,ACAILANDIA_RV_FLAVORS.slice(8)],[23,ACAILANDIA_RV_FLAVORS.slice(8)]].map(([id,flavors])=>db.prepare(`UPDATE products SET enable_flavors=1,flavors_json=? WHERE id=? AND flavors_json='[]' AND enable_flavors=0`).bind(JSON.stringify(flavors),id)));
 }
 
 async function hmac(value, secret) {
@@ -250,16 +251,21 @@ function cleanComplements(value) {
   })).filter(item => item.name);
 }
 
-const ACAI_COMPLEMENT_GROUPS = new Set(["base","cream","topping","fruit","extra"]);
+const ACAI_COMPLEMENT_GROUPS = new Set(["base","cream","topping","fruit","extra","flavor"]);
 let primeOperationsSchemaReady = false;
 let operationalColumnsReady = false;
+let cashierAccessSchemaReady = false;
+async function ensureCashierAccessTable(db){if(cashierAccessSchemaReady)return;await db.prepare(`CREATE TABLE IF NOT EXISTS cashier_access (id INTEGER PRIMARY KEY CHECK(id=1),pin_hash TEXT NOT NULL DEFAULT '',updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();await db.prepare(`INSERT OR IGNORE INTO cashier_access (id) VALUES (1)`).run();cashierAccessSchemaReady=true}
+const ACAILANDIA_RV_FLAVORS=["Sensação","Surpresinha de Uva","Brownie Trufado","Cookies Oreo","Ouro Branco","Ninhotella","Kit Kat Especial","Ovomaltine Black","Mousse de Maracujá","Mousse de Maracujá com Calda de Nutella","Mousse de Ninho","Mousse de Ninho com Calda de Nutella","Mousse de Morango","Mousse de Morango com Calda de Nutella","Mousse de Amendoim","Mousse de Amendoim com Calda de Nutella","Leite Condensado com Farinha Láctea","Leite Condensado com Paçoca","Calda de Nutella com Paçoca","Calda de Nutella com Leite em Pó","Calda de Nutella com Ovomaltine","Calda de Nutella com Morango em Calda","Calda de Ninho com Leite em Pó","Calda de Ninho com Ovomaltine","Calda de Ninho com Morango em Calda"];
 function cleanFlavors(value) { const source=Array.isArray(value)?value:parseJson(value,[]),seen=new Set(),result=[]; for(const raw of source){const name=clean(raw,80),key=name.toLocaleLowerCase("pt-BR");if(name&&!seen.has(key)){seen.add(key);result.push(name)}if(result.length>=40)break}return result; }
 async function ensurePrimeOperationsSchema(db) {
   if(primeOperationsSchemaReady)return;
   const columns=(await db.prepare(`PRAGMA table_info(products)`).all()).results||[];
   const add=async(name,definition)=>{if(!columns.some(column=>column.name===name))await db.prepare(`ALTER TABLE products ADD COLUMN ${definition}`).run();};
-  await add("enable_acai_complements","enable_acai_complements INTEGER NOT NULL DEFAULT 0"); await add("enable_acai_extras","enable_acai_extras INTEGER NOT NULL DEFAULT 0"); await add("enable_flavors","enable_flavors INTEGER NOT NULL DEFAULT 0"); await add("flavors_json","flavors_json TEXT NOT NULL DEFAULT '[]'");
+  await add("enable_acai_complements","enable_acai_complements INTEGER NOT NULL DEFAULT 0"); await add("enable_acai_extras","enable_acai_extras INTEGER NOT NULL DEFAULT 0"); await add("enable_flavors","enable_flavors INTEGER NOT NULL DEFAULT 0"); await add("flavors_json","flavors_json TEXT NOT NULL DEFAULT '[]'"); await add("selected_complement_ids_json","selected_complement_ids_json TEXT NOT NULL DEFAULT '[]'");
   await db.batch([db.prepare(`CREATE TABLE IF NOT EXISTS acai_complements (id INTEGER PRIMARY KEY AUTOINCREMENT,group_id TEXT NOT NULL,name TEXT NOT NULL,price_cents INTEGER NOT NULL DEFAULT 0,sort_order INTEGER NOT NULL DEFAULT 0,is_active INTEGER NOT NULL DEFAULT 1,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`),db.prepare(`CREATE TABLE IF NOT EXISTS fiscal_config (id INTEGER PRIMARY KEY CHECK(id=1),provider TEXT NOT NULL DEFAULT 'focus',environment TEXT NOT NULL DEFAULT 'homologation',enabled INTEGER NOT NULL DEFAULT 0,token_homologation TEXT NOT NULL DEFAULT '',token_production TEXT NOT NULL DEFAULT '',cnpj TEXT NOT NULL DEFAULT '',legal_name TEXT NOT NULL DEFAULT '',trade_name TEXT NOT NULL DEFAULT 'Açailandia PE',state_registration TEXT NOT NULL DEFAULT '',tax_regime TEXT NOT NULL DEFAULT '1',series TEXT NOT NULL DEFAULT '1',csc_id TEXT NOT NULL DEFAULT '',csc_token TEXT NOT NULL DEFAULT '',municipality_code TEXT NOT NULL DEFAULT '',default_cfop TEXT NOT NULL DEFAULT '5102',default_csosn TEXT NOT NULL DEFAULT '102',default_pis_cst TEXT NOT NULL DEFAULT '49',default_cofins_cst TEXT NOT NULL DEFAULT '49',updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`),db.prepare(`INSERT OR IGNORE INTO fiscal_config (id) VALUES (1)`),db.prepare(`CREATE TABLE IF NOT EXISTS product_fiscal (product_id INTEGER PRIMARY KEY,ncm TEXT NOT NULL DEFAULT '',cest TEXT NOT NULL DEFAULT '',cfop TEXT NOT NULL DEFAULT '',csosn TEXT NOT NULL DEFAULT '',pis_cst TEXT NOT NULL DEFAULT '',cofins_cst TEXT NOT NULL DEFAULT '',unit TEXT NOT NULL DEFAULT 'UN',origin TEXT NOT NULL DEFAULT '0',updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`) ]);
+  const complements=(await db.prepare(`SELECT COUNT(*) AS total FROM acai_complements`).first())?.total||0;
+  if(!complements){await db.batch(ACAILANDIA_RV_FLAVORS.map((name,index)=>db.prepare(`INSERT INTO acai_complements (group_id,name,price_cents,sort_order,is_active) VALUES ('flavor',?,0,?,1)`).bind(name,index)))}
   primeOperationsSchemaReady=true;
 }
 async function ensureOperationalColumns(db) {
@@ -304,12 +310,17 @@ async function normalizeOrderItems(db, requestedItems) {
   })).filter(item => item.product_id);
   const ids = [...new Set(requested.map(item => item.product_id))];
   if (!ids.length) throw new Error("Pedido sem produtos válidos.");
-  const found = await db.prepare(`SELECT id,name,price_cents,is_available,complements_json FROM products WHERE id IN (${ids.map(() => "?").join(",")})`).bind(...ids).all();
+  const found = await db.prepare(`SELECT id,name,price_cents,is_available,complements_json,enable_flavors,flavors_json,selected_complement_ids_json FROM products WHERE id IN (${ids.map(() => "?").join(",")})`).bind(...ids).all();
   const products = new Map(found.results.map(product => [int(product.id), product]));
   if (products.size !== ids.length || [...products.values()].some(product => !product.is_available)) throw new Error("Um produto do pedido não está disponível.");
+  const centralComplements=(await db.prepare(`SELECT id,name,price_cents,group_id,is_active FROM acai_complements WHERE is_active=1`).all()).results||[];
   return requested.map(item => {
     const product = products.get(item.product_id);
     const allowed = new Map(cleanComplements(product.complements_json).map(option => [option.name.toLocaleLowerCase("pt-BR"), option]));
+    const selectedCatalogIds=parseJson(product.selected_complement_ids_json,[]).map(Number).filter(Number.isFinite);
+    for(const option of centralComplements){if(selectedCatalogIds.length&&!selectedCatalogIds.includes(Number(option.id)))continue;if(selectedCatalogIds.length||allowed.has(String(option.name).toLocaleLowerCase("pt-BR")))allowed.set(String(option.name).toLocaleLowerCase("pt-BR"),{name:option.name,price_cents:option.group_id==="extra"?int(option.price_cents):0,max_quantity:1})}
+    const flavors=cleanFlavors(product.flavors_json),selectedFlavorIds=new Set(centralComplements.filter(option=>String(option.group_id).startsWith("flavor")&&(!selectedCatalogIds.length||selectedCatalogIds.includes(Number(option.id)))).map(option=>String(option.name).toLocaleLowerCase("pt-BR")));
+    if(bool(product.enable_flavors))for(const flavor of flavors){const key=flavor.toLocaleLowerCase("pt-BR");if(!selectedCatalogIds.length||selectedFlavorIds.has(key))allowed.set(key,{name:flavor,price_cents:0,max_quantity:1})}
     const selected = [];
     for (const raw of item.complements.slice(0, 20)) {
       const option = allowed.get(clean(raw?.name, 80).toLocaleLowerCase("pt-BR"));
@@ -317,7 +328,8 @@ async function normalizeOrderItems(db, requestedItems) {
       const quantity = Math.max(1, Math.min(option.max_quantity, int(raw?.quantity, 1)));
       selected.push({ name:option.name, price_cents:option.price_cents, quantity });
     }
-    const productId=int(product.id),requiresFlavor=false;
+    const productId=int(product.id),requiresFlavor=bool(product.enable_flavors),selectedFlavor=selected.find(option=>flavors.some(name=>name.toLocaleLowerCase("pt-BR")===option.name.toLocaleLowerCase("pt-BR")));
+    if(requiresFlavor&&(!flavors.length||!selectedFlavor))throw new Error(`Escolha um sabor válido para ${product.name}.`);
     const additions = selected.reduce((sum, option) => sum + option.price_cents * option.quantity, 0);
     // Garrafinhas trufadas e milk shakes têm sabor obrigatório, mas o sabor já
     // está incluído no preço do tamanho. Nunca some os dois valores.
@@ -361,7 +373,7 @@ async function getCatalog(env, includeAdminSettings = false, branchId = "acailan
   return {
     settings: { ...publicSettings, store_name:branch?.name||"Açailandia PE", store_address:branch?.address||publicSettings.store_address, branch_id:branchId, branch_name:branch?.name||BRANCHES[branchId].name, ...storeAvailability(settingsRow), ...(includeAdminSettings?{reception_printer,kitchen_printer,pedeai_enabled:Boolean(pedeai_enabled),pedeai_environment:pedeai_environment||"sandbox",pedeai_store_id:pedeai_store_id||"",pedeai_client_id:pedeai_client_id||"",pedeai_api_base_url:pedeai_api_base_url||"",pedeai_api_token_configured:Boolean(pedeai_api_token),pedeai_webhook_secret_configured:Boolean(pedeai_webhook_secret),pedeai_last_sync_at:pedeai_last_sync_at||"",pedeai_last_error:pedeai_last_error||""}:{}), delivery_neighborhood_fees:neighborhoodFeeRows.results, delivery_rate_tiers:rateRows.results, waiter_fee_enabled:Boolean(settingsRow.waiter_fee_enabled), auto_print_enabled:Boolean(settingsRow.auto_print_enabled), delivery_surcharge_enabled:Boolean(settingsRow.delivery_surcharge_enabled), print_bridge_configured:Boolean(print_bridge_key) },
     categories,
-    products: sortedProducts.map(p => ({ ...p, image_url:hostedImageUrl(p.image_url), complements:cleanComplements(p.complements_json), flavors:cleanFlavors(p.flavors_json), enable_acai_complements:Boolean(p.enable_acai_complements), enable_acai_extras:Boolean(p.enable_acai_extras), enable_flavors:Boolean(p.enable_flavors), is_featured:automaticFeatured.has(int(p.id)), is_promo:Boolean(p.is_promo), catalog_available:Boolean(p.is_available), branch_available:Boolean(p.branch_available), is_available:Boolean(p.is_available)&&Boolean(p.branch_available) })),
+    products: sortedProducts.map(p => ({ ...p, image_url:hostedImageUrl(p.image_url), complements:cleanComplements(p.complements_json), flavors:cleanFlavors(p.flavors_json), selected_complement_ids:parseJson(p.selected_complement_ids_json,[]).map(Number).filter(Number.isFinite), enable_acai_complements:Boolean(p.enable_acai_complements), enable_acai_extras:Boolean(p.enable_acai_extras), enable_flavors:Boolean(p.enable_flavors), is_featured:automaticFeatured.has(int(p.id)), is_promo:Boolean(p.is_promo), catalog_available:Boolean(p.is_available), branch_available:Boolean(p.branch_available), is_available:Boolean(p.is_available)&&Boolean(p.branch_available) })),
     acai_complements: includeAdminSettings ? (await env.DB.prepare(`SELECT * FROM acai_complements ORDER BY group_id,sort_order,id`).all()).results : undefined
   };
 }
@@ -692,7 +704,8 @@ async function productInput(request, env, current = null) {
     enable_acai_complements: body.enable_acai_complements == null ? (current?.enable_acai_complements ?? 0) : (bool(body.enable_acai_complements)?1:0),
     enable_acai_extras: body.enable_acai_extras == null ? (current?.enable_acai_extras ?? 0) : (bool(body.enable_acai_extras)?1:0),
     enable_flavors: body.enable_flavors == null ? (current?.enable_flavors ?? 0) : (bool(body.enable_flavors)?1:0),
-    flavors_json: body.flavors_json == null ? (current?.flavors_json || "[]") : JSON.stringify(cleanFlavors(body.flavors_json))
+    flavors_json: body.flavors_json == null ? (current?.flavors_json || "[]") : JSON.stringify(cleanFlavors(body.flavors_json)),
+    selected_complement_ids_json: body.selected_complement_ids_json == null ? (current?.selected_complement_ids_json || "[]") : JSON.stringify([...new Set(parseJson(body.selected_complement_ids_json,[]).map(value=>int(value)).filter(value=>value>0))].slice(0,100))
   };
 }
 
@@ -907,9 +920,10 @@ async function api(request, env, url) {
   }
   if (url.pathname === "/api/admin/logout" && request.method === "POST") return json({ ok:true }, 200, { "set-cookie": "loja_admin=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0" });
   if (url.pathname === "/api/cashier/login" && request.method === "POST") {
-    const body=await readJson(request),branchId=validBranch(body?.branch_id),expected=env.CASHIER_SG_PIN||env.CASHIER_DOM_PIN;
-    if(!expected||!env.SESSION_SECRET)return json({error:"O acesso do caixa ainda não foi configurado."},503);
-    if(clean(body?.pin,32)!==String(expected))return json({error:"PIN incorreto."},401);
+    const body=await readJson(request),branchId=validBranch(body?.branch_id),expected=env.CASHIER_SG_PIN||env.CASHIER_DOM_PIN,pin=clean(body?.pin,32);
+    if(!env.SESSION_SECRET)return json({error:"O acesso do caixa ainda não foi configurado."},503);
+    await ensureCashierAccessTable(env.DB);const access=await env.DB.prepare(`SELECT pin_hash FROM cashier_access WHERE id=1`).first();
+    if(access?.pin_hash?await sha256(pin)!==access.pin_hash:(!expected||pin!==String(expected)))return json({error:"PIN incorreto."},401);
     const expires=String(Date.now()+12*60*60*1000),token=`${branchId}.${expires}.${await hmac(`${branchId}.${expires}.cashier`,env.SESSION_SECRET)}`,secure=url.protocol==="https:"?"; Secure":"";
     return json({ok:true,branch_id:branchId},200,{"set-cookie":`loja_cashier=${encodeURIComponent(token)}; HttpOnly${secure}; SameSite=Strict; Path=/; Max-Age=43200`});
   }
@@ -1067,6 +1081,8 @@ async function api(request, env, url) {
     return json({ ok:true });
   }
   if (url.pathname.startsWith("/api/admin/") && !(await isAdmin(request, env))) return json({ error: "Acesso não autorizado." }, 401);
+  if(url.pathname==="/api/admin/cashier-access"&&request.method==="GET"){await ensureCashierAccessTable(env.DB);const access=await env.DB.prepare(`SELECT pin_hash,updated_at FROM cashier_access WHERE id=1`).first();return json({configured:Boolean(access?.pin_hash),updated_at:access?.updated_at||""})}
+  if(url.pathname==="/api/admin/cashier-access"&&request.method==="PATCH"){const body=await readJson(request),pin=clean(body?.pin,12);if(!/^\d{4,12}$/.test(pin))return json({error:"Use um PIN numérico de 4 a 12 dígitos."},400);await ensureCashierAccessTable(env.DB);await env.DB.batch([env.DB.prepare(`UPDATE cashier_access SET pin_hash=?,updated_at=CURRENT_TIMESTAMP WHERE id=1`).bind(await sha256(pin)),auditStatement(env.DB,"cashier_pin_updated","cashier_access","1","PIN do caixa atualizado pelo proprietário")]);return json({ok:true})}
   if (url.pathname === "/api/admin/employees" && request.method === "GET") return json({employees:(await env.DB.prepare(`SELECT * FROM employees ORDER BY is_active DESC,name`).all()).results||[]});
   if (url.pathname === "/api/admin/employees" && request.method === "POST") {const body=await readJson(request),name=clean(body?.name,100);if(!name)return json({error:"Informe o nome do funcionário."},400);const result=await env.DB.prepare(`INSERT INTO employees (name) VALUES (?)`).bind(name).run();return json({ok:true,id:result.meta.last_row_id})}
   const employeeRoute=url.pathname.match(/^\/api\/admin\/employees\/(\d+)$/);
@@ -1261,7 +1277,7 @@ async function api(request, env, url) {
       if (!input.name || !input.category || input.price_cents <= 0) return json({ error:"Informe nome, categoria e preço válido." },400);
       if (input.is_promo && (!input.old_price_cents || input.old_price_cents <= input.price_cents)) return json({ error:"O valor original deve ser maior que o valor da promoção." },400);
       const next = await env.DB.prepare(`SELECT COALESCE(MAX(sort_order),0)+1 AS value FROM products`).first();
-      const result = await env.DB.prepare(`INSERT INTO products (category,name,description,price_cents,old_price_cents,image_url,is_featured,is_promo,is_available,sort_order,complements_json,enable_acai_complements,enable_acai_extras,enable_flavors,flavors_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(input.category,input.name,input.description,input.price_cents,input.old_price_cents,input.image_url,input.is_featured,input.is_promo,input.is_available,next.value,input.complements_json,input.enable_acai_complements,input.enable_acai_extras,input.enable_flavors,input.flavors_json).run();
+      const result = await env.DB.prepare(`INSERT INTO products (category,name,description,price_cents,old_price_cents,image_url,is_featured,is_promo,is_available,sort_order,complements_json,enable_acai_complements,enable_acai_extras,enable_flavors,flavors_json,selected_complement_ids_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(input.category,input.name,input.description,input.price_cents,input.old_price_cents,input.image_url,input.is_featured,input.is_promo,input.is_available,next.value,input.complements_json,input.enable_acai_complements,input.enable_acai_extras,input.enable_flavors,input.flavors_json,input.selected_complement_ids_json).run();
       await auditStatement(env.DB,"product_created","product",String(result.meta.last_row_id),`Produto ${input.name} cadastrado`,{ category:input.category,price_cents:input.price_cents }).run();
       await clearCatalogCache();
       return json({ ok:true,id:result.meta.last_row_id },201);
@@ -1275,7 +1291,7 @@ async function api(request, env, url) {
       const input = await productInput(request,env,current);
       if (!input.name || !input.category || input.price_cents <= 0) return json({ error:"Informe nome, categoria e preço válido." },400);
       if (input.is_promo && (!input.old_price_cents || input.old_price_cents <= input.price_cents)) return json({ error:"O valor original deve ser maior que o valor da promoção." },400);
-      await env.DB.prepare(`UPDATE products SET category=?,name=?,description=?,price_cents=?,old_price_cents=?,image_url=?,is_featured=?,is_promo=?,is_available=?,complements_json=?,enable_acai_complements=?,enable_acai_extras=?,enable_flavors=?,flavors_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(input.category,input.name,input.description,input.price_cents,input.old_price_cents,input.image_url,input.is_featured,input.is_promo,input.is_available,input.complements_json,input.enable_acai_complements,input.enable_acai_extras,input.enable_flavors,input.flavors_json,product[1]).run();
+      await env.DB.prepare(`UPDATE products SET category=?,name=?,description=?,price_cents=?,old_price_cents=?,image_url=?,is_featured=?,is_promo=?,is_available=?,complements_json=?,enable_acai_complements=?,enable_acai_extras=?,enable_flavors=?,flavors_json=?,selected_complement_ids_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(input.category,input.name,input.description,input.price_cents,input.old_price_cents,input.image_url,input.is_featured,input.is_promo,input.is_available,input.complements_json,input.enable_acai_complements,input.enable_acai_extras,input.enable_flavors,input.flavors_json,input.selected_complement_ids_json,product[1]).run();
       await auditStatement(env.DB,"product_updated","product",product[1],`Produto ${input.name} atualizado`,{ category:input.category,price_cents:input.price_cents,is_available:Boolean(input.is_available) }).run();
       await clearCatalogCache();
     } catch (error) { return json({ error:error.message || "Não foi possível editar o produto." },400); }
