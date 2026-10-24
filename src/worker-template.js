@@ -61,7 +61,7 @@ const ACAILANDIA_COMPLEMENT_SEED=[
 const DEFAULT_DELIVERY_FEES=[];
 const ORDER_STATUSES = new Set(["novo","confirmado","preparando","pronto","saiu_entrega","concluido","cancelado"]);
 const PAYMENT_METHODS = new Set(["dinheiro","pix","credito","debito"]);
-const DELETE_ORDER_PASSWORD_HASH = "8a9bcf1e51e812d0af8465a8dbcc9f741064bf0af3b3d08e6b0246437c19f7fb";
+const DELETE_ORDER_PASSWORD_HASH = "d156b90b66685b7fec57f8fd45e466052364e3a3fce31d2aa724f4eceaef71b4";
 
 function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...headers } });
