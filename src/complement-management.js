@@ -1,5 +1,5 @@
 /* Cadastro central dos componentes do Monte seu Açaí. */
-const COMPLEMENT_GROUP_LABELS={cream:"Açaí ou creme",topping:"Complementos",fruit:"Frutas",syrup:"Coberturas",spoon:"Colher",extra:"Extras"};
+const COMPLEMENT_GROUP_LABELS={flavor:"Sabores da RV",cream:"Açaí ou creme",topping:"Complementos",fruit:"Frutas",syrup:"Coberturas",spoon:"Colher",extra:"Extras",base:"Montagens"};
 const complementManagementNav=adminNavButtons;
 adminNavButtons=function(){return complementManagementNav().replace(/(<button[^>]+data-admin-view="products"[\s\S]*?<\/button>)/,`$1<button class="${state.admin.view==="complements"?"active":""}" data-admin-view="complements"><span class="admin-nav-icon">✦</span><span class="nav-full">Complementos</span><span class="nav-short">Complementos</span></button>`)};
 function complementMoneyInput(value){return Math.max(0,Math.round(Number(String(value||"").replace(",","."))*100)||0)}
