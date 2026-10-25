@@ -11,3 +11,22 @@
 .cashier-payment-dialog{display:grid;gap:13px}.cashier-payment-dialog>p{margin:0}.cashier-payment-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(96px,.7fr) 36px;gap:8px;align-items:center;margin-bottom:8px}.cashier-payment-row select,.cashier-payment-row input{width:100%;min-height:42px;border:1px solid var(--line);border-radius:9px;padding:8px;background:#fff}.cashier-payment-row .icon-btn{width:36px;height:36px}
 .order-item-details-toggle{width:100%;margin:9px 0 3px;padding:8px 10px;border:1px solid #d8c5e8;border-radius:9px;background:#f8f2fc;color:#4c1765;font-size:12px;font-weight:850;text-align:left;cursor:pointer}.order-item-details-toggle:hover{background:#efe2f8}.order-item-details{display:grid;gap:9px;margin:16px 0;padding:14px;border:1px solid #dfcdec;border-radius:12px;background:#fbf7fd}.order-item-details h3{margin:0;color:#42115b;font-size:14px}.order-item-details>div{display:grid;gap:4px;padding-top:8px;border-top:1px solid #eadff0}.order-item-details>div:first-of-type{padding-top:0;border-top:0}.order-item-details strong{font-size:13px;color:#202331}.order-item-details span{font-size:13px;line-height:1.35;color:#5d4968}@media(max-width:720px){.order-item-details-toggle{font-size:11px;padding:7px 9px}.order-item-details{margin:12px 0;padding:12px}}
 @media(max-width:850px){.admin-side{display:none}.admin-shell.sidebar-open>.admin-side{display:flex!important;width:100vw!important;z-index:100!important}.admin-shell.sidebar-open>.admin-main,.admin-shell.sidebar-open>.admin-mobile-nav{display:none!important}.admin-shell.sidebar-open:after{display:none!important}}
+
+Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
+.counter-orders-view{display:grid;gap:18px}
+.counter-orders-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.counter-orders-header h2{margin:5px 0;font-size:clamp(24px,3vw,34px);letter-spacing:-.03em}
+.counter-orders-header p{margin:0;max-width:650px}
+.counter-orders-pending{display:grid;gap:4px;min-width:190px;padding:15px 17px;border:1px solid #e5d8fb;border-radius:14px;background:#faf7ff;text-align:right}
+.counter-orders-pending span,.counter-orders-pending small{color:#695b7b;font-size:12px}
+.counter-orders-pending strong{color:#6514b5;font-size:22px}
+.counter-orders-tabs{display:flex;flex-wrap:wrap;gap:7px;padding:4px;border-bottom:1px solid #e7e9ee}
+.counter-orders-tabs button{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;color:#626b78;font-weight:850;cursor:pointer;box-shadow:none}
+.counter-orders-tabs button:hover{background:#f7f0fc;color:#53108c}
+.counter-orders-tabs button span{display:grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#eef0f4;color:#5e6672;font-size:11px}
+.counter-orders-tabs button.active{border-bottom-color:#6d1bb1;color:#53108c;background:transparent}
+.counter-orders-tabs button.active span{background:#e9d8fb;color:#5d149d}
+.counter-orders-grid{display:grid;grid-template-columns:repeat(3,minmax(270px,1fr));gap:12px;align-items:start}
+.counter-orders-grid .order-card{margin:0;min-width:0}
+.counter-orders-empty{grid-column:1/-1}
+@media(max-width:720px){.counter-orders-header{flex-direction:column}.counter-orders-pending{width:100%;text-align:left}.counter-orders-grid{grid-template-columns:1fr}.counter-orders-tabs{overflow-x:auto;flex-wrap:nowrap}.counter-orders-tabs button{white-space:nowrap}}
