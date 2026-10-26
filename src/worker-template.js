@@ -18,7 +18,7 @@ const ACAILANDIA_PRODUCT_SEED=[
   [5,"Copos promocionais","Copo 4","Açaí intercalado de creme de ninho, leite em pó e morango. Escolha o tamanho no pedido.",1890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",1,1,4],
   [6,"Monte seu combo pote","Combo açaí 500 ml","Escolha 1 creme, até 3 complementos grátis e até 10 extras pagos. Itens enviados separadamente para preservar a textura.",3990,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1853820/thumb_ea3096e4fc47c3c4-bd03-4369-8a1f-8be92962a6f4.jpeg",1,0,5],
   [7,"Monte seu combo pote","Combo açaí 1000 ml","Escolha 1 creme, até 3 complementos grátis e até 10 extras pagos. Itens enviados separadamente para preservar a textura.",5490,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1862255/thumb_559f13d6fc47c3c4-bd03-4369-8a1f-8be92962a6f4.jpeg",1,0,6],
-  [8,"Monte seu açaí no copo","Monte seu copo","Escolha o tamanho, 1 creme e até 5 complementos grátis.",2590,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834905/thumb_c51c7f19f060d541-7023-4bb8-bd70-51ec04205da2.jpeg",1,0,7],
+  [8,"Monte seu açaí no copo","Monte seu copo","Escolha o tamanho, 1 creme e até 5 complementos grátis.",2590,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1587239/thumb_05da6f30IMG_2688.jpeg",1,0,7],
   [9,"Potes individuais","Pote de açaí","A partir de R$ 29,90. Escolha seu tamanho e complementos.",2990,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834985/thumb_5d21a0ebIMG_2937.png",0,0,8],
   [10,"Potes individuais","Pote de creme","A partir de R$ 28,90. Escolha seu tamanho e sabor.",2890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834988/thumb_5169203dIMG_1469.jpeg",0,0,9],
   [11,"Potes individuais","Pote de sorvete","A partir de R$ 23,00. Escolha seu tamanho e sabor.",2300,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",0,0,10],
@@ -400,6 +400,28 @@ async function ensurePrimeOperationsSchema(db) {
       changes.push(db.prepare("UPDATE products SET selected_complement_ids_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(JSON.stringify(selected),Number(id)));
     }
     changes.push(db.prepare("INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-product-order-parity-2026-10-v5')"));
+    await db.batch(changes);
+  }
+  const rvCatalogMigration=await db.prepare("SELECT name FROM acai_complement_migrations WHERE name='rv-catalog-detail-parity-2026-10-v6'").first();
+  if(!rvCatalogMigration){
+    const exactToppings=["Morango","Kiwi","Banana","Uva","Manga","Uva passas","Cereja","Morango em calda","Abacaxi ao vinho","Granola","Leite em pó","Paçoca","Amendoim granulado","Farofa de amendoim","Farinha Lacta","Disquete","Granulado","Gotas de chocolate","Leite condensado","Pasta de amendoim","Chocolate branco","Calda de ninho","Calda quente","Ovomaltine","Nutela","Jujuba","Choco Power","Choco Power Mini","Mel","Xarope","Cobertura de morango","Cobertura de chocolate","Calda de Oreo","Brownie"];
+    for(let index=0;index<exactToppings.length;index++){
+      const name=exactToppings[index],active=["Uva","Manga","Brownie"].includes(name)?0:1;
+      await db.prepare("INSERT OR IGNORE INTO acai_complements (group_id,name,price_cents,sort_order,is_active) VALUES ('rv_topping',?,0,?,?)").bind(name,2000+index*10,active).run();
+      await db.prepare("UPDATE acai_complements SET price_cents=0,sort_order=?,is_active=?,updated_at=CURRENT_TIMESTAMP WHERE group_id='rv_topping' AND name=?").bind(2000+index*10,active,name).run();
+    }
+    await db.prepare("UPDATE acai_complements SET is_active=0,updated_at=CURRENT_TIMESTAMP WHERE group_id='rv_topping' AND name IN ('Canudinho wafer','Nutella','Farinha láctea')").run();
+    const fullCreams=[...ACAILANDIA_RV_CREAMS,"Creme de Ninho","Creme de Nutela","Creme de Oreo","Creme de Maracuja","Creme de Amendoin","Creme de Cupuaçu"];
+    const catalog=(await db.prepare("SELECT id,name,group_id FROM acai_complements WHERE is_active=1").all()).results||[];
+    const changes=[];
+    for(const id of [6,7,8,9]){
+      const groupsForProduct=id===6||id===7?["cream","rv_topping","extra"]:id===8?["cream","rv_topping"]:["cream"];
+      const allowedCreams=id===6||id===7?ACAILANDIA_RV_CREAMS:fullCreams;
+      const selected=catalog.filter(row=>groupsForProduct.includes(row.group_id)&&(row.group_id!=="cream"||allowedCreams.includes(row.name))).map(row=>Number(row.id));
+      changes.push(db.prepare("UPDATE products SET selected_complement_ids_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(JSON.stringify(selected),id));
+    }
+    changes.push(db.prepare("UPDATE products SET image_url='https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1587239/thumb_05da6f30IMG_2688.jpeg',updated_at=CURRENT_TIMESTAMP WHERE id=8"));
+    changes.push(db.prepare("INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-catalog-detail-parity-2026-10-v6')"));
     await db.batch(changes);
   }
   primeOperationsSchemaReady=true;
