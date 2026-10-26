@@ -307,6 +307,22 @@ async function ensurePrimeOperationsSchema(db) {
     changes.push(db.prepare(`INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-product-parity-2026-10-v2')`));
     await db.batch(changes);
   }
+  const parityRepair=await db.prepare("SELECT name FROM acai_complement_migrations WHERE name='rv-product-parity-2026-10-v3'").first();
+  if(!parityRepair){
+    const catalog=(await db.prepare("SELECT id,name,group_id FROM acai_complements WHERE is_active=1").all()).results||[];
+    const selectGroups={6:["cream","rv_topping","extra"],7:["cream","rv_topping","extra"],8:["cream","rv_topping"],9:["cream"],10:["cream","extra"],11:["flavor","extra"],12:["flavor"],13:["flavor"],14:["flavor"],15:["flavor"]};
+    const repair=[];
+    for(const [id,groupsForProduct] of Object.entries(selectGroups)){
+      const selected=catalog.filter(row=>groupsForProduct.includes(row.group_id)&&!(Number(id)===11&&row.group_id==="flavor"&&!ACAILANDIA_RV_ICECREAM_FLAVORS.includes(row.name))&&!(Number(id)>=12&&Number(id)<=15&&!ACAILANDIA_RV_MILKSHAKE_FLAVORS.includes(row.name))).map(row=>Number(row.id));
+      repair.push(db.prepare("UPDATE products SET selected_complement_ids_json=?,enable_acai_complements=1,enable_acai_extras=CASE WHEN id IN (6,7,10,11) THEN 1 ELSE enable_acai_extras END,enable_flavors=0,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(JSON.stringify(selected),Number(id)));
+    }
+    const sizes=JSON.stringify([{name:"300 ml",price_cents:0,max_quantity:1,group_id:"size"},{name:"400 ml",price_cents:500,max_quantity:1,group_id:"size"}]);
+    repair.push(db.prepare("UPDATE products SET enable_acai_complements=1,complements_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=1").bind(sizes));
+    repair.push(db.prepare("UPDATE products SET enable_acai_complements=1,complements_json=?,updated_at=CURRENT_TIMESTAMP WHERE id IN (3,4,5)").bind(sizes));
+    repair.push(db.prepare("UPDATE products SET is_available=0,updated_at=CURRENT_TIMESTAMP WHERE id=2"));
+    repair.push(db.prepare("INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-product-parity-2026-10-v3')"));
+    await db.batch(repair);
+  }
   primeOperationsSchemaReady=true;
 }
 async function ensureOperationalColumns(db) {
@@ -419,7 +435,7 @@ async function getCatalog(env, includeAdminSettings = false, branchId = "acailan
     settings: { ...publicSettings, store_name:branch?.name||"Açailandia PE", store_address:branch?.address||publicSettings.store_address, branch_id:branchId, branch_name:branch?.name||BRANCHES[branchId].name, ...storeAvailability(settingsRow), ...(includeAdminSettings?{reception_printer,kitchen_printer,pedeai_enabled:Boolean(pedeai_enabled),pedeai_environment:pedeai_environment||"sandbox",pedeai_store_id:pedeai_store_id||"",pedeai_client_id:pedeai_client_id||"",pedeai_api_base_url:pedeai_api_base_url||"",pedeai_api_token_configured:Boolean(pedeai_api_token),pedeai_webhook_secret_configured:Boolean(pedeai_webhook_secret),pedeai_last_sync_at:pedeai_last_sync_at||"",pedeai_last_error:pedeai_last_error||""}:{}), delivery_neighborhood_fees:neighborhoodFeeRows.results, delivery_rate_tiers:rateRows.results, waiter_fee_enabled:Boolean(settingsRow.waiter_fee_enabled), auto_print_enabled:Boolean(settingsRow.auto_print_enabled), delivery_surcharge_enabled:Boolean(settingsRow.delivery_surcharge_enabled), print_bridge_configured:Boolean(print_bridge_key) },
     categories,
     products: sortedProducts.map(p => ({ ...p, image_url:hostedImageUrl(p.image_url), complements:cleanComplements(p.complements_json), flavors:cleanFlavors(p.flavors_json), selected_complement_ids:parseJson(p.selected_complement_ids_json,[]).map(Number).filter(Number.isFinite), enable_acai_complements:Boolean(p.enable_acai_complements), enable_acai_extras:Boolean(p.enable_acai_extras), enable_flavors:Boolean(p.enable_flavors), is_featured:automaticFeatured.has(int(p.id)), is_promo:Boolean(p.is_promo), catalog_available:Boolean(p.is_available), branch_available:Boolean(p.branch_available), is_available:Boolean(p.is_available)&&Boolean(p.branch_available) })),
-    acai_complements: includeAdminSettings ? (await env.DB.prepare(`SELECT * FROM acai_complements ORDER BY group_id,sort_order,id`).all()).results : undefined
+    acai_complements: (await env.DB.prepare(`SELECT * FROM acai_complements ${includeAdminSettings?"":"WHERE is_active=1 "}ORDER BY group_id,sort_order,id`).all()).results
   };
 }
 
