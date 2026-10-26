@@ -12,7 +12,6 @@
 .order-item-details-toggle{width:100%;margin:9px 0 3px;padding:8px 10px;border:1px solid #d8c5e8;border-radius:9px;background:#f8f2fc;color:#4c1765;font-size:12px;font-weight:850;text-align:left;cursor:pointer}.order-item-details-toggle:hover{background:#efe2f8}.order-item-details{display:grid;gap:9px;margin:16px 0;padding:14px;border:1px solid #dfcdec;border-radius:12px;background:#fbf7fd}.order-item-details h3{margin:0;color:#42115b;font-size:14px}.order-item-details>div{display:grid;gap:4px;padding-top:8px;border-top:1px solid #eadff0}.order-item-details>div:first-of-type{padding-top:0;border-top:0}.order-item-details strong{font-size:13px;color:#202331}.order-item-details span{font-size:13px;line-height:1.35;color:#5d4968}@media(max-width:720px){.order-item-details-toggle{font-size:11px;padding:7px 9px}.order-item-details{margin:12px 0;padding:12px}}
 @media(max-width:850px){.admin-side{display:none}.admin-shell.sidebar-open>.admin-side{display:flex!important;width:100vw!important;z-index:100!important}.admin-shell.sidebar-open>.admin-main,.admin-shell.sidebar-open>.admin-mobile-nav{display:none!important}.admin-shell.sidebar-open:after{display:none!important}}
 
-Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 .counter-orders-view{display:grid;gap:18px}
 .counter-orders-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
 .counter-orders-header h2{margin:5px 0;font-size:clamp(24px,3vw,34px);letter-spacing:-.03em}
