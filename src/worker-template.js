@@ -18,7 +18,7 @@ const ACAILANDIA_PRODUCT_SEED=[
   [5,"Copos promocionais","Copo 4","Açaí intercalado de creme de ninho, leite em pó e morango. Escolha o tamanho no pedido.",1890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",1,1,4],
   [6,"Monte seu combo pote","Combo açaí 500 ml","Escolha 1 creme, até 3 complementos grátis e até 10 extras pagos. Itens enviados separadamente para preservar a textura.",3990,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1853820/thumb_ea3096e4fc47c3c4-bd03-4369-8a1f-8be92962a6f4.jpeg",1,0,5],
   [7,"Monte seu combo pote","Combo açaí 1000 ml","Escolha 1 creme, até 3 complementos grátis e até 10 extras pagos. Itens enviados separadamente para preservar a textura.",5490,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1862255/thumb_559f13d6fc47c3c4-bd03-4369-8a1f-8be92962a6f4.jpeg",1,0,6],
-  [8,"Monte seu açaí no copo","Monte seu copo","Escolha o tamanho, 1 creme e até 5 complementos grátis.",2590,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1587239/thumb_05da6f30IMG_2688.jpeg",1,0,7],
+  [8,"Monte seu açaí no copo","Monte seu copo","Escolha o tamanho, 1 creme e até 6 complementos grátis.",2590,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1587239/thumb_05da6f30IMG_2688.jpeg",1,0,7],
   [9,"Potes individuais","Pote de açaí","A partir de R$ 29,90. Escolha seu tamanho e complementos.",2990,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834985/thumb_5d21a0ebIMG_2937.png",0,0,8],
   [10,"Potes individuais","Pote de creme","A partir de R$ 28,90. Escolha seu tamanho e sabor.",2890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834988/thumb_5169203dIMG_1469.jpeg",0,0,9],
   [11,"Potes individuais","Pote de sorvete","A partir de R$ 23,00. Escolha seu tamanho e sabor.",2300,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",0,0,10],
@@ -302,7 +302,7 @@ async function ensurePrimeOperationsSchema(db) {
       changes.push(db.prepare(`UPDATE products SET selected_complement_ids_json=?,enable_acai_complements=CASE WHEN id BETWEEN 1 AND 15 OR id IN (18,19) THEN 1 ELSE enable_acai_complements END,enable_acai_extras=CASE WHEN id IN (6,7,10,11,18,19) THEN 1 ELSE enable_acai_extras END,enable_flavors=CASE WHEN id BETWEEN 12 AND 15 THEN 0 ELSE enable_flavors END,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(JSON.stringify([...new Set(selected)]),Number(id)));
     }
     changes.push(db.prepare(`UPDATE products SET name='Copo 1',description='Açaí, leite condensado, leite em pó, granola e banana. Escolha o tamanho.',enable_acai_complements=1,complements_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=1`).bind(JSON.stringify([{name:"300 ml",price_cents:0,max_quantity:1,group_id:"size"},{name:"400 ml",price_cents:500,max_quantity:1,group_id:"size"}])));
-    changes.push(db.prepare(`UPDATE products SET description=CASE WHEN id IN (6,7) THEN 'Escolha 1 creme, até 3 complementos grátis e até 10 extras pagos. Itens enviados separadamente para preservar a textura.' ELSE 'Escolha o tamanho, 1 creme e até 5 complementos grátis.' END,updated_at=CURRENT_TIMESTAMP WHERE id IN (6,7,8)`));
+    changes.push(db.prepare(`UPDATE products SET description=CASE WHEN id IN (6,7) THEN 'Escolha 1 creme, até 3 complementos grátis e até 10 extras pagos. Itens enviados separadamente para preservar a textura.' ELSE 'Escolha o tamanho, 1 creme e até 6 complementos grátis.' END,updated_at=CURRENT_TIMESTAMP WHERE id IN (6,7,8)`));
     changes.push(db.prepare(`UPDATE products SET is_available=0,updated_at=CURRENT_TIMESTAMP WHERE id=2`));
     changes.push(db.prepare(`INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-product-parity-2026-10-v2')`));
     await db.batch(changes);
@@ -457,7 +457,7 @@ async function ensurePrimeOperationsSchema(db) {
     const selected={6:[...creamEight,...toppingIds,...extras],7:[...creamEight,...toppingIds,...extras],8:[...creamFourteen,...toppingIds],9:creamFourteen,10:[...creamFourteen,...extras],11:[...ice,...extras],12:milk,13:milk,14:milk,15:milk,18:[...toppingIds,...extras],19:[...toppingIds,...extras],20:trufado,21:trufado,22:garrafa,23:garrafa};
     const updates=[];
     for(const [id,selectedIds] of Object.entries(selected))updates.push(db.prepare("UPDATE products SET selected_complement_ids_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(JSON.stringify([...new Set(selectedIds)]),Number(id)));
-    updates.push(db.prepare("UPDATE products SET image_url=?,description='Monte seu açaí no copo com até 5 complementos grátis! Tudo em uma única embalagem.',updated_at=CURRENT_TIMESTAMP WHERE id=8").bind("https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1587239/thumb_05da6f30IMG_2688.jpeg"));
+    updates.push(db.prepare("UPDATE products SET image_url=?,description='Monte seu açaí no copo com até 6 complementos grátis! Tudo em uma única embalagem.',updated_at=CURRENT_TIMESTAMP WHERE id=8").bind("https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1587239/thumb_05da6f30IMG_2688.jpeg"));
     updates.push(db.prepare("UPDATE products SET image_url=?,description=?,enable_acai_complements=1,enable_acai_extras=1,updated_at=CURRENT_TIMESTAMP WHERE id=18").bind("https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834985/thumb_5d21a0ebIMG_2937.png",ACAILANDIA_PRODUCT_SEED.find(product=>product[0]===18)[3]));
     updates.push(db.prepare("UPDATE products SET image_url=?,description=?,enable_acai_complements=1,enable_acai_extras=1,updated_at=CURRENT_TIMESTAMP WHERE id=19").bind("https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834985/thumb_5d21a0ebIMG_2937.png",ACAILANDIA_PRODUCT_SEED.find(product=>product[0]===19)[3]));
     updates.push(db.prepare("INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-catalog-detail-parity-2026-10-v7')"));
@@ -482,6 +482,11 @@ async function ensurePrimeOperationsSchema(db) {
     }
     changes.push(db.prepare("INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-catalog-detail-parity-2026-10-v8')"));
     await db.batch(changes);
+  }
+  const cupFreeLimit=await db.prepare("SELECT name FROM acai_complement_migrations WHERE name='rv-catalog-detail-parity-2026-10-v9'").first();
+  if(!cupFreeLimit){
+    await db.prepare("UPDATE products SET description='Monte seu açaí no copo com até 6 complementos grátis! Tudo em uma única embalagem.',updated_at=CURRENT_TIMESTAMP WHERE id=8").run();
+    await db.prepare("INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-catalog-detail-parity-2026-10-v9')").run();
   }
   primeOperationsSchemaReady=true;
 }
