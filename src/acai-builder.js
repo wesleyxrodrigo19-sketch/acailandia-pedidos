@@ -4,7 +4,7 @@ const ACAI_SIZES=[
 ];
 const ACAI_GROUPS=[
   {id:"size",title:"Tamanho",min:1,max:1,options:[]},
-  {id:"cream",title:"Escolha Açaí ou Creme",min:1,max:2,options:["Açaí","Creme de Maracujá","Creme de Amendoim","Creme de Ninho","Creme de Morango","Creme de Oreo","Creme Cupuaçu","Creme de Nutella","Creme de abacaxi ao vinho"]},
+  {id:"cream",title:"Escolha o açaí",min:1,max:1,options:["Açaí","Açaí com creme de Ninho","Açaí com creme de Maracujá","Açaí com creme de Morango","Açaí com creme de Nutella","Açaí com creme de Oreo","Açaí com creme de Amendoim","Açaí com creme de Cupuaçu"]},
   {id:"rv_topping",title:"Acompanhamentos grátis",min:0,max:5,options:[]},
   {id:"topping",title:"Complementos",min:1,max:2,options:["Granola","Amendoim","Chocoboll","Disquetes","Paçoca","Gotas de chocolate","Granulado","Jujuba","Leite em pó","Uva passa","Cereja"]},
   {id:"fruit",title:"Frutas",min:1,max:2,options:["Morango","Banana","Kiwi","Abacaxi","Uva verde sem semente","Manga"]},
