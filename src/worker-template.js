@@ -258,7 +258,7 @@ let operationalColumnsReady = false;
 let cashierAccessSchemaReady = false;
 async function ensureCashierAccessTable(db){if(cashierAccessSchemaReady)return;await db.prepare(`CREATE TABLE IF NOT EXISTS cashier_access (id INTEGER PRIMARY KEY CHECK(id=1),pin_hash TEXT NOT NULL DEFAULT '',updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();await db.prepare(`INSERT OR IGNORE INTO cashier_access (id) VALUES (1)`).run();cashierAccessSchemaReady=true}
 const ACAILANDIA_RV_FLAVORS=["Sensação","Surpresinha de Uva","Brownie Trufado","Cookies Oreo","Ouro Branco","Ninhotella","Kit Kat Especial","Ovomaltine Black","Mousse de Maracujá","Mousse de Maracujá com Calda de Nutella","Mousse de Ninho","Mousse de Ninho com Calda de Nutella","Mousse de Morango","Mousse de Morango com Calda de Nutella","Mousse de Amendoim","Mousse de Amendoim com Calda de Nutella","Leite Condensado com Farinha Láctea","Leite Condensado com Paçoca","Calda de Nutella com Paçoca","Calda de Nutella com Leite em Pó","Calda de Nutella com Ovomaltine","Calda de Nutella com Morango em Calda","Calda de Ninho com Leite em Pó","Calda de Ninho com Ovomaltine","Calda de Ninho com Morango em Calda"];
-const ACAILANDIA_RV_FREE_COMPLEMENTS=["Morango","Kiwi","Banana","Uva","Manga","Uva passas","Cereja","Morango em calda","Abacaxi ao vinho","Granola","Leite em pó","Paçoca","Amendoim granulado","Farofa de amendoim","Farinha LACTA","Disquete","Granulado","Gotas de chocolate","Leite condensado","Pasta de amendoim","Chocolate branco","Calda de Ninho","Calda quente","Ovomaltine","Nutela","Jujuba","Choco Power","Choco Power Mini","Mel","Xarope","Cobertura de morango","Cobertura de chocolate","Calda de Oreo","Brownie"];
+const ACAILANDIA_RV_FREE_COMPLEMENTS=["Morango","Kiwi","Banana","Uva","Manga","Uva passas","Cereja","Morango em calda","Abacaxi ao vinho","Granola","Leite em pó","Paçoca","Amendoim granulado","Farofa de amendoim","Farinha LACTA","Disquete","Granulado","Gotas de chocolate","Leite condensado","Canudinho wafer","Pasta de amendoim","Chocolate branco","Calda de Ninho","Calda quente","Ovomaltine","Nutela","Jujuba","Choco Power","Choco Power Mini","Mel","Xarope","Cobertura de morango","Cobertura de chocolate","Calda de Oreo","Brownie"];
 const ACAILANDIA_RV_CREAMS=["Açaí","Açaí com creme de Ninho","Açaí com creme de Maracujá","Açaí com creme de Morango","Açaí com creme de Nutella","Açaí com creme de Oreo","Açaí com creme de Amendoim","Açaí com creme de Cupuaçu"];
 const ACAILANDIA_RV_PAID_COMPLEMENTS=[["Morango",400],["Kiwi",350],["Banana",250],["Uva",300],["Manga",250],["Uva passas",300],["Cereja",350],["Morango em calda",400],["Abacaxi ao vinho",400],["Granola",300],["Paçoca",300],["Farofa de amendoim",300],["Farinha láctea",250],["Disquete",400],["Gotas de chocolate",400],["Leite condensado",250],["Pasta de amendoim",400],["Chocolate branco",400],["Calda quente",400],["Choco Ball Mini",300],["Ovomaltine",300],["Choco Ball Black",300],["Fini Bananinha",400],["Jujuba",300],["Calda de Nutela",450],["Calda de Ninho",400],["Pasta de Ovomaltine",450],["Calda de Oreo",400],["Brownie",400]];
 const ACAILANDIA_RV_MILKSHAKE_FLAVORS=["Abacaxi","Abacaxi ao vinho","Amendoim","Brigadeiro","Cupuaçu","Chocomenta","Chocolate branco","Dois chocolates","Frutas vermelhas","Farinha láctea","Ganache","Leite Ninho","Leite condensado","Maracujá","Morango","Oreo","Ouro Branco","Nutella","Ovomaltine","Prestígio","Açaí","Ameixa","Sonho de Valsa","Flocos","Diamante Negro","Bis","Kit Kat"];
@@ -462,6 +462,26 @@ async function ensurePrimeOperationsSchema(db) {
     updates.push(db.prepare("UPDATE products SET image_url=?,description=?,enable_acai_complements=1,enable_acai_extras=1,updated_at=CURRENT_TIMESTAMP WHERE id=19").bind("https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834985/thumb_5d21a0ebIMG_2937.png",ACAILANDIA_PRODUCT_SEED.find(product=>product[0]===19)[3]));
     updates.push(db.prepare("INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-catalog-detail-parity-2026-10-v7')"));
     await db.batch(updates);
+  }
+  const rvCatalogImages=await db.prepare("SELECT name FROM acai_complement_migrations WHERE name='rv-catalog-detail-parity-2026-10-v8'").first();
+  if(!rvCatalogImages){
+    let wafer=await db.prepare("SELECT id FROM acai_complements WHERE group_id='rv_topping' AND lower(name)=lower('Canudinho wafer') ORDER BY id LIMIT 1").first();
+    if(!wafer){
+      await db.prepare("INSERT INTO acai_complements (group_id,name,price_cents,sort_order,is_active) VALUES ('rv_topping','Canudinho wafer',0,2185,1)").run();
+      wafer=await db.prepare("SELECT id FROM acai_complements WHERE group_id='rv_topping' AND lower(name)=lower('Canudinho wafer') ORDER BY id LIMIT 1").first();
+    }
+    await db.prepare("UPDATE acai_complements SET name='Canudinho wafer',price_cents=0,sort_order=2185,is_active=1,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(wafer.id).run();
+    await db.prepare("UPDATE acai_complements SET is_active=0,updated_at=CURRENT_TIMESTAMP WHERE group_id='rv_topping' AND lower(name)=lower('Canudinho wafer') AND id<>?").bind(wafer.id).run();
+    const changes=[];
+    for(const id of [6,7,8,18,19]){
+      const product=await db.prepare("SELECT selected_complement_ids_json FROM products WHERE id=?").bind(id).first();
+      if(!product)continue;
+      let selected=[];try{selected=JSON.parse(product.selected_complement_ids_json||"[]")}catch(_){}
+      if(!selected.map(Number).includes(Number(wafer.id)))selected.push(Number(wafer.id));
+      changes.push(db.prepare("UPDATE products SET selected_complement_ids_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(JSON.stringify(selected.map(Number)),id));
+    }
+    changes.push(db.prepare("INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-catalog-detail-parity-2026-10-v8')"));
+    await db.batch(changes);
   }
   primeOperationsSchemaReady=true;
 }
