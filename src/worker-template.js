@@ -197,7 +197,7 @@ async function seed(db) {
     VALUES (?,?,?,?,?,?,?,?,?,1,?)`).bind(...p));
   await db.batch(statements);
   await db.batch(ACAILANDIA_PRODUCT_SEED.map(p => db.prepare(`UPDATE products SET image_url=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(p[6],p[0])));
-  await db.prepare(`UPDATE products SET image_url=NULL,updated_at=CURRENT_TIMESTAMP WHERE id IN (20,21,22,23)`).run();
+  await db.prepare(`UPDATE products SET image_url='',updated_at=CURRENT_TIMESTAMP WHERE id IN (20,21,22,23)`).run();
   await db.prepare(`UPDATE products SET description=REPLACE(description,'até 6 complementos grátis','até 5 complementos grátis'),updated_at=CURRENT_TIMESTAMP WHERE id=8 AND description LIKE '%até 6 complementos grátis%'`).run();
   await db.prepare(`UPDATE products SET image_gallery_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=8`).bind(JSON.stringify(["https://storage.googleapis.com/prod-cardapio-web/uploads/item_image/image/64601/thumb_710ddf8270f25d9d-dc3b-46db-922d-f796c2575165.jpeg"])).run();
   await db.prepare(`UPDATE products SET description=REPLACE(description,'até 6 complementos grátis','até 5 complementos grátis'),updated_at=CURRENT_TIMESTAMP WHERE id=8 AND description LIKE '%até 6 complementos grátis%'`).run();
