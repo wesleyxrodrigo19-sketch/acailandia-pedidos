@@ -507,6 +507,20 @@ async function ensurePrimeOperationsSchema(db) {
     await db.prepare("UPDATE acai_complements SET name='Açaí com creme de Nutela',updated_at=CURRENT_TIMESTAMP WHERE group_id='cream' AND name='Açaí com creme de Nutella'").run();
     await db.prepare("INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-catalog-detail-parity-2026-10-v12')").run();
   }
+  const rvComboCreamParity=await db.prepare("SELECT name FROM acai_complement_migrations WHERE name='rv-combo-cream-parity-2026-10-v13'").first();
+  if(!rvComboCreamParity){
+    const creamRows=(await db.prepare("SELECT id FROM acai_complements WHERE group_id='cream' AND is_active=1").all()).results||[];
+    const creamIds=creamRows.map(row=>Number(row.id)).filter(Number.isFinite);
+    const updates=[];
+    for(const id of [6,7]){
+      const product=await db.prepare("SELECT selected_complement_ids_json FROM products WHERE id=?").bind(id).first();
+      if(!product)continue;
+      let selected=[];try{selected=JSON.parse(product.selected_complement_ids_json||"[]").map(Number)}catch(_){}
+      updates.push(db.prepare("UPDATE products SET selected_complement_ids_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(JSON.stringify([...new Set([...selected,...creamIds])]),id));
+    }
+    updates.push(db.prepare("INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-combo-cream-parity-2026-10-v13')"));
+    await db.batch(updates);
+  }
   primeOperationsSchemaReady=true;
 }
 async function ensureOperationalColumns(db) {
