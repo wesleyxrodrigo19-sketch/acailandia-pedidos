@@ -1605,7 +1605,7 @@ export default {
       if (["/","/painel","/pedido","/mesas","/caixa","/caixa/sao-goncalo"].includes(url.pathname)) return text(APP_HTML, "text/html", "no-cache");
       return new Response("Não encontrado", { status:404 });
     } catch (error) {
-      console.error(error);
+      console.error("Falha na requisição do Worker",error?.name||"Error",error?.message||String(error),error?.cause?.message||"",error?.stack||"");
       return url.pathname.startsWith("/api/") ? json({ error:"O serviço está temporariamente indisponível." },500) : new Response("Serviço indisponível",{status:500});
     }
   }
