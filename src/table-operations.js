@@ -1,212 +1,87 @@
-€^öõbûh•Íﬂ¢π≠Ö‚'äÿöñ,ﬁÁ⁄∫[CÆ+ﬁ≤ä^≠´b¢z'∂ÖäWí À^ööËæ'^≠ˆ¢ïÁK àY\ÿ\»H€€X[ô\»õ»õ‹õX]»‹\òX⁄[€ò[YY»[HpÈÿZ[[ôXKà
-ã√Bôù[ò›[€àXõS‹ô\ëõ‹äXõJ^‹ô]\õà›]KòYZ[ãõ‹ô\úÀôö[ô
-‹ô\èOî›ö[ô ‹ô\ãöY
-OOOT›ö[ô XõKõ‹ô\ó⁄Y
-J_›]KòYZ[ãõ‹ô\úÀôö[ô
-‹ô\èOî›ö[ô ‹ô\ãùXõW€ù[Xô\äOOOT›ö[ô XõKõù[Xô\äIâõ‹ô\ãò⁄[õô[OOHò€›[ù\àââàV…ÿ€€ò€ZY…À	ÿÿ[òŸ[Y…◊Kö[ò€Y\ ‹ô\ãú›]\ J_CBôù[ò›[€àXõS‹ô\ï›[
-‹ô\ä^‹ô]\õàù[Xô\ä‹ô\èÀù›[ÿŸ[ùﬂ
-_CBôù[ò›[€àXõS‹ô\î›\ùY
-‹ô\ä^⁄Yä[‹ô\èÀò‹ôX]Yÿ]
-\ô]\õàêY€‹òHéÿ€€ú›[\ŸYSX]õX^
-X]ôõ€‹ä
-]Kõõ› 
-K[ô]»]J	‘›ö[ô ‹ô\ãò‹ôX]Yÿ]
-Kúô\XŸJ	»	À	’	 _Vò
-KôŸ][YJ
-JKÕå
-JN‹ô]\õà[\ŸYO»êY€‹òHéò	Ÿ[\ŸYHZ[òCBôù[ò›[€àXõQö[\êù]€äò[YKXô[€›[ùö[\ä^‹ô]\õàù]€à\OHòù]€àà€\‹œHùXõKYö[\à	Ÿö[\èOO]ò[YO…ÿX›]ôIŒâ…ﬂHà]K]XõKYö[\èHâ›ò[Y_Hèè›õ€ôœâÿ€›[ùO‹›õ€ôœè‹[èâ€Xô[O‹‹[èèÿù]€èòCBò€€ú›XõS‹\ò][€ú–ò\ŸPõÿ\ô]Xõ\–õÿ\ôX\ö›\√Bôù[ò›[€àXõ\–õÿ\ôX\ö›\
-]KÿYZ[èYò[Ÿ_O^ﬂJ^√BàYäXYZ[ä\ô]\õàXõS‹\ò][€ú–ò\ŸPõÿ\ô
-]KÿYZ[üJN√Bà€€ú›Xõ\œY]OÀùXõ\ﬂ◊Kÿÿ›\YY]Xõ\Àôö[\äXõOOùXõKõÿÿ›\YY
-K]òZ[XõO]Xõ\Àôö[\äXõOOà]XõKõÿÿ›\YY
-N√Bà€€ú›Ÿ[X›Yù[Xô\èT›ö[ô ›]KòYZ[ãúŸ[X›YXõSù[Xô\üÿÿ›\YYÃOÀõù[Xô\ü]òZ[XõVÃOÀõù[Xô\üàäKŸ[X›Y]Xõ\Àôö[ô
-XõOOî›ö[ô XõKõù[Xô\äOOO\Ÿ[X›Yù[Xô\äKö[\è\›]KòYZ[ãùXõQö[\üò[é√Bà€€ú›⁄›€ìÿÿ›\YYYö[\èOOHò]òZ[XõHè÷◊Nõÿÿ›\YY⁄›€ê]òZ[XõOYö[\èOOHõÿÿ›\YYè÷◊Nò]òZ[XõKŸ[X›Y‹ô\è\Ÿ[X›YÀõÿÿ›\YY›XõS‹ô\ëõ‹äŸ[X›Y
-Nõù[√Bà€€ú›‹ô\í][\œJŸ[X›Y‹ô\èÀö][\ﬂ◊JKõX\
-][OOò]à€\‹œHùXõKY]Z[Z][Hèè‹[èâ”ù[Xô\ä][Kú]X[ù]_J_H0Â»	Ÿ\ÿ ][KúõŸX›€ò[YJ_O‹‹[èè›õ€ôœâ€[€ô^Jù[Xô\ä][Kú]X[ù]_JJìù[Xô\ä][Kù[ö]‹öXŸWÿŸ[ùﬂ
-J_O‹›õ€ôœèŸ]èò
-Köõ⁄[äàäN√Bà€€ú›[O]XõOOûÿ€€ú›‹ô\è]XõKõÿÿ›\YY›XõS‹ô\ëõ‹äXõJNõù[X›]ôOT›ö[ô XõKõù[Xô\äOOO\Ÿ[X›Yù[Xô\é‹ô]\õàù]€à\OHòù]€àà€\‹œHùXõK][H	›XõKõÿÿ›\YY…€ÿÿ›\YY	Œâÿ]òZ[XõIﬂH	ÿX›]ôO…‹Ÿ[X›Y	Œâ…ﬂHà]K]XõK\Ÿ[X›Hâ›XõKõù[Xô\üHà\öXK\ô\‹ŸYHâÿX›]ô_Hà\öXK[Xô[Hâ›XõKõÿÿ›\YYÿY\ÿH	›XõKõù[Xô\üK	€[€ô^JXõS‹ô\ï›[
-‹ô\äJ_KXô\ùH0ËH	›XõS‹ô\î›\ùY
-‹ô\ä_XòY\ÿH	›XõKõù[Xô\üK\‹€∞Î]ô[Hèè‹[à€\‹œHùXõK][K]]HèìQT–H	‘›ö[ô XõKõù[Xô\äKúY›\ù
-ã	Ã	 _O‹‹[èâ›XõKõÿÿ›\YYÿ›õ€ô»€\‹œHùXõK][KX[[›[ùèâ€[€ô^JXõS‹ô\ï›[
-‹ô\äJ_O‹›õ€ôœè‹[à€\‹œHùXõK][K\›‹ôHèâŸ\ÿ ›]Kòÿ][ŸœÀúŸ][ô‹œÀú›‹ôW€ò[Y_	–pÈÿZ[[ôXHI _O‹‹[èè‹[à€\‹œHùXõK][K[Y]Hè∏•Ì»	›XõS‹ô\î›\ùY
-‹ô\ä_H‹[èåH€€X[ôO‹‹[èè‹‹[èòò‹[à€\‹œHùXõK][KYúôYHèë\‹€∞Î]ô[‹‹[èòOÿù]€èòN√Bà€€ú›Ÿ[X›Y[ô[H\Ÿ[X›Yÿ]à€\‹œHùXõKY]Z[Y[\HèîŸ[X⁄[€ôH[XHY\ÿH\òHô\àH€€X[ôHH\»pÈÌY\ÀèŸ]èòúŸ[X›Yõÿÿ›\YYÿ]à€\‹œHùXõKY]Z[X€€ù[ùèè]à€\‹œHùXõKY]Z[\›]\»èè›õ€ôœâŸ\ÿ XõT›]\”Xô[
-Ÿ[X›Yú›]\ J_H0≠»YY»…Ÿ\ÿ Ÿ[X›Yõ‹ô\ó⁄Y
-_O‹›õ€ôœè‹[èìY\ÿHXô\ùH0ËH	›XõS‹ô\î›\ùY
-Ÿ[X›Y‹ô\ä_O‹‹[èèŸ]èè]à€\‹œHùXõKY]Z[X›\›€Y\àèè‹[èê€Y[ùO‹‹[èè›õ€ôœâŸ\ÿ Ÿ[X›Y‹ô\èÀò›\›€Y\ó€ò[Y_	”∞Ë€»[ôõ‹õXY… _O‹›õ€ôœè‹[èîYÿ[Y[ùœ‹‹[èè›õ€ôœâ‹Ÿ[X›Y‹ô\èÀú^[Y[ù‹›]\œOOIÿXô\ù…œ…‘[ô[ùIŒâ‘Y€…ﬂI‹Ÿ[X›Y‹ô\èÀú^[Y[ù€Y]Ÿÿ0≠»	Ÿ\ÿ ^[Y[ùXô[
-Ÿ[X›Y‹ô\ãú^[Y[ù€Y]Ÿ
-J_Xâ…ﬂO‹›õ€ôœèŸ]èè]à€\‹œHùXõKY]Z[Z][\»èâ€‹ô\í][\ﬂ	œ€\‹œHõ]]Yèì‹»][ú»\›H€€X[ôH∞Ë€»õ‹ò[Hÿ\úôYÿY‹Àè‹âﬂOŸ]èè]à€\‹œHùXõKY]Z[]›[èè‹[èî›Xù›[»€€ùO‹‹[èè›õ€ôœâ€[€ô^JXõS‹ô\ï›[
-Ÿ[X›Y‹ô\äJ_O‹›õ€ôœèŸ]èè]à€\‹œHùXõKY]Z[XX›[€ú»XõKY]Z[XX›[€úÀ\›X⁄»èèù]€à\OHòù]€àà€\‹œHúö[X\ûKXùàà]K]XõKXYZ][\œHâŸ\ÿ Ÿ[X›Yõ‹ô\ó⁄Y
-_HèªÔ"»YX⁄[€ò\à][Oÿù]€èè]èèù]€à\OHòù]€àà€\‹œHúŸX€€ô\ûKXùàà]K]XõK[‹[èHâ‹Ÿ[X›Yõù[Xô\üHà]K[‹ô\ãZYHâŸ\ÿ Ÿ[X›Yõ‹ô\ó⁄Y
-_HèëY]\à€€X[ôOÿù]€èèù]€à\OHòù]€àà€\‹œHúŸX€€ô\ûKXùàà]K]XõKX€‹ŸOHâŸ\ÿ Ÿ[X›Yõ‹ô\ó⁄Y
-_Hèâ‹Ÿ[X›Y‹ô\èÀú^[Y[ù‹›]\œOOIÿXô\ù…œ…‘ôXŸXô\àHôX⁄\à€€ùIŒâ—ôX⁄\à€€ùIﬂOÿù]€èèŸ]èèŸ]èèŸ]èòò]à€\‹œHùXõKY]Z[X€€ù[ùèè]à€\‹œHùXõKY]Z[\›]\»úôYHèè›õ€ôœìY\ÿH	‘›ö[ô Ÿ[X›Yõù[Xô\äKúY›\ù
-ã	Ã	 _H\‹€∞Î]ô[‹›õ€ôœè‹[èîõ€ùH\òHXúö\à[XHõ›òH€€X[ôKè‹‹[èèŸ]èè]à€\‹œHùXõKY]Z[XX›[€ú»èèù]€à\OHòù]€àà€\‹œHúö[X\ûKXùàà]K]XõK[‹[èHâ‹Ÿ[X›Yõù[Xô\üHèêXúö\à€€X[ôOÿù]€èèŸ]èèŸ]èò√Bàô]\õàŸX›[€à€\‹œHùXõ\ÀXYZ[àèè]à€\‹œHùXõ\À[XZ[à[ô[èè]à€\‹œHùXõ\À[XZ[ãZXY[ô»èè]èè‹[à€\‹œHô^YXúõ›»èî–S0‡”»0≠»‡”»””∞·–Sœ‹‹[èèèìY\ÿ\»H€€X[ô\œ⁄èèêXúòKY]HHôX⁄H€€ù\»»][ô[Y[ù»ô\Ÿ[ò⁄X[è‹èŸ]èèù]€à\OHòù]€àà€\‹œHúŸX€€ô\ûKXùààYHúôYúô\⁄]Xõ\»èê]X[^ò\èÿù]€èèŸ]èè]à€\‹œHùXõK\›[[X\ûK]Xú»èâ›XõQö[\êù]€ä	ÿ[	À	’Ÿ\…ÀXõ\Àõ[ô›ö[\ä_I›XõQö[\êù]€ä	€ÿÿ›\YY	À	–Xô\ù\…Àÿÿ›\YYõ[ô›ö[\ä_I›XõQö[\êù]€ä	ÿ]òZ[XõIÀ	—ôX⁄Y\…À]òZ[XõKõ[ô›ö[\ä_O‹[à€\‹œHùXõK[‹[ã]›[èè›õ€ôœâ€[€ô^Jÿÿ›\YYúôYXŸJ
-›[KXõJOOú›[J›XõS‹ô\ï›[
-XõS‹ô\ëõ‹äXõJJK
-J_O‹›õ€ôœè€X[ô[H€€X[ô\»Xô\ù\œ‹€X[è‹‹[èèŸ]èâ‹⁄›€ìÿÿ›\YYõ[ô›ÿŸX›[€à€\‹œHùXõK\ŸX›[€àèè]à€\‹œHùXõK\ŸX›[€ã]]Hèèœê€€X[ô\»Xô\ù\œ⁄œè‹[èâ‹⁄›€ìÿÿ›\YYõ[ô›HY\ÿJ O‹‹[èèŸ]èè]à€\‹œHùXõK[‹[ãY‹öYèâ‹⁄›€ìÿÿ›\YYõX\
-[JKöõ⁄[ä	… _OŸ]èè‹ŸX›[€èòâ…ﬂI‹⁄›€ê]òZ[XõKõ[ô›ÿŸX›[€à€\‹œHùXõK\ŸX›[€àXõKX]òZ[XõK\ŸX›[€àèè]à€\‹œHùXõK\ŸX›[€ã]]HèèœìY\ÿ\»ôX⁄Y\»»\‹€∞Î]ôZ\œ⁄œè‹[èâ‹⁄›€ê]òZ[XõKõ[ô›HY\ÿJ O‹‹[èèŸ]èè]à€\‹œHùXõKX]òZ[XõKY‹öYèâ‹⁄›€ê]òZ[XõKõX\
-[JKöõ⁄[ä	… _OŸ]èè‹ŸX›[€èòâ…ﬂI»]Xõ\Àõ[ô›…œ]à€\‹œHô[\HXõKY[\Hèê€€ôöY›\ôHH]X[ùYYHHY\ÿ\»[H€€ôöY›\òpÈÌY\ÀèŸ]èâŒâ…ﬂOŸ]èè\⁄YH€\‹œHùXõKY]Z[\[ô[[ô[èè]à€\‹œHú[ô[ZXYèè]èè‹[à€\‹œHô^YXúõ›»èëUST»H””PSëO‹‹[èèèâ‹Ÿ[X›YÿY\ÿH	‘›ö[ô Ÿ[X›Yõù[Xô\äKúY›\ù
-ã	Ã	 _Xâ‘Ÿ[X⁄[€ôH[XHY\ÿIﬂO⁄èèŸ]èèŸ]èâ‹Ÿ[X›Y[ô[Oÿ\⁄YOè‹ŸX›[€èò√BüCBùXõ\’öY]œYù[ò›[€ä
-^‹ô]\õàXõ\–õÿ\ôX\ö›\
-›]KòYZ[ãùXõ\ÀÿYZ[éùùY_J_N√BÉBò€€ú›XõS‹\ò][€ú–ò\ŸS‹ô\ëY]‹è[‹[ì‹ô\ëY]‹é√Bõ‹[ì‹ô\ëY]‹èX\ﬁ[ò»ù[ò›[€äY
-^√Bà€€ú›‹ô\è\›]KòYZ[ãõ‹ô\úÀôö[ô
-][OOö][KöYOOZY
-N⁄Yä[‹ô\ä\ô]\õé√BàYä\›]Kòÿ][Ÿ \›]Kòÿ][ŸœX]ÿZ]\J	Àÿ\KÿYZ[ã‹õŸX›… N√Bà€€ú›‹öY⁄[ò[][\œ[‹ô\ãö][\Œ€‹ô\ãö][\œJ‹öY⁄[ò[][\ﬂ◊JKôö[\ä][OOö][KúõŸX›⁄Y
-N√Bàû^‹ô]\õà]ÿZ]XõS‹\ò][€ú–ò\ŸS‹ô\ëY]‹äY
-_Yö[ò[^€‹ô\ãö][\œ[‹öY⁄[ò[][\ﬂCBüN√BÉBò€€ú›XõS‹\ò][€ú–ò\ŸS‹ô\ë]Z[œ[‹[ì‹ô\ë]Z[Œ√Bõ‹[ì‹ô\ë]Z[œYù[ò›[€ä‹ô\íY
-^√BàXõS‹\ò][€ú–ò\ŸS‹ô\ë]Z[ ‹ô\íY
-N√Bà€€ú›‹ô\è\›]KòYZ[ãõ‹ô\úÀôö[ô
-][OOö][KöYOO[‹ô\íY
-N⁄Yä‹ô\èÀò⁄[õô[OOIÿ€›[ù\âﬂ[‹ô\ãùXõW€ù[Xô\ü‹ô\ãú›]\œOOIÿÿ[òŸ[Y… \ô]\õé√Bà€€ú›X›[€úœYÿ›[Y[ùú]Y\ûTŸ[X›‹ä	Àõ‹ô\ãY]Z[XX›[€ú… N⁄YäXX›[€ú \ô]\õé√Bà]€‹ŸUXõOI
-	»Ÿ]Z[\ô[X\ŸK]XõI N√BàYäX€‹ŸUXõJ^ÿ€‹ŸUXõOYÿ›[Y[ùò‹ôX]Q[[Y[ù
-	ÿù]€â Nÿ€‹ŸUXõKöYIŸ]Z[\ô[X\ŸK]XõIŒÿ€‹ŸUXõKù\OIÿù]€âŒÿ€‹ŸUXõKò€\‹”ò[YOI‹ŸX€€ô\ûKXùâŒÿX›[€úÀò\[ô
-€‹ŸUXõJ_CBà€‹ŸUXõKù^€€ù[ù[‹ô\ãú^[Y[ù‹›]\œOOIÿXô\ù…œ…‘Yÿ\àHôX⁄\àY\ÿIŒâ—ôX⁄\àY\ÿIŒ√Bà€‹ŸUXõKõ€ò€X⁄œX\ﬁ[ò 
-OOû√BàYä‹ô\ãú^[Y[ù‹›]\œOOIÿXô\ù… ^√Bà‹[î^[Y[ùŸ][Y[ù
-‹ô\íY
-Nÿ€€ú›€€ôö\õPù]€èI
-	»ÿ€€ôö\õK\^[Y[ù	 N⁄YäX€€ôö\õPù]€ä\ô]\õé√Bà€€ú›€€ôö\õT^[Y[ùX€€ôö\õPù]€ãõ€ò€X⁄Œÿ€€ôö\õPù]€ãù^€€ù[ùI–€€ôö\õX\àYÿ[Y[ù»HôX⁄\àY\ÿIŒ√Bà€€ôö\õPù]€ãõ€ò€X⁄œX\ﬁ[ò»]ô[ùOûÿ]ÿZ]€€ôö\õT^[Y[ùòÿ[
-€€ôö\õPù]€ã]ô[ù
-Nÿ€€ú›\]Y\›]KòYZ[ãõ‹ô\úÀôö[ô
-][OOö][KöYOO[‹ô\íY
-N⁄Yä\]YÀú^[Y[ù‹›]\»OOI‹Y€… \ô]\õé›û^ÿ]ÿZ]\Jÿ\KÿYZ[ã€‹ô\úÀ…Ÿ[ò€ŸUTíP€€\€ô[ù
-‹ô\íY
-_X€Y]Ÿâ‘U“	ÀõŸNíî””ãú›ö[ô⁄YûJ‹›]\Œâÿ€€ò€ZY…ﬂJ_JNÿ]ÿZ]ÿYYZ[ì‹ô\ú 
-N‹›]KòYZ[ãùXõ\œX]ÿZ]\J	Àÿ\KÿYZ[ã›Xõ\… Nÿ€‹ŸS^Y\ä
-N‹ô[ô\êYZ[ä
-N›ÿ\›
-	‘Yÿ[Y[ù»€€ôö\õXY»HY\ÿHXô\òYI _Xÿ]⁄
-\úõ‹ä^›ÿ\›
-Yÿ[Y[ù»ôY⁄\›òYÀX\»HY\ÿH∞Ë€»õ⁄HXô\òYNà	Ÿ\úõ‹ãõY\‹ÿYŸ_X
-__N‹ô]\õé√BàCBàYäX€€ôö\õJôX⁄\àHY\ÿH	€‹ô\ãùXõW€ù[Xô\üO»H€€X[ôHŸ\∞ËH€€ò€pÎYHHHY\ÿHöXÿ\∞ËH\‹€∞Î]ô[ò
-J\ô]\õé√Bàû^ÿ]ÿZ]\Jÿ\KÿYZ[ã€‹ô\úÀ…Ÿ[ò€ŸUTíP€€\€ô[ù
-‹ô\íY
-_X€Y]Ÿâ‘U“	ÀõŸNíî””ãú›ö[ô⁄YûJ‹›]\Œâÿ€€ò€ZY…ﬂJ_JNÿ]ÿZ]ÿYYZ[ì‹ô\ú 
-N‹›]KòYZ[ãùXõ\œX]ÿZ]\J	Àÿ\KÿYZ[ã›Xõ\… Nÿ€‹ŸS^Y\ä
-N‹ô[ô\êYZ[ä
-N›ÿ\›
-Y\ÿH	€‹ô\ãùXõW€ù[Xô\üHXô\òYX
-_Xÿ]⁄
-\úõ‹ä^›ÿ\›
-\úõ‹ãõY\‹ÿYŸJ_CBàN√BüN√BÉBò\ﬁ[ò»ù[ò›[€àXõS‹\ò][€ú”‹[ê]òZ[XõJXõSù[Xô\ä^√Bà€€ú›Ÿ[X›YT›ö[ô XõSù[Xô\äKÿÿ][ŸÀXõ\◊OX]ÿZ]õ€Z\ŸKò[
-ÿ\J	Àÿ\KÿYZ[ã‹õŸX›… K\J	Àÿ\KÿYZ[ã›Xõ\… WJN√Bà€€ú›XõO]Xõ\ÀùXõ\œÀôö[ô
-][OOî›ö[ô ][Kõù[Xô\äOOO\Ÿ[X›Y
-N⁄Yä]Xõ_XõKõÿÿ›\YY
-]õ›»ô]»\úõ‹ä	—\›HY\ÿH∞Ë€»\›0ËHXZ\»\‹€∞Î]ô[à]X[^ôHH[HHY\ÿ\Àâ N√Bà›]Kòÿ][ŸœXÿ][ŸŒ‹›]KòYZ[ãùXõ\œ]Xõ\Œ‹›]KòYZ[ãú‹–ÿ\ùV◊N‹›]KòYZ[ãúŸ[X›YXõSù[Xô\è\Ÿ[X›Y‹›]KòYZ[ãôY]‹ô\íY[ù[‹›]KòYZ[ãôY]^\›[ô‘Ÿ[îŸ\ùöXŸOV◊N‹›]KòYZ[ãùöY]œI‹‹…Œ‹ô[ô\êYZ[ä
-N√Bà€€ú›õ‹õOI
-	»‹‹ÀYõ‹õI N⁄YäYõ‹õJ\ô]\õéŸõ‹õKô[[Y[ùÀõ‹ô\ó›\Kùò[YOIŸ[ôW⁄[âŒŸõ‹õKô[[Y[ùÀùXõW€ù[Xô\ãùò[YO\Ÿ[X›YŸõ‹õKô[[Y[ùÀõ‹ô\ó›\Kô\‹]⁄]ô[ù
-ô]»]ô[ù
-	ÿ⁄[ôŸIÀÿùXòõ\ŒùùY_JJNŸõ‹õKô[[Y[ùÀùXõW€ù[Xô\ãô\‹]⁄]ô[ù
-ô]»]ô[ù
-	ÿ⁄[ôŸIÀÿùXòõ\ŒùùY_JJN√BüCBÉBôù[ò›[€àXõR][TX⁄Ÿ\ìX\ö›\
-‹ô\íYÿ]Y€‹ûOI’Ÿ\…À]Y\ûOI… ^√Bà€€ú›‹ô\è\›]KòYZ[ãõ‹ô\úÀôö[ô
-][OOî›ö[ô ][KöY
-OOOT›ö[ô ‹ô\íY
-JN⁄Yä[‹ô\ä\ô]\õé√Bà€€ú›ÿ]Y€‹öY\œV…’Ÿ\…Àããä›]Kòÿ][ŸÀòÿ]Y€‹öY\ﬂÀããõô]»Ÿ]
-›]Kòÿ][ŸÀúõŸX›ÀõX\
-õŸX›OúõŸX›òÿ]Y€‹ûJJWJWN√Bà€€ú›\õO\]Y\ûKùö[J
-Kù”ÿÿ[S›Ÿ\êÿ\ŸJ	‹Pîâ N√Bà€€ú›õŸX›œ\›]Kòÿ][ŸÀúõŸX›Àôö[\äõŸX›OúõŸX›ö\◊ÿ]òZ[XõIâäÿ]Y€‹ûOOOI’Ÿ\…ﬂõŸX›òÿ]Y€‹ûOOOXÿ]Y€‹ûJIâä]\õ_	‹õŸX›õò[Y_H	‹õŸX›ô\ÿ‹ö\[€ü	…ﬂH	‹õŸX›òÿ]Y€‹û_Xù”ÿÿ[S›Ÿ\êÿ\ŸJ	‹Pîâ Kö[ò€Y\ \õJJJN√Bà€€ú›][\œ\›]KòYZ[ãôY]‹ô\êÿ\ù◊K›[Xÿ\ù›[
-][\ N√Bà^Y\ä]à€\‹œHùXõK\X⁄Ÿ\ãZXYèè]èè‹[à€\‹œHô^YXúõ›»èìQT–H	‘›ö[ô ‹ô\ãùXõW€ù[Xô\ü	… KúY›\ù
-ã	Ã	 _O‹‹[èèèêYX⁄[€ò\à][O⁄èèŸ]èèù]€à\OHòù]€àà€\‹œHöX€€ãXùàà]KX€‹ŸH\öXK[Xô[HëôX⁄\àè∞Âœÿù]€èèŸ]èè]à€\‹œHùXõK\X⁄Ÿ\ã[^[›]èèò]à€\‹œHùXõK\X⁄Ÿ\ãXÿ]Y€‹öY\»à\öXK[Xô[Hêÿ]Y€‹öX\»èâÿÿ]Y€‹öY\ÀõX\
-ò[YOOòù]€à\OHòù]€àà€\‹œHâÿÿ]Y€‹ûOOO[ò[YO…ÿX›]ôIŒâ…ﬂHà]K]XõK\X⁄Ÿ\ãXÿ]Y€‹ûOHâŸ\ÿ ò[YJ_HèâŸ\ÿ ò[YJ_Oÿù]€èò
-Köõ⁄[ä	… _O€ò]èèŸX›[€à€\‹œHùXõK\X⁄Ÿ\ãXÿ][Ÿ»èèXô[€\‹œHùXõK\X⁄Ÿ\ã\ŸX\ò⁄è∏£%O[ú]YHùXõK\X⁄Ÿ\ã\ŸX\ò⁄àXŸZ€\èHêù\ÿÿ\àõŸ]»õ»ÿ\ô0Ë\[»àò[YOHâŸ\ÿ ]Y\ûJ_Hèè€Xô[è]à€\‹œHùXõK\X⁄Ÿ\ã\õŸX›»èâ‹õŸX›Àõ[ô›ÿ	‹õŸX›ÀõX\
-õŸX›Oòù]€à\OHòù]€àà€\‹œHùXõK\X⁄Ÿ\ã\õŸX›à]K]XõK\X⁄Ÿ\ã\õŸX›Hâ‹õŸX›öYHà]K\ŸX\ò⁄HâŸ\ÿ 	‹õŸX›õò[Y_H	‹õŸX›ô\ÿ‹ö\[€ü	…ﬂH	‹õŸX›òÿ]Y€‹û_Xù”ÿÿ[S›Ÿ\êÿ\ŸJ	‹Pîâ J_Hèè[Y»‹òœHâŸ\ÿ õŸX›ö[XYŸW›\õï◊”—” _Hà[Hàèè‹[èè›õ€ôœâŸ\ÿ õŸX›õò[YJ_O‹›õ€ôœè€X[â€[€ô^JõŸX›úöXŸWÿŸ[ù _O‹€X[è‹‹[èèèªÔ"œÿèèÿù]€èò
-Köõ⁄[ä	… _O]à€\‹œHùXõK\X⁄Ÿ\ã[õÀ\ô\›[»Y[àèìô[ö[HõŸ]»[ò€€ùòYÀèŸ]èòâœ]à€\‹œHô[\Hèìô[ö[HõŸ]»[ò€€ùòY»ô\›Hÿ]Y€‹öXKèŸ]èâﬂOŸ]èè‹ŸX›[€èè\⁄YH€\‹œHùXõK\X⁄Ÿ\ãXÿ\ùèèœìõ›õ»YYœ⁄œè›õ€ôœêÿ\úö[öœ‹›õ€ôœè]à€\‹œHùXõK\X⁄Ÿ\ãXÿ\ùZ][\»èâ⁄][\Àõ[ô›⁄][\ÀõX\
-][OOò]à€\‹œHùXõK\X⁄Ÿ\ãXÿ\ùZ][Hèè]èèèâŸ\ÿ ][KúõŸX›õò[YJ_Oÿèè€X[â⁄][Kò€€\[Y[ùœÀõ[ô›Ÿ\ÿ ][Kò€€\[Y[ùÀõX\
-‹[€èOò	€‹[€ãú]X[ù]_pÂ»	€‹[€ãõò[Y_X
-Köõ⁄[ä	À	 JNâ…ﬂI⁄][Kõõ›\œÿ0≠»	Ÿ\ÿ ][Kõõ›\ _Xâ…ﬂO‹€X[è]à€\‹œHùXõK\X⁄Ÿ\ã\]Hèèù]€à\OHòù]€àà]K]XõK\X⁄Ÿ\ã\]OHãLHà]K]XõK\X⁄Ÿ\ãZŸ^OHâŸ\ÿ ][KöŸ^J_Hè∏¢$èÿù]€èè‹[èâ⁄][Kú]X[ù]_O‹‹[èèù]€à\OHòù]€àà]K]XõK\X⁄Ÿ\ã\]OHåHà]K]XõK\X⁄Ÿ\ãZŸ^OHâŸ\ÿ ][KöŸ^J_HèªÔ"œÿù]€èèŸ]èèŸ]èè›õ€ôœâ€[€ô^J][Kú]X[ù]Jö][Kù[ö]‹öXŸWÿŸ[ù _O‹›õ€ôœèŸ]èò
-Köõ⁄[ä	… Nâœ]à€\‹œHùXõK\X⁄Ÿ\ãY[\Hèè‹[è∏•¨O‹‹[èèêÿ\úö[ö»ò^ö[œ‹èŸ]èâﬂOŸ]èè]à€\‹œHùXõK\X⁄Ÿ\ãXÿ\ù]›[èè‹[èî›Xù›[‹‹[èè›õ€ôœâ€[€ô^J›[
-_O‹›õ€ôœèŸ]èèù]€à\OHòù]€àà€\‹œHúö[X\ûKXùàù[àYHùXõK\X⁄Ÿ\ã\ÿ]ôHà	⁄][\Àõ[ô›……ŒâŸ\ÿXõY	ﬂOêYX⁄[€ò\à0Ë€€X[ôH0≠»	€[€ô^J›[
-_Oÿù]€èèÿ\⁄YOèŸ]èò	›XõKZ][K\X⁄Ÿ\â N√Bà	
-	»€›ô\õ^HŸ]KX€‹ŸWI Kõ€ò€X⁄œX€‹ŸS^Y\é√Bàÿ›[Y[ùú]Y\ûTŸ[X›‹ê[
-	÷Ÿ]K]XõK\X⁄Ÿ\ãXÿ]Y€‹ûWI Kôõ‹ëXX⁄
-ù]€èOòù]€ãõ€ò€X⁄œJ
-OOùXõR][TX⁄Ÿ\ìX\ö›\
-‹ô\íYù]€ãô]\Ÿ]ùXõTX⁄Ÿ\êÿ]Y€‹ûK	
-	»›XõK\X⁄Ÿ\ã\ŸX\ò⁄	 OÀùò[Y_	… JN√Bà	
-	»›XõK\X⁄Ÿ\ã\ŸX\ò⁄	 Kõ€ö[ú]Y]ô[ùOûÿ€€ú›\õOY]ô[ùù\ôŸ]ùò[YKùö[J
-Kù”ÿÿ[S›Ÿ\êÿ\ŸJ	‹Pîâ N€]ö\⁄XõOLŸÿ›[Y[ùú]Y\ûTŸ[X›‹ê[
-	÷Ÿ]K]XõK\X⁄Ÿ\ã\õŸX›I Kôõ‹ëXX⁄
-ù]€èOûÿ€€ú›X]⁄Xù]€ãô]\Ÿ]úŸX\ò⁄ö[ò€Y\ \õJNÿù]€ãò€\‹”\›ùŸŸ€J	⁄Y[âÀ[X]⁄
-N⁄YäX]⁄
-]ö\⁄XõJ ﬂJN…
-	ÀùXõK\X⁄Ÿ\ã[õÀ\ô\›[… OÀò€\‹”\›ùŸŸ€J	⁄Y[âÀö\⁄XõOå
-_N√Bàÿ›[Y[ùú]Y\ûTŸ[X›‹ê[
-	÷Ÿ]K]XõK\X⁄Ÿ\ã\õŸX›I Kôõ‹ëXX⁄
-ù]€èOòù]€ãõ€ò€X⁄œJ
-OOûÿ€€ú›õŸX›\›]Kòÿ][ŸÀúõŸX›Àôö[ô
-][OOö][KöYOOSù[Xô\äù]€ãô]\Ÿ]ùXõTX⁄Ÿ\îõŸX›
-JN€‹[îõŸX›
-õŸX›öY›]KòYZ[ãôY]‹ô\êÿ\ù
+/* Mesas e comandas no formato operacional pedido pela A√ßailandia. */
+function tableOrderFor(table){return state.admin.orders.find(order=>String(order.id)===String(table.order_id))||state.admin.orders.find(order=>String(order.table_number)===String(table.number)&&order.channel==="counter"&&!['concluido','cancelado'].includes(order.status))}
+function tableOrderTotal(order){return Number(order?.total_cents||0)}
+function tableOrderStarted(order){if(!order?.created_at)return "Agora";const elapsed=Math.max(0,Math.floor((Date.now()-new Date(`${String(order.created_at).replace(' ','T')}Z`).getTime())/60000));return elapsed<1?"Agora":`${elapsed} min`}
+function tableFilterButton(value,label,count,filter){return `<button type="button" class="table-filter ${filter===value?'active':''}" data-table-filter="${value}"><strong>${count}</strong><span>${label}</span></button>`}
+const tableOperationsBaseBoard=tablesBoardMarkup;
+function tablesBoardMarkup(data,{admin=false}={}){
+  if(!admin)return tableOperationsBaseBoard(data,{admin});
+  const tables=data?.tables||[],occupied=tables.filter(table=>table.occupied),available=tables.filter(table=>!table.occupied);
+  const selectedNumber=String(state.admin.selectedTableNumber||occupied[0]?.number||available[0]?.number||""),selected=tables.find(table=>String(table.number)===selectedNumber),filter=state.admin.tableFilter||"all";
+  const shownOccupied=filter==="available"?[]:occupied,shownAvailable=filter==="occupied"?[]:available,selectedOrder=selected?.occupied?tableOrderFor(selected):null;
+  const orderItems=(selectedOrder?.items||[]).map(item=>`<div class="table-detail-item"><span>${Number(item.quantity||1)} √ó ${esc(item.product_name)}</span><strong>${money(Number(item.quantity||1)*Number(item.unit_price_cents||0))}</strong></div>`).join("");
+  const tile=table=>{const order=table.occupied?tableOrderFor(table):null,active=String(table.number)===selectedNumber;return `<button type="button" class="table-tile ${table.occupied?'occupied':'available'} ${active?'selected':''}" data-table-select="${table.number}" aria-pressed="${active}" aria-label="${table.occupied?`Mesa ${table.number}, ${money(tableOrderTotal(order))}, aberta h√° ${tableOrderStarted(order)}`:`Mesa ${table.number}, dispon√≠vel`}"><span class="table-tile-title">MESA ${String(table.number).padStart(2,'0')}</span>${table.occupied?`<strong class="table-tile-amount">${money(tableOrderTotal(order))}</strong><span class="table-tile-store">${esc(state.catalog?.settings?.store_name||'A√ßailandia PE')}</span><span class="table-tile-meta">‚ó∑ ${tableOrderStarted(order)} <span>1 comanda</span></span>`:`<span class="table-tile-free">Dispon√≠vel</span>`}</button>`};
+  const selectedPanel=!selected?`<div class="table-detail-empty">Selecione uma mesa para ver a comanda e as a√ß√µes.</div>`:selected.occupied?`<div class="table-detail-content"><div class="table-detail-status"><strong>${esc(tableStatusLabel(selected.status))} ¬∑ Pedido #${esc(selected.order_id)}</strong><span>Mesa aberta h√° ${tableOrderStarted(selectedOrder)}</span></div><div class="table-detail-customer"><span>Cliente</span><strong>${esc(selectedOrder?.customer_name||'N√£o informado')}</strong><span>Pagamento</span><strong>${selectedOrder?.payment_status==='aberto'?'Pendente':'Pago'}${selectedOrder?.payment_method?` ¬∑ ${esc(paymentLabel(selectedOrder.payment_method))}`:''}</strong></div><div class="table-detail-items">${orderItems||'<p class="muted">Os itens desta comanda n√£o foram carregados.</p>'}</div><div class="table-detail-total"><span>Subtotal / conta</span><strong>${money(tableOrderTotal(selectedOrder))}</strong></div><div class="table-detail-actions table-detail-actions-stack"><button type="button" class="primary-btn" data-table-add-items="${esc(selected.order_id)}">Ôºã Adicionar item</button><div><button type="button" class="secondary-btn" data-table-open="${selected.number}" data-order-id="${esc(selected.order_id)}">Editar comanda</button><button type="button" class="secondary-btn" data-table-close="${esc(selected.order_id)}">${selectedOrder?.payment_status==='aberto'?'Receber e fechar conta':'Fechar conta'}</button></div></div></div>`:`<div class="table-detail-content"><div class="table-detail-status free"><strong>Mesa ${String(selected.number).padStart(2,'0')} dispon√≠vel</strong><span>Pronta para abrir uma nova comanda.</span></div><div class="table-detail-actions"><button type="button" class="primary-btn" data-table-open="${selected.number}">Abrir comanda</button></div></div>`;
+  return `<section class="tables-admin"><div class="tables-main panel"><div class="tables-main-heading"><div><span class="eyebrow">SAL√ÉO ¬∑ S√ÉO GON√áALO</span><h2>Mesas e Comandas</h2><p>Abra, edite e feche contas do atendimento presencial.</p></div><button type="button" class="secondary-btn" id="refresh-tables">Atualizar</button></div><div class="table-summary-tabs">${tableFilterButton('all','Todas',tables.length,filter)}${tableFilterButton('occupied','Abertas',occupied.length,filter)}${tableFilterButton('available','Fechadas',available.length,filter)}<span class="table-open-total"><strong>${money(occupied.reduce((sum,table)=>sum+tableOrderTotal(tableOrderFor(table)),0))}</strong><small>em comandas abertas</small></span></div>${shownOccupied.length?`<section class="table-section"><div class="table-section-title"><h3>Comandas abertas</h3><span>${shownOccupied.length} mesa(s)</span></div><div class="table-open-grid">${shownOccupied.map(tile).join('')}</div></section>`:''}${shownAvailable.length?`<section class="table-section table-available-section"><div class="table-section-title"><h3>Mesas fechadas / dispon√≠veis</h3><span>${shownAvailable.length} mesa(s)</span></div><div class="table-available-grid">${shownAvailable.map(tile).join('')}</div></section>`:''}${!tables.length?'<div class="empty table-empty">Configure a quantidade de mesas em Configura√ß√µes.</div>':''}</div><aside class="table-detail-panel panel"><div class="panel-head"><div><span class="eyebrow">DETALHES DA COMANDA</span><h2>${selected?`Mesa ${String(selected.number).padStart(2,'0')}`:'Selecione uma mesa'}</h2></div></div>${selectedPanel}</aside></section>`;
+}
+tablesView=function(){return tablesBoardMarkup(state.admin.tables,{admin:true})};
 
-OOûÿ€€ú›X›]ôOYÿ›[Y[ùú]Y\ûTŸ[X›‹ä	÷Ÿ]K]XõK\X⁄Ÿ\ãXÿ]Y€‹ûWKòX›]ôI OÀô]\Ÿ]ùXõTX⁄Ÿ\êÿ]Y€‹û_	’Ÿ\…Œ›XõR][TX⁄Ÿ\ìX\ö›\
-‹ô\íYX›]ôK	
-	»›XõK\X⁄Ÿ\ã\ŸX\ò⁄	 OÀùò[Y_	… _J_JN√Bàÿ›[Y[ùú]Y\ûTŸ[X›‹ê[
-	÷Ÿ]K]XõK\X⁄Ÿ\ã\]WI Kôõ‹ëXX⁄
-ù]€èOòù]€ãõ€ò€X⁄œJ
-OOû›\]T]Jù]€ãô]\Ÿ]ùXõTX⁄Ÿ\íŸ^Kù[Xô\äù]€ãô]\Ÿ]ùXõTX⁄Ÿ\î]JK›]KòYZ[ãôY]‹ô\êÿ\ù
-N›XõR][TX⁄Ÿ\ìX\ö›\
-‹ô\íYÿ]Y€‹ûK]Y\ûJ_JN√Bà	
-	»›XõK\X⁄Ÿ\ã\ÿ]ôI Kõ€ò€X⁄œX\ﬁ[ò»ù]€ë]ô[ùOûÿ€€ú›ù]€èXù]€ë]ô[ùò›\úô[ù\ôŸ]ÿù]€ãô\ÿXõY]ùYN›û^ÿ]ÿZ]\Jÿ\KÿYZ[ã€‹ô\úÀ…Ÿ[ò€ŸUTíP€€\€ô[ù
-‹ô\íY
-_K⁄][\ÿ€Y]Ÿâ‘U“	ÀõŸNíî””ãú›ö[ô⁄YûJ⁄][\Œú›]KòYZ[ãôY]‹ô\êÿ\ùõX\
-][OOä‹õŸX›⁄Yö][KúõŸX›öY]X[ù]Nö][Kú]X[ù]K€€\[Y[ùŒö][Kò€€\[Y[ùﬂ◊Kõ›\Œö][Kõõ›\ﬂ	…ﬂJJ_J_JNÿ]ÿZ]ÿYYZ[ì‹ô\ú 
-N‹›]KòYZ[ãùXõ\œX]ÿZ]\J	Àÿ\KÿYZ[ã›Xõ\… Nÿ€‹ŸS^Y\ä
-N‹ô[ô\êYZ[ä
-N›ÿ\›
-	“][ú»YX⁄[€òY‹»0Ë€€X[ôI _Xÿ]⁄
-\úõ‹ä^›ÿ\›
-\úõ‹ãõY\‹ÿYŸJNÿù]€ãô\ÿXõYYò[Ÿ__N√BüCBÉBò\ﬁ[ò»ù[ò›[€à‹[ïXõR][TX⁄Ÿ\ä‹ô\íY
-^√BàYä\›]Kòÿ][Ÿ \›]Kòÿ][ŸœX]ÿZ]\J	Àÿ\KÿYZ[ã‹õŸX›… N√BàYä\›]KòYZ[ãõ‹ô\úÀú€€YJ‹ô\èOî›ö[ô ‹ô\ãöY
-OOOT›ö[ô ‹ô\íY
-JJX]ÿZ]ÿYYZ[ì‹ô\ú 
-N√Bà€€ú›‹ô\è\›]KòYZ[ãõ‹ô\úÀôö[ô
-][OOî›ö[ô ][KöY
-OOOT›ö[ô ‹ô\íY
-JN⁄Yä[‹ô\ä]õ›»ô]»\úõ‹ä	–H€€X[ôH∞Ë€»\›0ËHXZ\»]]òKà]X[^ôH\»Y\ÿ\Àâ N√Bà›]KòYZ[ãôY]‹ô\íY[‹ô\ãöY√Bà›]KòYZ[ãôY]‹ô\êÿ\ùJ‹ô\ãö][\ﬂ◊JKôö[\ä][OOö][KúõŸX›⁄Y
-KõX\
-][OOûÿ€€ú›õŸX›\›]Kòÿ][ŸÀúõŸX›Àôö[ô
-OúöYOOZ][KúõŸX›⁄Y
-_⁄Yö][KúõŸX›⁄Yò[YNö][KúõŸX›€ò[YK[XYŸW›\õíï◊”—”ÀöXŸWÿŸ[ùŒö][Kù[ö]‹öXŸWÿŸ[ùﬂN€]€€\[Y[ùœV◊N›û^ÿ€€\[Y[ùœRî””ãú\úŸJ][Kò€€\[Y[ù◊⁄ú€€ü	÷◊I _Xÿ]⁄ﬂX€€ú›õ›\œZ][Kõõ›\ﬂ	…Œ‹ô]\õà‹õŸX›]X[ù]Nö][Kú]X[ù]K[ö]‹öXŸWÿŸ[ùŒö][Kù[ö]‹öXŸWÿŸ[ùÀ€€\[Y[ùÀõ›\ÀŸ^Nòÿ\ù][RŸ^JõŸX›€€\[Y[ùÀõ›\ __JN√BàXõR][TX⁄Ÿ\ìX\ö›\
-‹ô\íY
-N√BüCBÉBôÿ›[Y[ùòY]ô[ù\›[ô\ä	ÿ€X⁄…À\ﬁ[ò»]ô[ùOû√Bà€€ú›Ÿ[X›Y]ô[ùù\ôŸ]ò€‹Ÿ\›
-	÷Ÿ]K]XõK\Ÿ[X›I Kö[\èY]ô[ùù\ôŸ]ò€‹Ÿ\›
-	÷Ÿ]K]XõKYö[\óI KôYúô\⁄Y]ô[ùù\ôŸ]ò€‹Ÿ\›
-	»‹ôYúô\⁄]Xõ\… K‹[èY]ô[ùù\ôŸ]ò€‹Ÿ\›
-	÷Ÿ]K]XõK[‹[óI KY][\œY]ô[ùù\ôŸ]ò€‹Ÿ\›
-	÷Ÿ]K]XõKXYZ][\◊I K€‹ŸOY]ô[ùù\ôŸ]ò€‹Ÿ\›
-	÷Ÿ]K]XõKX€‹ŸWI N√BàYä\Ÿ[X›	âàYö[\ââà\ôYúô\⁄	âà[‹[ââàXY][\…âàX€‹ŸJ\ô]\õé√Bà]ô[ùúô]ô[ùYò][
+const tableOperationsBaseOrderEditor=openOrderEditor;
+openOrderEditor=async function(id){
+  const order=state.admin.orders.find(item=>item.id===id);if(!order)return;
+  if(!state.catalog)state.catalog=await api('/api/admin/products');
+  const originalItems=order.items;order.items=(originalItems||[]).filter(item=>item.product_id);
+  try{return await tableOperationsBaseOrderEditor(id)}finally{order.items=originalItems}
+};
 
-NŸ]ô[ùú›‹[[YYX]Tõ‹Yÿ][€ä
-N√BàYäŸ[X›
-^‹›]KòYZ[ãúŸ[X›YXõSù[Xô\èT›ö[ô Ÿ[X›ô]\Ÿ]ùXõTŸ[X›
-N‹ô[ô\êYZ[ä
-N‹ô]\õüCBàYäö[\ä^‹›]KòYZ[ãùXõQö[\èYö[\ãô]\Ÿ]ùXõQö[\é‹ô[ô\êYZ[ä
-N‹ô]\õüCBàYäôYúô\⁄
-^›û^ÿ]ÿZ]õ€Z\ŸKò[
-€ÿYYZ[ì‹ô\ú 
-K\J	Àÿ\KÿYZ[ã›Xõ\… Kù[ä]OOú›]KòYZ[ãùXõ\œY]JWJN‹ô[ô\êYZ[ä
-_Xÿ]⁄
-\úõ‹ä^›ÿ\›
-\úõ‹ãõY\‹ÿYŸJ_\ô]\õüCBàYäY][\ ^›û^ÿ]ÿZ]‹[ïXõR][TX⁄Ÿ\äY][\Àô]\Ÿ]ùXõPY][\ _Xÿ]⁄
-\úõ‹ä^›ÿ\›
-\úõ‹ãõY\‹ÿYŸJ_\ô]\õüCBàYä‹[ä^ÿ€€ú›‹ô\íY[‹[ãô]\Ÿ]õ‹ô\íY⁄Yä‹ô\íY
-^›û^ÿ]ÿZ]ÿYYZ[ì‹ô\ú 
-Nÿ]ÿZ]‹[ì‹ô\ëY]‹ä‹ô\íY
-_Xÿ]⁄
-\úõ‹ä^›ÿ\›
-\úõ‹ãõY\‹ÿYŸJ_\ô]\õü]û^ÿ]ÿZ]XõS‹\ò][€ú”‹[ê]òZ[XõJ‹[ãô]\Ÿ]ùXõS‹[ä_Xÿ]⁄
-\úõ‹ä^›ÿ\›
-\úõ‹ãõY\‹ÿYŸJ_\ô]\õüCBàYä€‹ŸJ^ÿ€€ú›YX€‹ŸKô]\Ÿ]ùXõP€‹ŸN›û^⁄Yä\›]KòYZ[ãõ‹ô\úÀú€€YJ‹ô\èOõ‹ô\ãöYOOZY
-JX]ÿZ]ÿYYZ[ì‹ô\ú 
-Nÿ€€ú›‹ô\è\›]KòYZ[ãõ‹ô\úÀôö[ô
-][OOö][KöYOOZY
-N⁄Yä[‹ô\ä\ô]\õàÿ\›
-	–H€€X[ôH∞Ë€»\›0ËHXZ\»]]òKà]X[^ôH\»Y\ÿ\Àâ N⁄Yä‹ô\ãú^[Y[ù‹›]\»OOI‹Y€… ^€‹[ì‹ô\ë]Z[ Y
-N‹ô]\õüZYäX€€ôö\õJôX⁄\àHY\ÿH	€‹ô\ãùXõW€ù[Xô\üO»H€€X[ôHŸ\∞ËH€€ò€pÎYHHHY\ÿHöXÿ\∞ËH\‹€∞Î]ô[ò
-J\ô]\õéÿ]ÿZ]\Jÿ\KÿYZ[ã€‹ô\úÀ…Ÿ[ò€ŸUTíP€€\€ô[ù
-Y
-_X€Y]Ÿâ‘U“	ÀõŸNíî””ãú›ö[ô⁄YûJ‹›]\Œâÿ€€ò€ZY…ﬂJ_JN‹›]KòYZ[ãùXõ\œX]ÿZ]\J	Àÿ\KÿYZ[ã›Xõ\… Nÿ]ÿZ]ÿYYZ[ì‹ô\ú 
-N‹ô[ô\êYZ[ä
-N›ÿ\›
-Y\ÿH	€‹ô\ãùXõW€ù[Xô\üHXô\òYX
-_Xÿ]⁄
-\úõ‹ä^›ÿ\›
-\úõ‹ãõY\‹ÿYŸJ__CBüKùYJN√B
+const tableOperationsBaseOrderDetails=openOrderDetails;
+openOrderDetails=function(orderId){
+  tableOperationsBaseOrderDetails(orderId);
+  const order=state.admin.orders.find(item=>item.id===orderId);if(order?.channel!=='counter'||!order.table_number||order.status==='cancelado')return;
+  const actions=document.querySelector('.order-detail-actions');if(!actions)return;
+  let closeTable=$('#detail-release-table');
+  if(!closeTable){closeTable=document.createElement('button');closeTable.id='detail-release-table';closeTable.type='button';closeTable.className='secondary-btn';actions.append(closeTable)}
+  closeTable.textContent=order.payment_status==='aberto'?'Pagar e fechar mesa':'Fechar mesa';
+  closeTable.onclick=async()=>{
+    if(order.payment_status==='aberto'){
+      openPaymentSettlement(orderId);const confirmButton=$('#confirm-payment');if(!confirmButton)return;
+      const confirmPayment=confirmButton.onclick;confirmButton.textContent='Confirmar pagamento e fechar mesa';
+      confirmButton.onclick=async event=>{await confirmPayment.call(confirmButton,event);const updated=state.admin.orders.find(item=>item.id===orderId);if(updated?.payment_status!=='pago')return;try{await api(`/api/admin/orders/${encodeURIComponent(orderId)}`,{method:'PATCH',body:JSON.stringify({status:'concluido'})});await loadAdminOrders();state.admin.tables=await api('/api/admin/tables');closeLayer();renderAdmin();toast('Pagamento confirmado e mesa liberada')}catch(error){toast(`Pagamento registrado, mas a mesa n√£o foi liberada: ${error.message}`)}};return;
+    }
+    if(!confirm(`Fechar a mesa ${order.table_number}? A comanda ser√° conclu√≠da e a mesa ficar√° dispon√≠vel.`))return;
+    try{await api(`/api/admin/orders/${encodeURIComponent(orderId)}`,{method:'PATCH',body:JSON.stringify({status:'concluido'})});await loadAdminOrders();state.admin.tables=await api('/api/admin/tables');closeLayer();renderAdmin();toast(`Mesa ${order.table_number} liberada`)}catch(error){toast(error.message)}
+  };
+};
+
+async function tableOperationsOpenAvailable(tableNumber){
+  const selected=String(tableNumber),[catalog,tables]=await Promise.all([api('/api/admin/products'),api('/api/admin/tables')]);
+  const table=tables.tables?.find(item=>String(item.number)===selected);if(!table||table.occupied)throw new Error('Esta mesa n√£o est√° mais dispon√≠vel. Atualize a tela de mesas.');
+  state.catalog=catalog;state.admin.tables=tables;state.admin.posCart=[];state.admin.selectedTableNumber=selected;state.admin.editOrderId=null;state.admin.editExistingSelfService=[];state.admin.view='pos';renderAdmin();
+  const form=$('#pos-form');if(!form)return;form.elements.order_type.value='dine_in';form.elements.table_number.value=selected;form.elements.order_type.dispatchEvent(new Event('change',{bubbles:true}));form.elements.table_number.dispatchEvent(new Event('change',{bubbles:true}));
+}
+
+function tableItemPickerMarkup(orderId,category='Todas',query=''){
+  const order=state.admin.orders.find(item=>String(item.id)===String(orderId));if(!order)return;
+  const categories=['Todas',...(state.catalog.categories||[...new Set(state.catalog.products.map(product=>product.category))])];
+  const term=query.trim().toLocaleLowerCase('pt-BR');
+  const products=state.catalog.products.filter(product=>product.is_available&&(category==='Todas'||product.category===category)&&(!term||`${product.name} ${product.description||''} ${product.category}`.toLocaleLowerCase('pt-BR').includes(term)));
+  const items=state.admin.editOrderCart||[],total=cartTotal(items);
+  layer(`<div class="table-picker-head"><div><span class="eyebrow">MESA ${String(order.table_number||'').padStart(2,'0')}</span><h2>Adicionar item</h2></div><button type="button" class="icon-btn" data-close aria-label="Fechar">√ó</button></div><div class="table-picker-layout"><nav class="table-picker-categories" aria-label="Categorias">${categories.map(name=>`<button type="button" class="${category===name?'active':''}" data-table-picker-category="${esc(name)}">${esc(name)}</button>`).join('')}</nav><section class="table-picker-catalog"><label class="table-picker-search">‚åï<input id="table-picker-search" placeholder="Buscar produto no card√°pio" value="${esc(query)}"></label><div class="table-picker-products">${products.length?`${products.map(product=>`<button type="button" class="table-picker-product" data-table-picker-product="${product.id}" data-search="${esc(`${product.name} ${product.description||''} ${product.category}`.toLocaleLowerCase('pt-BR'))}"><img src="${esc(product.image_url||JW_LOGO)}" alt=""><span><strong>${esc(product.name)}</strong><small>${money(product.price_cents)}</small></span><b>Ôºã</b></button>`).join('')}<div class="table-picker-no-results hidden">Nenhum produto encontrado.</div>`:'<div class="empty">Nenhum produto encontrado nesta categoria.</div>'}</div></section><aside class="table-picker-cart"><h3>Novo pedido</h3><strong>Carrinho</strong><div class="table-picker-cart-items">${items.length?items.map(item=>`<div class="table-picker-cart-item"><div><b>${esc(item.product.name)}</b><small>${item.complements?.length?esc(item.complements.map(option=>`${option.quantity}√ó ${option.name}`).join(', ')):''}${item.notes?` ¬∑ ${esc(item.notes)}`:''}</small><div class="table-picker-qty"><button type="button" data-table-picker-qty="-1" data-table-picker-key="${esc(item.key)}">‚àí</button><span>${item.quantity}</span><button type="button" data-table-picker-qty="1" data-table-picker-key="${esc(item.key)}">Ôºã</button></div></div><strong>${money(item.quantity*item.unit_price_cents)}</strong></div>`).join(''):'<div class="table-picker-empty"><span>‚ñ±</span><p>Carrinho vazio</p></div>'}</div><div class="table-picker-cart-total"><span>Subtotal</span><strong>${money(total)}</strong></div><button type="button" class="primary-btn full" id="table-picker-save" ${items.length?'':'disabled'}>Adicionar √† comanda ¬∑ ${money(total)}</button></aside></div>`,'table-item-picker');
+  $('#overlay [data-close]').onclick=closeLayer;
+  document.querySelectorAll('[data-table-picker-category]').forEach(button=>button.onclick=()=>tableItemPickerMarkup(orderId,button.dataset.tablePickerCategory,$('#table-picker-search')?.value||''));
+  $('#table-picker-search').oninput=event=>{const term=event.target.value.trim().toLocaleLowerCase('pt-BR');let visible=0;document.querySelectorAll('[data-table-picker-product]').forEach(button=>{const match=button.dataset.search.includes(term);button.classList.toggle('hidden',!match);if(match)visible++});$('.table-picker-no-results')?.classList.toggle('hidden',visible>0)};
+  document.querySelectorAll('[data-table-picker-product]').forEach(button=>button.onclick=()=>{const product=state.catalog.products.find(item=>item.id===Number(button.dataset.tablePickerProduct));openProduct(product.id,state.admin.editOrderCart,()=>{const active=document.querySelector('[data-table-picker-category].active')?.dataset.tablePickerCategory||'Todas';tableItemPickerMarkup(orderId,active,$('#table-picker-search')?.value||'')})});
+  document.querySelectorAll('[data-table-picker-qty]').forEach(button=>button.onclick=()=>{updateQty(button.dataset.tablePickerKey,Number(button.dataset.tablePickerQty),state.admin.editOrderCart);tableItemPickerMarkup(orderId,category,query)});
+  $('#table-picker-save').onclick=async buttonEvent=>{const button=buttonEvent.currentTarget;button.disabled=true;try{await api(`/api/admin/orders/${encodeURIComponent(orderId)}/items`,{method:'PATCH',body:JSON.stringify({items:state.admin.editOrderCart.map(item=>({product_id:item.product.id,quantity:item.quantity,complements:item.complements||[],notes:item.notes||''}))})});await loadAdminOrders();state.admin.tables=await api('/api/admin/tables');closeLayer();renderAdmin();toast('Itens adicionados √† comanda')}catch(error){toast(error.message);button.disabled=false}};
+}
+
+async function openTableItemPicker(orderId){
+  if(!state.catalog)state.catalog=await api('/api/admin/products');
+  if(!state.admin.orders.some(order=>String(order.id)===String(orderId)))await loadAdminOrders();
+  const order=state.admin.orders.find(item=>String(item.id)===String(orderId));if(!order)throw new Error('A comanda n√£o est√° mais ativa. Atualize as mesas.');
+  state.admin.editOrderId=order.id;
+  state.admin.editOrderCart=(order.items||[]).filter(item=>item.product_id).map(item=>{const product=state.catalog.products.find(p=>p.id===item.product_id)||{id:item.product_id,name:item.product_name,image_url:JW_LOGO,price_cents:item.unit_price_cents};let complements=[];try{complements=JSON.parse(item.complements_json||'[]')}catch{}const notes=item.notes||'';return {product,quantity:item.quantity,unit_price_cents:item.unit_price_cents,complements,notes,key:cartItemKey(product,complements,notes)}});
+  tableItemPickerMarkup(orderId);
+}
+
+document.addEventListener('click',async event=>{
+  const select=event.target.closest('[data-table-select]'),filter=event.target.closest('[data-table-filter]'),refresh=event.target.closest('#refresh-tables'),open=event.target.closest('[data-table-open]'),addItems=event.target.closest('[data-table-add-items]'),close=event.target.closest('[data-table-close]');
+  if(!select&&!filter&&!refresh&&!open&&!addItems&&!close)return;
+  event.preventDefault();event.stopImmediatePropagation();
+  if(select){state.admin.selectedTableNumber=String(select.dataset.tableSelect);renderAdmin();return}
+  if(filter){state.admin.tableFilter=filter.dataset.tableFilter;renderAdmin();return}
+  if(refresh){try{await Promise.all([loadAdminOrders(),api('/api/admin/tables').then(data=>state.admin.tables=data)]);renderAdmin()}catch(error){toast(error.message)}return}
+  if(addItems){try{await openTableItemPicker(addItems.dataset.tableAddItems)}catch(error){toast(error.message)}return}
+  if(open){const orderId=open.dataset.orderId;if(orderId){try{await loadAdminOrders();await openOrderEditor(orderId)}catch(error){toast(error.message)}return}try{await tableOperationsOpenAvailable(open.dataset.tableOpen)}catch(error){toast(error.message)}return}
+  if(close){const id=close.dataset.tableClose;try{if(!state.admin.orders.some(order=>order.id===id))await loadAdminOrders();const order=state.admin.orders.find(item=>item.id===id);if(!order)return toast('A comanda n√£o est√° mais ativa. Atualize as mesas.');if(order.payment_status!=='pago'){openOrderDetails(id);return}if(!confirm(`Fechar a mesa ${order.table_number}? A comanda ser√° conclu√≠da e a mesa ficar√° dispon√≠vel.`))return;await api(`/api/admin/orders/${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify({status:'concluido'})});state.admin.tables=await api('/api/admin/tables');await loadAdminOrders();renderAdmin();toast(`Mesa ${order.table_number} liberada`)}catch(error){toast(error.message)}}
+},true);

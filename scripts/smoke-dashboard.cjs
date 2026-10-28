@@ -1,219 +1,192 @@
-Ы^љ›bћhҐкЯў№­…в'ЉШљ–,ЮзЪє[C®+ЮІЉ^­«bўz'¶…ЉW’КЛ^љљиѕ'^­цў•зXЫЫњЭњИH™\]Z\™J››ЩN™њИЉNГBЫЫњЭ\ЬЩ\ќH™\]Z\™J››ЩN\ЬЩ\ќЬЭљXЭЉNГBѓB™ЫШ[›ШШ][Ы€HИ][YN€‹Э\Э€NГB™ЫШ[—ЧЩШЭ[Y[ќ\Э[™\њПVЧNГB™ЫШ[™ШЭ[Y[ќHИ]Y\ћTЩ[XЭЬЋњЩ[XЭЬЏOњЩ[XЭЬЏOOH€ЭШ\ЭЏЮЭ^ЫЫќ[ќ€€‹Ы\ЬУ\ЭћШY
+const fs = require("node:fs");
+const assert = require("node:assert/strict");
 
-^ЯK™[[Э™J
-^Я__N›ќ[]Y\ћTЩ[XЭЬђ[Љ
-OO–ЧKY]™[ќ\Э[™\ЋЉ\K[™\‹Ь[ЫњКOO™ЫШ[—ЧЩШЭ[Y[ќ\Э[™\њЛњ\Ъ
-Э\K[™\‹Ь[ЫњЯJK›ЩNћЯHNГB™ЫШ[ќЪ[™ЭИHЫШ[ГB™ЫШ[›ШШ[ЭЬYЩHHИЩ]][NЉ
-OO›ќ[Щ]][NЉ
-OOћЯK™[[Э™R][NЉ
-OOћЯHNГB™ЫШ[™™]ЪH
+global.location = { pathname:"/test" };
+global.__documentListeners=[];
+global.document = { querySelector:selector=>selector==="#toast"?{textContent:"",classList:{add(){},remove(){}}}:null, querySelectorAll:()=>[], addEventListener:(type,handler,options)=>global.__documentListeners.push({type,handler,options}), body:{} };
+global.window = global;
+global.localStorage = { getItem:()=>null, setItem:()=>{}, removeItem:()=>{} };
+global.fetch = () => new Promise(()=>{});
+global.matchMedia = () => ({ matches:false });
 
-HO€™]И›ЫZ\ЩJ
+let source = ["app.js","whatsapp-pix.js","customer-recovery.js","admin-operations.js","admin-dashboard.js","promotions.js","customer-cart-flow.js","customer-cart-resilience.js","admin-order-sound.js","payment-copy.js","integrations.js","cashier-payment.js","cash-register.js","admin-fast-navigation.js","acai-builder.js","prime-operations-upgrade.js","operational-request-fixes.js","complement-management.js","product-flavors.js","fiscal-integration.js","self-service-confirmation.js","table-operations.js"]
+  .map(file => fs.readFileSync(`${__dirname}/../src/${file}`,"utf8"))
+  .join("\n") + `
+state.catalog={settings:{store_name:"JW",is_open:true,closing_time:"23:20",minimum_order_cents:1000,delivery_eta:"60",pickup_eta:"30",phone:"879",address:"Rua",table_count:10,featured_product_limit:15,delivery_neighborhood_fees:[],delivery_surcharge_enabled:false,delivery_surcharge_percent:0,delivery_surcharge_label:"Chuva",waiter_fee_enabled:true,waiter_fee_percent:10,auto_print_enabled:false,reception_printer:"Caixa",kitchen_printer:"",print_bridge_configured:true,print_copies:1,business_hours:[]},products:[],categories:[]};
+state.admin.printStatus={};
+const customerHeader=renderStoreHeader(state.catalog.settings);
+assert(customerHeader.includes("Mais informaГ§Гµes"));
+assert(customerHeader.includes("store-service-pills"));
+assert(searchableNeighborhoodMarkup("Petrolina").includes('Digite algumas letras'));
+// A Prime cadastra bairros e taxas no painel; a lista fixa comeГ§a vazia.
+assert.deepStrictEqual(searchableNeighborhoodNames("Petrolina"),[]);
+assert(searchableNeighborhoodMarkup("Petrolina","pos-neighborhood").includes('pos-neighborhood-search'));
+assert(!searchableNeighborhoodMarkup("Petrolina").includes('<datalist'));
+assert(searchableNeighborhoodMarkup("Petrolina").includes('neighborhood-suggestions'));
+const settingsMarkup=settingsView();
+assert(!settingsMarkup.includes("Taxas de entrega por bairro"));
+assert(settingsMarkup.includes("Taxa de garГ§om"));
+const navigationMarkup=adminNavButtons();
+assert(navigationMarkup.includes("GestГЈo de pedidos"));
+assert(navigationMarkup.includes("Bairros e taxas"));
+assert(neighborhoodsView().includes("Bairros e taxas de entrega"));
+assert(closedCatalogNotice().includes("Fechado"));
+assert(closedCatalogNotice().includes("CardГЎpio somente para consulta"));
+assert(closedCatalogNotice().includes("compact"));
+assert(!closedCatalogNotice().includes("Ver horГЎrios de funcionamento"));
+assert(!closedCatalogNotice().includes("Voltar"));
+assert(infoHoursMarkup(state.catalog.settings).includes("HorГЎrios nГЈo informados"));
+state.admin.management={from:"2026-09-01",to:"2026-09-23",orders:[],products:[],neighborhoods:[],summary:{},visits:{period:12,by_day:[{visited_on:"2026-09-23",visits:4}]}};
+assert(orderManagementView().includes("Visitas por dia"));
+assert(orderManagementView().includes("12 no perГ­odo"));
+state.admin.revenue={from:"2026-09-01",to:"2026-09-23",total_cents:0,order_count:0,average_cents:0,waiter_fee_cents:0,visit_count:12,by_payment:{dinheiro:0,pix:0,credito:0,debito:0},by_channel:{online:0,counter:0}};
+assert(revenueView().includes("Visitas no perГ­odo"));
+assert.equal(orderTypeLabel("pickup"),"Retirada");
+assert.equal(orderTypeLabel("dine_in"),"Consumir no local");
+assert.equal(orderTypeLabel("delivery"),"Entrega/Delivery");
+assert(posView().includes('<option value="dine_in">Consumir no local</option>'));
+assert(posView().includes('id="pos-clear-cart"'));
+assert.equal(typeof openCart,"function");
+const infoFees=infoNeighborhoodsMarkup({delivery_neighborhood_fees:[{city:"Petrolina",neighborhood:"SГЈo GonГ§alo",fee_cents:700}]});
+assert(infoFees.includes('id="info-neighborhood-search"'));
+assert(infoFees.includes('SГЈo GonГ§alo'));
+const noPromotionCatalog=customerApp();
+assert(!noPromotionCatalog.includes('data-target="promocoes"'));
+state.catalog.products=[{id:1,name:"Promo teste",description:"Teste",category:"Lanches",price_cents:1500,old_price_cents:2200,is_promo:true,is_available:true,is_featured:true,image_url:"/image.webp",complements:[]}];
+const promotionCatalog=customerApp();
+assert(promotionCatalog.includes('data-target="promocoes"'));
+assert(promotionCatalog.includes('old-price'));
+assert(productEditor(null).includes('Ativar promoГ§ГЈo'));
+assert(productEditor(null).includes('name="old_price"'));
+const adminTableMarkup=tablesBoardMarkup({table_count:2,available_count:1,occupied_count:1,tables:[{number:1,occupied:true,status:"novo",order_id:"123A",customer_name:"Cliente"},{number:2,occupied:false}]},{admin:true});
+assert(adminTableMarkup.includes('data-table-add-items="123A"'));
+assert(adminTableMarkup.includes('Adicionar item'));
+assert(adminTableMarkup.includes('data-table-open="1" data-order-id="123A"'));
+assert(adminTableMarkup.includes('data-table-close="123A"'));
+assert(adminTableMarkup.includes("Editar comanda"));
+assert(adminTableMarkup.includes("Fechar conta"));
+state.admin.selectedTableNumber="2";
+const availableTableMarkup=tablesBoardMarkup({table_count:2,available_count:1,occupied_count:1,tables:[{number:1,occupied:true,status:"novo",order_id:"123A",customer_name:"Cliente"},{number:2,occupied:false}]},{admin:true});
+assert(availableTableMarkup.includes('data-table-open="2"'));
+state.admin.selectedTableNumber=null;
+assert(source.includes("tableItemPickerMarkup"));
+assert(source.includes('data-table-picker-category'));
+assert(source.includes('id="table-picker-search"'));
+assert(source.includes('table-picker-save'));
+assert(source.includes("/api/admin/orders/")&&source.includes("/items"));
+assert(source.includes("Pagar e fechar mesa"));
+assert(adminNavButtons().includes('data-admin-view="counter-orders"'));
+assert(counterOrdersView().includes("Self-service/BalcГЈo"));
+state.catalog.products=[{id:20,name:"Copo trufado 300 ml",description:"Sabor",category:"Copos trufados",price_cents:3190,is_available:true,is_promo:false,enable_acai_complements:false,enable_acai_extras:false,enable_flavors:true,flavors:["SensaГ§ГЈo"],complements:[],selected_complement_ids:[]}];
+state.catalog.acai_complements=[{id:1,name:"SensaГ§ГЈo",group_id:"flavor",price_cents:0,is_active:1}];
+assert(productsView().includes('data-product-choice="complements"'));
+assert(productsView().includes('data-product-choice="extras"'));
+assert(fs.readFileSync(__dirname+"/../src/product-flavors.js","utf8").includes('data-product-flavors="edit"'));
+assert(productEditor(state.catalog.products[0]).includes('name="enable_flavors"'));
+assert(productEditor(state.catalog.products[0]).includes('value="1"'));
+state.admin.orders=[{id:"COUNTER-PAID",channel:"counter",payment_status:"pago",status:"novo",total_cents:3190,items:[]},{id:"COUNTER-PENDING",channel:"counter",payment_status:"aberto",status:"novo",total_cents:2490,items:[]},{id:"COUNTER-CANCELLED",channel:"counter",payment_status:"aberto",status:"cancelado",total_cents:990,items:[]}];
+state.admin.counterOrderFilter="all";
+assert(counterOrdersView().includes("COUNTER-PAID"));
+assert(counterOrdersView().includes("COUNTER-PENDING"));
+state.admin.counterOrderFilter="paid";
+assert(counterOrdersView().includes("COUNTER-PAID"));
+assert(!counterOrdersView().includes("COUNTER-PENDING"));
+assert(!counterOrdersView().includes("COUNTER-CANCELLED"));
+state.admin.counterOrderFilter="pending";
+assert(!counterOrdersView().includes("COUNTER-PAID"));
+assert(counterOrdersView().includes("COUNTER-PENDING"));
+assert(!counterOrdersView().includes("COUNTER-CANCELLED"));
+const workerSource=fs.readFileSync(__dirname+"/../src/worker-template.js","utf8");
+assert(workerSource.includes('url.pathname==="/api/admin/cashier-access"&&request.method==="PATCH"'));
+assert(workerSource.includes('await sha256(pin)'));
+assert(workerSource.includes('selected_complement_ids_json'));
+assert(posView().includes("AГ§aГ­ Self-service por peso"));
+state.cashier.view="counter-orders";state.cashier.orderFilter="all";state.cashier.orders=[{id:"COUNTER-TEST",channel:"counter",status:"novo",payment_status:"aberto",total_cents:1200,created_at:new Date().toISOString(),items:[]},{id:"ONLINE-TEST",channel:"online",status:"novo",payment_status:"aberto",total_cents:900,created_at:new Date().toISOString(),items:[]}];
+const cashierCounterMarkup=cashierCounterOrdersView();
+assert(cashierCounterMarkup.includes('class="counter-orders-tabs"'));
+assert(cashierCounterMarkup.includes('class="counter-orders-grid"'));
+assert(cashierCounterMarkup.includes("COUNTER-TEST"));
+assert(!cashierCounterMarkup.includes("ONLINE-TEST"));
+const cashierCounterCss=fs.readFileSync(__dirname+"/../src/cashier-ui-fixes.css","utf8");
+assert(cashierCounterCss.includes(".counter-orders-tabs button.active"));
+console.log("Dashboard smoke test passed");`;
 
-OOћЯJNГB™ЫШ[›X]ЪYYXHH
+source += "\nglobalThis.__appState=state;globalThis.__api=api;globalThis.__navigateAdmin=primeOpsNavigateAdmin;globalThis.__clearApiCache=()=>{apiGetCache.clear();apiGetPending.clear()};globalThis.__setAdminRenderer=fn=>renderAdmin=fn;globalThis.__setOrderEditor=fn=>openOrderEditor=fn;globalThis.__setOrderDetails=fn=>openOrderDetails=fn;globalThis.__setOrderLoader=fn=>loadAdminOrders=fn;";
+eval(source);
+// Exercise the final capture-phase menu guard the same way a real menu click
+// reaches it. Every screen must load its own backing data before navigation.
+global.__fetchCount={};
+global.fetch=async input=>{
+  const url=new URL(String(input),"https://test.local"),path=url.pathname;
+  global.__fetchCount[path]=(global.__fetchCount[path]||0)+1;
+  const payload=path.endsWith("/orders")?{orders:[]}:
+    path.endsWith("/products")?{products:[],categories:[],settings:global.__appState.catalog.settings}:
+    path.endsWith("/tables")?{table_count:1,available_count:1,occupied_count:0,tables:[{number:1,occupied:false}]}:
+    path.endsWith("/revenue")?{from:"",to:"",total_cents:0,order_count:0,average_cents:0,by_payment:{},by_channel:{}}:
+    path.endsWith("/print-status")?{}:
+    path.endsWith("/order-management")?{orders:[],products:[],neighborhoods:[],summary:{},visits:{period:0,by_day:[]}}:
+    path.endsWith("/neighborhood-fees")?{fees:[]}:
+    path.endsWith("/audit")?{entries:[]}:
+    path.endsWith("/cash-register")?{branches:{acailandia:{active:null,history:[]}}}:
+    path.endsWith("/employees")?{employees:[]}:
+    path.endsWith("/employee-purchases")?{rows:[],summary:{}}:
+    path.endsWith("/abandoned-carts")?{carts:[]}:
+    path.endsWith("/integrations/status")?{scale:{configured:false,grams:0,captured_at:"",token_created_at:""}}:
+    path.endsWith("/fiscal/setup")?{config:{},products:[],documents:[],readiness:{}}:{};
+  return {ok:true,json:async()=>payload};
+};
+global.__appState.admin.logged=true;
+global.__setAdminRenderer(()=>{});
+const navigationGuard=global.__documentListeners.filter(item=>item.type==="click"&&item.options===true&&String(item.handler).includes("[data-admin-view]")).at(-1);
+assert(navigationGuard,"capture-phase navigation guard was not registered");
+async function verifyNavigation(view){
+  const event={target:{closest:selector=>selector==='[data-admin-view]'?{dataset:{adminView:view}}:null},preventDefault(){},stopPropagation(){},stopImmediatePropagation(){}};
+  await navigationGuard.handler(event);
+  assert.equal(global.__appState.admin.view,view,`menu did not open ${view}`);
+}
+(async()=>{
+  for(const view of ["orders","counter-orders","pos","availability","tables","revenue","products","settings","management","neighborhoods","audit","cash-register","employees","abandoned","integrations","complements","fiscal"]){
+    await verifyNavigation(view);
+  }
+  const tableHandler=global.__documentListeners.filter(item=>item.type==="click"&&item.options===true&&String(item.handler).includes("[data-table-open]")).at(-1);
+  assert(tableHandler,"table controls must register a capture-phase click handler");
+  const clickTarget=dataset=>({closest:selector=>selector==="[data-table-open]"?{dataset}:null});
+  await tableHandler.handler({target:clickTarget({tableOpen:"1"}),preventDefault(){},stopPropagation(){},stopImmediatePropagation(){}});
+  assert.equal(global.__appState.admin.view,"pos","available table did not open the counter");
+  assert.equal(global.__appState.admin.selectedTableNumber,"1","available table was not selected");
+  let editedOrder="";global.__setOrderEditor(id=>{editedOrder=id});
+  global.__setOrderLoader(async()=>{global.__appState.admin.orders=[{id:"CAIXA-01",channel:"counter",status:"novo",payment_status:"aberto",table_number:1,items:[]}]});
+  await tableHandler.handler({target:clickTarget({tableOpen:"1",orderId:"CAIXA-01"}),preventDefault(){},stopPropagation(){},stopImmediatePropagation(){}});
+  assert.equal(editedOrder,"CAIXA-01","occupied table did not open its order editor");
+  let detailsOrder="";global.__setOrderDetails(id=>{detailsOrder=id});
+  const closeTarget={closest:selector=>selector==="[data-table-close]"?{dataset:{tableClose:"CAIXA-01"}}:null};
+  await tableHandler.handler({target:closeTarget,preventDefault(){},stopPropagation(){},stopImmediatePropagation(){}});
+  assert.equal(detailsOrder,"CAIXA-01","unpaid table close did not open its payment/details flow");
+  assert.equal(global.__appState.admin.cashRegister.active,null,"cash screen did not unwrap the AГ§ailandia branch response");
+  const productFetches=global.__fetchCount["/api/admin/products"]||0;
+  await verifyNavigation("products");
+  assert.equal(global.__fetchCount["/api/admin/products"]||0,productFetches,"recent catalog response was fetched again on a quick screen switch");
+  await global.__api("/api/admin/store-availability",{method:"PATCH",body:"{}"});
+  await global.__api("/api/admin/products");
+  assert.equal(global.__fetchCount["/api/admin/products"]||0,productFetches+1,"a successful update did not invalidate cached GET responses");
+  // A route with an existing snapshot must paint synchronously even if its
+  // background refresh is deliberately held open by a slow network.
+  global.__clearApiCache();
+  global.__renderCount=0;
+  global.__setAdminRenderer(()=>{global.__renderCount++});
+  let releaseSlowFetch;
+  global.fetch=()=>new Promise(resolve=>{releaseSlowFetch=()=>resolve({ok:true,json:async()=>({products:[],categories:[],settings:global.__appState.catalog.settings})})});
+  const slowNavigation=global.__navigateAdmin("products");
+  assert.equal(global.__renderCount,1,"cached screen did not render before its network refresh completed");
+  releaseSlowFetch();
+  await slowNavigation;
+  assert.equal(global.__renderCount,1,"background refresh unnecessarily rebuilt the screen and could discard user input");
+  console.log("Admin navigation smoke test passed (17 screens)");
+  process.exit(0);
+})().catch(error=>{console.error(error);process.exit(1)});
+assert(!fs.readFileSync(`${__dirname}/../src/worker-template.js`,"utf8").includes('Pagamento: ${paymentLabel(order.payment_method)} вЂў'));
+assert(fs.readFileSync(`${__dirname}/../src/worker-template.js`,"utf8").includes('featured_product_limit'));
+const workerSource=fs.readFileSync(`${__dirname}/../src/worker-template.js`,"utf8");
+assert(workerSource.includes('`Tipo do pedido: ${typeLabel}`'));
+assert(!workerSource.includes('SETOR: GERAL'));
 
-HO€
-ИX]Ъ\О™[ЩHJNГBѓB›]ЫЭ\ЩHHИ\љњИ‹ќЪ]Ш\\^љњИ‹Э\ЭЫY\‹\™XЫЭ™\ћKљњИ‹YZ[‹[Ь\][ЫњЛљњИ‹YZ[‹Y\Ъ›Ш\™љњИ‹њ›Ы[Э[ЫњЛљњИ‹Э\ЭЫY\‹XШ\ќY›ЭЛљњИ‹Э\ЭЫY\‹XШ\ќ\™\Ъ[Y[ЩKљњИ‹YZ[‹[Ь™\‹\ЫЭ[™љњИ‹њ^[Y[ќXЫЬKљњИ‹љ[ќYЬ][ЫњЛљњИ‹Ш\ЪY\‹\^[Y[ќљњИ‹Ш\Ъ\™YЪ\Э\‹љњИ‹YZ[‹Y\Э[]љYШ][Ы‹љњИ‹XШZKXќZ[\‹љњИ‹њљ[YK[Ь\][ЫњЛ]\ЬYKљњИ‹›Ь\][Ы[\™\]Y\ЭYљ^\ЛљњИ‹ЫЫ\[Y[ќ[X[YЩ[Y[ќљњИ‹њ›ЩXЭY›]›ЬњЛљњИ‹™љ\ШШ[Z[ќYЬ][Ы‹љњИ‹њЩ[‹\Щ\ќљXЩKXЫЫ™љ\›X][Ы‹љњИ‹ќX›K[Ь\][ЫњЛљњИ—CB€›X\
-љ[HO€њЛњ™XYљ[TЮ[К	ЧЧЩ\›[Y_KЛ‹‹ЬЬЛЙЩљ[_Xќ]ЋЉJCB€љ›Ъ[Љ—€ЉH
-ИBњЭ]KШ][ЩП^ЬЩ][™ЬОћЬЭЬ™WЫ[YN€’•И‹\ЧЫЬ[ЋќќYKЫЬЪ[™ЧЭ[YN€ЊЊОЊЊ‹Z[љ[][WЫЬ™\—ШЩ[ќОЊL[]™\ћWЩ]N€ЌЊ‹XЪЭ\Щ]N€ЊМ‹Ы™N€ЋОH‹Y™\ЬО€”ќXH‹X›WШЫЭ[ќЊL™X]\™YЬ›ЩXЭЫ[Z]ЊMK[]™\ћWЫ™ZYЪ›ЬљЫЩЩ™Y\О–ЧK[]™\ћWЬЭ\Ъ\™ЩWЩ[X›Y™[ЩK[]™\ћWЬЭ\Ъ\™ЩWЬ\Щ[ќЊ[]™\ћWЬЭ\Ъ\™ЩWЫX™[€ђЪ]H‹ШZ]\—Щ™YWЩ[X›YќќYKШZ]\—Щ™YWЬ\Щ[ќЊL]]ЧЬљ[ќЩ[X›Y™[ЩK™XЩ\[Ы—Ьљ[ќ\Ћ€ђШZ^H‹Ъ]Ъ[—Ьљ[ќ\Ћ€€‹љ[ќШњљYЩWШЫЫ™љYЭ\™YќќYKљ[ќШЫЬY\ОЊKќ\Ъ[™\ЬЧЪЭ\њО–Ч_K›ЩXЭО–ЧKШ]YЫЬљY\О–Ч_NГBњЭ]KYZ[‹њљ[ќЭ]\П^ЯNГBЫЫњЭЭ\ЭЫY\’XY\Џ\™[™\”ЭЬ™RXY\ЉЭ]KШ][ЩЛњЩ][™ЬКNГB\ЬЩ\ќ
-Э\ЭЫY\’XY\‹љ[ЫY\К“XZ\И[™›Ь›XpйрнY\ИЉJNГB\ЬЩ\ќ
-Э\ЭЫY\’XY\‹љ[ЫY\КњЭЬ™K\Щ\ќљXЩK\[ИЉJNГB\ЬЩ\ќ
-ЩX\ЪX›S™ZYЪ›ЬљЫЩX\љЭ\
-”]›Ы[HЉKљ[ЫY\К	СYЪ]H[Э[X\И]\ЙКJNГB‹ЛИHљ[YHШY\ЭHZ\њ›ЬИH^\И›ИZ[™[ИH\ЭHљ^HЫЫYpйШH^љXKѓB\ЬЩ\ќ™Y\ЭљXЭ\]X[
-ЩX\ЪX›S™ZYЪ›ЬљЫЩ[Y\К”]›Ы[HЉKЧJNГB\ЬЩ\ќ
-ЩX\ЪX›S™ZYЪ›ЬљЫЩX\љЭ\
-”]›Ы[H‹њЬЛ[™ZYЪ›ЬљЫЩЉKљ[ЫY\К	ЬЬЛ[™ZYЪ›ЬљЫЩ\ЩX\Ъ	КJNГB\ЬЩ\ќ
-\ЩX\ЪX›S™ZYЪ›ЬљЫЩX\љЭ\
-”]›Ы[HЉKљ[ЫY\К	П][\Э	КJNГB\ЬЩ\ќ
-ЩX\ЪX›S™ZYЪ›ЬљЫЩX\љЭ\
-”]›Ы[HЉKљ[ЫY\К	Ы™ZYЪ›ЬљЫЩ\ЭYЩЩ\Э[ЫњЙКJNГBЫЫњЭЩ][™ЬУX\љЭ\\Щ][™ЬХљY]К
-NГB\ЬЩ\ќ
-\Щ][™ЬУX\љЭ\љ[ЫY\К•^\ИH[ќ™YШHЬ€Z\њ›ИЉJNГB\ЬЩ\ќ
-Щ][™ЬУX\љЭ\љ[ЫY\К•^HHШ\°йЫЫHЉJNГBЫЫњЭ]љYШ][Ы“X\љЭ\XYZ[“]ђќ]ЫњК
-NГB\ЬЩ\ќ
-]љYШ][Ы“X\љЭ\љ[ЫY\К‘Щ\Э0иЫИHYYЬИЉJNГB\ЬЩ\ќ
-]љYШ][Ы“X\љЭ\љ[ЫY\КђZ\њ›ЬИH^\ИЉJNГB\ЬЩ\ќ
-™ZYЪ›ЬљЫЩХљY]К
-Kљ[ЫY\КђZ\њ›ЬИH^\ИH[ќ™YШHЉJNГB\ЬЩ\ќ
-ЫЬЩYШ][ЩУ›ЭXЩJ
-Kљ[ЫY\К‘™XЪYИЉJNГB\ЬЩ\ќ
-ЫЬЩYШ][ЩУ›ЭXЩJ
-Kљ[ЫY\КђШ\™0и\[ИЫЫY[ќH\HЫЫњЭ[HЉJNГB\ЬЩ\ќ
-ЫЬЩYШ][ЩУ›ЭXЩJ
-Kљ[ЫY\КЫЫ\XЭЉJNГB\ЬЩ\ќ
-XЫЬЩYШ][ЩУ›ЭXЩJ
-Kљ[ЫY\К•™\€Ь°и\љ[ЬИHќ[Ъ[Ы[Y[ќИЉJNГB\ЬЩ\ќ
-XЫЬЩYШ][ЩУ›ЭXЩJ
-Kљ[ЫY\К•›Ы\€ЉJNГB\ЬЩ\ќ
-[™›ТЭ\њУX\љЭ\
-Э]KШ][ЩЛњЩ][™ЬКKљ[ЫY\К’Ь°и\љ[ЬИ°иЫИ[™›Ь›XYЬИЉJNГBњЭ]KYZ[‹›X[YЩ[Y[ќ^Щњ›ЫN€ЊЊЌ‹LKLH‹О€ЊЊЌ‹LKLЊИ‹Ь™\њО–ЧK›ЩXЭО–ЧK™ZYЪ›ЬљЫЩО–ЧKЭ[[X\ћNћЯKљ\Ъ]ОћЬ\љ[ЩЊL‹ћWЩ^N–ЮЭљ\Ъ]YЫЫЋ€ЊЊЌ‹LKLЊИ‹љ\Ъ]ОЌW__NГB\ЬЩ\ќ
-Ь™\“X[YЩ[Y[ќљY]К
-Kљ[ЫY\К•љ\Ъ]\ИЬ€XHЉJNГB\ЬЩ\ќ
-Ь™\“X[YЩ[Y[ќљY]К
-Kљ[ЫY\КЊL€›И\°л[ЩИЉJNГBњЭ]KYZ[‹њ™]™[ќYO^Щњ›ЫN€ЊЊЌ‹LKLH‹О€ЊЊЌ‹LKLЊИ‹Э[ШЩ[ќОЊЬ™\—ШЫЭ[ќЊ]™\YЩWШЩ[ќОЊШZ]\—Щ™YWШЩ[ќОЊљ\Ъ]ШЫЭ[ќЊL‹ћWЬ^[Y[ќћЩ[љZ\›ОЊ^ЊЬ™Y]ОЊXљ]ОЊKћWШЪ[›™[ћЫЫ›[™NЊЫЭ[ќ\ЋЊ_NГB\ЬЩ\ќ
-™]™[ќYUљY]К
-Kљ[ЫY\К•љ\Ъ]\И›И\°л[ЩИЉJNГB\ЬЩ\ќ™\]X[
-Ь™\•\SX™[
-њXЪЭ\ЉK”™]\YHЉNГB\ЬЩ\ќ™\]X[
-Ь™\•\SX™[
-™[™WЪ[€ЉKђЫЫњЭ[Z\€›ИШШ[ЉNГB\ЬЩ\ќ™\]X[
-Ь™\•\SX™[
-™[]™\ћHЉK‘[ќ™YШKС[]™\ћHЉNГB\ЬЩ\ќ
-ЬХљY]К
-Kљ[ЫY\К	ПЬ[Ы€[YOH™[™WЪ[€ЏђЫЫњЭ[Z\€›ИШШ[ЫЬ[ЫЏ‰КJNГB\ЬЩ\ќ
-ЬХљY]К
-Kљ[ЫY\К	ЪYHњЬЛXЫX\‹XШ\ќ‰КJNГB\ЬЩ\ќ™\]X[
-\[Щ€Ь[ђШ\ќ™ќ[Э[Ы€ЉNГBЫЫњЭ[™›С™Y\ПZ[™›У™ZYЪ›ЬљЫЩУX\љЭ\
-Щ[]™\ћWЫ™ZYЪ›ЬљЫЩЩ™Y\О–ЮШЪ]N€”]›Ы[H‹™ZYЪ›ЬљЫЩ€”риЫИЫЫ°йШ[И‹™YWШЩ[ќОЌМW_JNГB\ЬЩ\ќ
-[™›С™Y\Лљ[ЫY\К	ЪYHљ[™›Л[™ZYЪ›ЬљЫЩ\ЩX\Ъ‰КJNГB\ЬЩ\ќ
-[™›С™Y\Лљ[ЫY\К	ФриЫИЫЫ°йШ[ЙКJNГBЫЫњЭ›Ф›Ы[Э[ЫђШ][ЩПXЭ\ЭЫY\ђ\
-
-NГB\ЬЩ\ќ
-[›Ф›Ы[Э[ЫђШ][ЩЛљ[ЫY\К	Щ]K]\™Щ]Hњ›Ы[ШЫЩ\И‰КJNГBњЭ]KШ][ЩЛњ›ЩXЭПVЮЪYЊK[YN€”›Ы[И\ЭH‹\ШЬљ\[ЫЋ€•\ЭH‹Ш]YЫЬћN€“[Ъ\И‹љXЩWШЩ[ќОЊMLЫЬљXЩWШЩ[ќОЊЊЊ\ЧЬ›Ы[ОќќYK\ЧШ]Z[X›NќќYK\ЧЩ™X]\™YќќYK[XYЩWЭ\›€‹Ъ[XYЩKќЩXњ‹ЫЫ\[Y[ќО–Ч_WNГBЫЫњЭ›Ы[Э[ЫђШ][ЩПXЭ\ЭЫY\ђ\
-
-NГB\ЬЩ\ќ
-›Ы[Э[ЫђШ][ЩЛљ[ЫY\К	Щ]K]\™Щ]Hњ›Ы[ШЫЩ\И‰КJNГB\ЬЩ\ќ
-›Ы[Э[ЫђШ][ЩЛљ[ЫY\К	ЫЫ\љXЩIКJNГB\ЬЩ\ќ
-›ЩXЭY]ЬЉќ[
-Kљ[ЫY\К	Р]]\€›Ы[рйриЫЙКJNГB\ЬЩ\ќ
-›ЩXЭY]ЬЉќ[
-Kљ[ЫY\К	Ы[YOH›ЫЬљXЩH‰КJNГBЫЫњЭYZ[•X›SX\љЭ\]X›\Р›Ш\™X\љЭ\
-ЭX›WШЫЭ[ќЊ‹]Z[X›WШЫЭ[ќЊKШШЭ\YYШЫЭ[ќЊKX›\О–ЮЫќ[X™\ЋЊKШШЭ\YYќќYKЭ]\О€››Э›И‹Ь™\—ЪY€ЊLЊРH‹Э\ЭЫY\—Ы[YN€ђЫY[ќHџKЫќ[X™\ЋЊ‹ШШЭ\YY™[Щ_W_KШYZ[ЋќќY_JNГB\ЬЩ\ќ
-YZ[•X›SX\љЭ\љ[ЫY\К	Щ]K]X›KXYZ][\ПHЊLЊРH‰КJNГB\ЬЩ\ќ
-YZ[•X›SX\љЭ\љ[ЫY\К	РYXЪ[Ы\€][IКJNГB\ЬЩ\ќ
-YZ[•X›SX\љЭ\љ[ЫY\К	Щ]K]X›K[Ь[ЏHЊH€]K[Ь™\‹ZYHЊLЊРH‰КJNГB\ЬЩ\ќ
-YZ[•X›SX\љЭ\љ[ЫY\К	Щ]K]X›KXЫЬЩOHЊLЊРH‰КJNГB\ЬЩ\ќ
-YZ[•X›SX\љЭ\љ[ЫY\К‘Y]\€ЫЫX[™HЉJNГB\ЬЩ\ќ
-YZ[•X›SX\љЭ\љ[ЫY\К‘™XЪ\€ЫЫќHЉJNГBњЭ]KYZ[‹њЩ[XЭYX›Sќ[X™\ЏHЊ€ЋГBЫЫњЭ]Z[X›UX›SX\љЭ\]X›\Р›Ш\™X\љЭ\
-ЭX›WШЫЭ[ќЊ‹]Z[X›WШЫЭ[ќЊKШШЭ\YYШЫЭ[ќЊKX›\О–ЮЫќ[X™\ЋЊKШШЭ\YYќќYKЭ]\О€››Э›И‹Ь™\—ЪY€ЊLЊРH‹Э\ЭЫY\—Ы[YN€ђЫY[ќHџKЫќ[X™\ЋЊ‹ШШЭ\YY™[Щ_W_KШYZ[ЋќќY_JNГB\ЬЩ\ќ
-]Z[X›UX›SX\љЭ\љ[ЫY\К	Щ]K]X›K[Ь[ЏHЊ€‰КJNГBњЭ]KYZ[‹њЩ[XЭYX›Sќ[X™\Џ[ќ[ГB\ЬЩ\ќ
-ЫЭ\ЩKљ[ЫY\КќX›R][TXЪЩ\“X\љЭ\ЉJNГB\ЬЩ\ќ
-ЫЭ\ЩKљ[ЫY\К	Щ]K]X›K\XЪЩ\‹XШ]YЫЬћIКJNГB\ЬЩ\ќ
-ЫЭ\ЩKљ[ЫY\К	ЪYHќX›K\XЪЩ\‹\ЩX\Ъ‰КJNГB\ЬЩ\ќ
-ЫЭ\ЩKљ[ЫY\К	ЭX›K\XЪЩ\‹\Ш]™IКJNГB\ЬЩ\ќ
-ЫЭ\ЩKљ[ЫY\К‹Ш\KШYZ[‹ЫЬ™\њЛИЉI‰њЫЭ\ЩKљ[ЫY\К‹Ъ][\ИЉJNГB\ЬЩ\ќ
-ЫЭ\ЩKљ[ЫY\К”YШ\€H™XЪ\€Y\ШHЉJNГB\ЬЩ\ќ
-YZ[“]ђќ]ЫњК
-Kљ[ЫY\К	Щ]KXYZ[‹]љY]ПHЫЭ[ќ\‹[Ь™\њИ‰КJNГB\ЬЩ\ќ
-ЫЭ[ќ\“Ь™\њХљY]К
-Kљ[ЫY\К”Щ[‹\Щ\ќљXЩKР[риЫИЉJNГBњЭ]KШ][ЩЛњ›ЩXЭПVЮЪYЊЊ[YN€ђЫЬИќYYИМ[‹\ШЬљ\[ЫЋ€”ШX›Ь€‹Ш]YЫЬћN€ђЫЬЬИќYYЬИ‹љXЩWШЩ[ќОЊМNL\ЧШ]Z[X›NќќYK\ЧЬ›Ы[О™[ЩK[X›WШXШZWШЫЫ\[Y[ќО™[ЩK[X›WШXШZWЩ^\О™[ЩK[X›WЩ›]›ЬњОќќYK›]›ЬњО–И”Щ[њШpйриЫИ—KЫЫ\[Y[ќО–ЧKЩ[XЭYШЫЫ\[Y[ќЪYО–Ч_WNГBњЭ]KШ][ЩЛXШZWШЫЫ\[Y[ќПVЮЪYЊK[YN€”Щ[њШpйриЫИ‹Ь›Э\ЪY€™›]›Ь€‹љXЩWШЩ[ќОЊ\ЧШXЭ]™NЊ_WNГB\ЬЩ\ќ
-›ЩXЭХљY]К
-Kљ[ЫY\К	Щ]K\›ЩXЭXЪЪXЩOHЫЫ\[Y[ќИ‰КJNГB\ЬЩ\ќ
-›ЩXЭХљY]К
-Kљ[ЫY\К	Щ]K\›ЩXЭXЪЪXЩOH™^\И‰КJNГB\ЬЩ\ќ
-њЛњ™XYљ[TЮ[КЧЩ\›[YJИ‹Л‹‹ЬЬЛЬ›ЩXЭY›]›ЬњЛљњИ‹ќ]ЋЉKљ[ЫY\К	Щ]K\›ЩXЭY›]›ЬњПH™Y]‰КJNГB\ЬЩ\ќ
-›ЩXЭY]ЬЉЭ]KШ][ЩЛњ›ЩXЭЦМJKљ[ЫY\К	Ы[YOH™[X›WЩ›]›ЬњИ‰КJNГB\ЬЩ\ќ
-›ЩXЭY]ЬЉЭ]KШ][ЩЛњ›ЩXЭЦМJKљ[ЫY\К	Э[YOHЊH‰КJNГBњЭ]KYZ[‹›Ь™\њПVЮЪY€ђУХS•T‹TRQ‹Ъ[›™[€ЫЭ[ќ\€‹^[Y[ќЬЭ]\О€њYЫИ‹Э]\О€››Э›И‹Э[ШЩ[ќОЊМNL][\О–Ч_KЪY€ђУХS•T‹TS‘S‘И‹Ъ[›™[€ЫЭ[ќ\€‹^[Y[ќЬЭ]\О€X™\ќИ‹Э]\О€››Э›И‹Э[ШЩ[ќОЊЌL][\О–Ч_KЪY€ђУХS•T‹PРSђСSQ‹Ъ[›™[€ЫЭ[ќ\€‹^[Y[ќЬЭ]\О€X™\ќИ‹Э]\О€Ш[Щ[YИ‹Э[ШЩ[ќОЋNL][\О–Ч_WNГBњЭ]KYZ[‹ЫЭ[ќ\“Ь™\‘љ[\ЏH[ЋГB\ЬЩ\ќ
-ЫЭ[ќ\“Ь™\њХљY]К
-Kљ[ЫY\КђУХS•T‹TRQЉJNГB\ЬЩ\ќ
-ЫЭ[ќ\“Ь™\њХљY]К
-Kљ[ЫY\КђУХS•T‹TS‘S‘ИЉJNГBњЭ]KYZ[‹ЫЭ[ќ\“Ь™\‘љ[\ЏHњZYЋГB\ЬЩ\ќ
-ЫЭ[ќ\“Ь™\њХљY]К
-Kљ[ЫY\КђУХS•T‹TRQЉJNГB\ЬЩ\ќ
-XЫЭ[ќ\“Ь™\њХљY]К
-Kљ[ЫY\КђУХS•T‹TS‘S‘ИЉJNГB\ЬЩ\ќ
-XЫЭ[ќ\“Ь™\њХљY]К
-Kљ[ЫY\КђУХS•T‹PРSђСSQЉJNГBњЭ]KYZ[‹ЫЭ[ќ\“Ь™\‘љ[\ЏHњ[™[™ИЋГB\ЬЩ\ќ
-XЫЭ[ќ\“Ь™\њХљY]К
-Kљ[ЫY\КђУХS•T‹TRQЉJNГB\ЬЩ\ќ
-ЫЭ[ќ\“Ь™\њХљY]К
-Kљ[ЫY\КђУХS•T‹TS‘S‘ИЉJNГB\ЬЩ\ќ
-XЫЭ[ќ\“Ь™\њХљY]К
-Kљ[ЫY\КђУХS•T‹PРSђСSQЉJNГBЫЫњЭЫЬљЩ\”ЫЭ\ЩOYњЛњ™XYљ[TЮ[КЧЩ\›[YJИ‹Л‹‹ЬЬЛЭЫЬљЩ\‹][\]KљњИ‹ќ]ЋЉNГB\ЬЩ\ќ
-ЫЬљЩ\”ЫЭ\ЩKљ[ЫY\К	Э\›њ][YOOOH‹Ш\KШYZ[‹ШШ\ЪY\‹XXШЩ\ЬИ‰‰њ™\]Y\Э›Y]ЩOOH”UТ‰КJNГB\ЬЩ\ќ
-ЫЬљЩ\”ЫЭ\ЩKљ[ЫY\К	Ш]ШZ]ЪLЌMЉ[ЉIКJNГB\ЬЩ\ќ
-ЫЬљЩ\”ЫЭ\ЩKљ[ЫY\К	ЬЩ[XЭYШЫЫ\[Y[ќЪYЧЪњЫЫ‰КJNГB\ЬЩ\ќ
-ЬХљY]К
-Kљ[ЫY\КђpйШpлHЩ[‹\Щ\ќљXЩHЬ€\ЫИЉJNГBњЭ]KШ\ЪY\‹ќљY]ПHЫЭ[ќ\‹[Ь™\њИЋЬЭ]KШ\ЪY\‹›Ь™\‘љ[\ЏH[ЋЬЭ]KШ\ЪY\‹›Ь™\њПVЮЪY€ђУХS•T‹UTХ‹Ъ[›™[€ЫЭ[ќ\€‹Э]\О€››Э›И‹^[Y[ќЬЭ]\О€X™\ќИ‹Э[ШЩ[ќОЊLЊЬ™X]YШ]›™]И]J
-KќТTУФЭљ[™К
-K][\О–Ч_KЪY€“У“S‘KUTХ‹Ъ[›™[€›Ы›[™H‹Э]\О€››Э›И‹^[Y[ќЬЭ]\О€X™\ќИ‹Э[ШЩ[ќОЋLЬ™X]YШ]›™]И]J
-KќТTУФЭљ[™К
-K][\О–Ч_WNГBЫЫњЭШ\ЪY\ђЫЭ[ќ\“X\љЭ\XШ\ЪY\ђЫЭ[ќ\“Ь™\њХљY]К
-NГB\ЬЩ\ќ
-Ш\ЪY\ђЫЭ[ќ\“X\љЭ\љ[ЫY\К	ШЫ\ЬПHЫЭ[ќ\‹[Ь™\њЛ]XњИ‰КJNГB\ЬЩ\ќ
-Ш\ЪY\ђЫЭ[ќ\“X\љЭ\љ[ЫY\К	ШЫ\ЬПHЫЭ[ќ\‹[Ь™\њЛYЬљY‰КJNГB\ЬЩ\ќ
-Ш\ЪY\ђЫЭ[ќ\“X\љЭ\љ[ЫY\КђУХS•T‹UTХЉJNГB\ЬЩ\ќ
-XШ\ЪY\ђЫЭ[ќ\“X\љЭ\љ[ЫY\К“У“S‘KUTХЉJNГBЫЫњЭШ\ЪY\ђЫЭ[ќ\ђЬЬПYњЛњ™XYљ[TЮ[КЧЩ\›[YJИ‹Л‹‹ЬЬЛШШ\ЪY\‹]ZKYљ^\ЛЬЬИ‹ќ]ЋЉNГB\ЬЩ\ќ
-Ш\ЪY\ђЫЭ[ќ\ђЬЬЛљ[ЫY\К‹ЫЭ[ќ\‹[Ь™\њЛ]XњИќ]Ы‹XЭ]™HЉJNГBЫЫњЫЫK›ЩК‘\Ъ›Ш\™Ы[ЪЩH\Э\ЬЩYЉNШГBѓBњЫЭ\ЩH
-ПH—™ЫШ[\Л—ЧШ\Э]O\Э]NЩЫШ[\Л—ЧШ\OX\NЩЫШ[\Л—ЧЫ]љYШ]PYZ[Џ\љ[YSЬУ]љYШ]PYZ[ЋЩЫШ[\Л—ЧШЫX\ђ\PШXЪOJ
-OOћШ\QЩ]ШXЪKЫX\Љ
-NШ\QЩ][™[™ЛЫX\Љ
-_NЩЫШ[\Л—ЧЬЩ]YZ[”™[™\™\ЏY›ЏOњ™[™\ђYZ[ЏY›ЋЩЫШ[\Л—ЧЬЩ]Ь™\‘Y]ЬЏY›ЏO›Ь[“Ь™\‘Y]ЬЏY›ЋЩЫШ[\Л—ЧЬЩ]Ь™\‘]Z[ПY›ЏO›Ь[“Ь™\‘]Z[ПY›ЋЩЫШ[\Л—ЧЬЩ]Ь™\“ШY\ЏY›ЏO›ШYYZ[“Ь™\њПY›ЋИЋГB™][
-ЫЭ\ЩJNГB‹ЛИ^\Ъ\ЩHHљ[[Ш\\™K\\ЩHY[ќHЭX\™HШ[YHШ^HH™X[Y[ќHЫXЪГB‹ЛИ™XXЪ\И]€]™\ћHШЬ™Y[€]\ЭШY]ИЭЫ€XЪЪ[™И]H™Y›Ь™H]љYШ][Ы‹ѓB™ЫШ[—ЧЩ™]ЪЫЭ[ќ^ЯNГB™ЫШ[™™]ЪX\Ю[И[њ]OћГB€ЫЫњЭ\›[™]ИT“
-Эљ[™К[њ]
-KљО‹ЛЭ\Э›ШШ[ЉK]]\›њ][YNГB€ЫШ[—ЧЩ™]ЪЫЭ[ќЬ]OJЫШ[—ЧЩ™]ЪЫЭ[ќЬ]_
-JМNГB€ЫЫњЭ^[ШY\]™[™ХЪ]
-‹ЫЬ™\њИЉOЮЫЬ™\њО–Ч_NѓB€]™[™ХЪ]
-‹Ь›ЩXЭИЉOЮЬ›ЩXЭО–ЧKШ]YЫЬљY\О–ЧKЩ][™ЬО™ЫШ[—ЧШ\Э]KШ][ЩЛњЩ][™ЬЯNѓB€]™[™ХЪ]
-‹ЭX›\ИЉOЮЭX›WШЫЭ[ќЊK]Z[X›WШЫЭ[ќЊKШШЭ\YYШЫЭ[ќЊX›\О–ЮЫќ[X™\ЋЊKШШЭ\YY™[Щ_W_NѓB€]™[™ХЪ]
-‹Ь™]™[ќYHЉOЮЩњ›ЫN€€‹О€€‹Э[ШЩ[ќОЊЬ™\—ШЫЭ[ќЊ]™\YЩWШЩ[ќОЊћWЬ^[Y[ќћЯKћWШЪ[›™[ћЯ_NѓB€]™[™ХЪ]
-‹Ьљ[ќ\Э]\ИЉOЮЯNѓB€]™[™ХЪ]
-‹ЫЬ™\‹[X[YЩ[Y[ќЉOЮЫЬ™\њО–ЧK›ЩXЭО–ЧK™ZYЪ›ЬљЫЩО–ЧKЭ[[X\ћNћЯKљ\Ъ]ОћЬ\љ[ЩЊћWЩ^N–Ч__NѓB€]™[™ХЪ]
-‹Ы™ZYЪ›ЬљЫЩY™Y\ИЉOЮЩ™Y\О–Ч_NѓB€]™[™ХЪ]
-‹Ш]Y]ЉOЮЩ[ќљY\О–Ч_NѓB€]™[™ХЪ]
-‹ШШ\Ъ\™YЪ\Э\€ЉOЮШњ[Ъ\ОћШXШZ[[™XNћШXЭ]™N›ќ[\ЭЬћN–Ч___NѓB€]™[™ХЪ]
-‹Щ[\ЮYY\ИЉOЮЩ[\ЮYY\О–Ч_NѓB€]™[™ХЪ]
-‹Щ[\ЮYYK\\Ъ\Щ\ИЉOЮЬ›ЭЬО–ЧKЭ[[X\ћNћЯ_NѓB€]™[™ХЪ]
-‹ШX[™Ы™YXШ\ќИЉOЮШШ\ќО–Ч_NѓB€]™[™ХЪ]
-‹Ъ[ќYЬ][ЫњЛЬЭ]\ИЉOЮЬШШ[NћШЫЫ™љYЭ\™Y™[ЩKЬ[\ОЊШ\\™YШ]€€‹ЪЩ[—ШЬ™X]YШ]€€џ_NѓB€]™[™ХЪ]
-‹Щљ\ШШ[ЬЩ]\ЉOЮШЫЫ™љYОћЯK›ЩXЭО–ЧKШЭ[Y[ќО–ЧK™XY[™\ЬОћЯ_NћЯNГB€™]\›€ЫЪОќќYKњЫЫЋ\Ю[К
-OOњ^[ШYNГBџNГB™ЫШ[—ЧШ\Э]KYZ[‹›ЩЩЩY]ќYNГB™ЫШ[—ЧЬЩ]YZ[”™[™\™\Љ
-
-OOћЯJNГBЫЫњЭ]љYШ][Ы‘ЭX\™YЫШ[—ЧЩШЭ[Y[ќ\Э[™\њЛ™љ[\Љ][OOљ][Kќ\OOOHЫXЪИ‰‰љ][K›Ь[ЫњПOO]ќYI‰”Эљ[™К][Kљ[™\ЉKљ[ЫY\К–Щ]KXYZ[‹]љY]ЧHЉJK]
-LJNГB\ЬЩ\ќ
-]љYШ][Ы‘ЭX\™Ш\\™K\\ЩH]љYШ][Ы€ЭX\™Ш\И›Э™YЪ\Э\™YЉNГB\Ю[Иќ[Э[Ы€™\љYћS]љYШ][ЫЉљY]К^ГB€ЫЫњЭ]™[ќ^Э\™Щ]ћШЫЬЩ\ЭњЩ[XЭЬЏOњЩ[XЭЬЏOOIЦЩ]KXYZ[‹]љY]ЧIПЮЩ]\Щ]ћШYZ[•љY]ОќљY]Я_N›ќ[K™]™[ќY][
-
-^ЯKЭЬ›ЬYШ][ЫЉ
-^ЯKЭЬ[[YYX]T›ЬYШ][ЫЉ
-^Я_NГB€]ШZ]]љYШ][Ы‘ЭX\™љ[™\Љ]™[ќ
-NГB€\ЬЩ\ќ™\]X[
-ЫШ[—ЧШ\Э]KYZ[‹ќљY]ЛљY]ЛY[ќHY›ЭЬ[€	ЭљY]ЯX
-NГBџCBЉ\Ю[К
-OOћГB€›ЬЉЫЫњЭљY]ИЩ€И›Ь™\њИ‹ЫЭ[ќ\‹[Ь™\њИ‹њЬИ‹]Z[Xљ[]H‹ќX›\И‹њ™]™[ќYH‹њ›ЩXЭИ‹њЩ][™ЬИ‹›X[YЩ[Y[ќ‹›™ZYЪ›ЬљЫЩИ‹]Y]‹Ш\Ъ\™YЪ\Э\€‹™[\ЮYY\И‹X[™Ы™Y‹љ[ќYЬ][ЫњИ‹ЫЫ\[Y[ќИ‹™љ\ШШ[—J^ГB€]ШZ]™\љYћS]љYШ][ЫЉљY]КNГB€CB€ЫЫњЭX›R[™\ЏYЫШ[—ЧЩШЭ[Y[ќ\Э[™\њЛ™љ[\Љ][OOљ][Kќ\OOOHЫXЪИ‰‰љ][K›Ь[ЫњПOO]ќYI‰”Эљ[™К][Kљ[™\ЉKљ[ЫY\К–Щ]K]X›K[Ь[—HЉJK]
-LJNГB€\ЬЩ\ќ
-X›R[™\‹ќX›HЫЫќ›ЫИ]\Э™YЪ\Э\€HШ\\™K\\ЩHЫXЪИ[™\€ЉNГB€ЫЫњЭЫXЪХ\™Щ]Y]\Щ]OЉШЫЬЩ\ЭњЩ[XЭЬЏOњЩ[XЭЬЏOOH–Щ]K]X›K[Ь[—HЏЮЩ]\Щ]N›ќ[JNГB€]ШZ]X›R[™\‹љ[™\ЉЭ\™Щ]ЫXЪХ\™Щ]
-ЭX›SЬ[Ћ€ЊHџJK™]™[ќY][
-
-^ЯKЭЬ›ЬYШ][ЫЉ
-^ЯKЭЬ[[YYX]T›ЬYШ][ЫЉ
-^Я_JNГB€\ЬЩ\ќ™\]X[
-ЫШ[—ЧШ\Э]KYZ[‹ќљY]ЛњЬИ‹]Z[X›HX›HY›ЭЬ[€HЫЭ[ќ\€ЉNГB€\ЬЩ\ќ™\]X[
-ЫШ[—ЧШ\Э]KYZ[‹њЩ[XЭYX›Sќ[X™\‹ЊH‹]Z[X›HX›HШ\И›ЭЩ[XЭYЉNГB€]Y]YЬ™\ЏH€ЋЩЫШ[—ЧЬЩ]Ь™\‘Y]ЬЉYOћЩY]YЬ™\ЏZYJNГB€ЫШ[—ЧЬЩ]Ь™\“ШY\Љ\Ю[К
-OOћЩЫШ[—ЧШ\Э]KYZ[‹›Ь™\њПVЮЪY€ђРRVKLH‹Ъ[›™[€ЫЭ[ќ\€‹Э]\О€››Э›И‹^[Y[ќЬЭ]\О€X™\ќИ‹X›WЫќ[X™\ЋЊK][\О–Ч_W_JNГB€]ШZ]X›R[™\‹љ[™\ЉЭ\™Щ]ЫXЪХ\™Щ]
-ЭX›SЬ[Ћ€ЊH‹Ь™\’Y€ђРRVKLHџJK™]™[ќY][
-
-^ЯKЭЬ›ЬYШ][ЫЉ
-^ЯKЭЬ[[YYX]T›ЬYШ][ЫЉ
-^Я_JNГB€\ЬЩ\ќ™\]X[
-Y]YЬ™\‹ђРRVKLH‹›ШШЭ\YYX›HY›ЭЬ[€]ИЬ™\€Y]Ь€ЉNГB€]]Z[УЬ™\ЏH€ЋЩЫШ[—ЧЬЩ]Ь™\‘]Z[КYOћЩ]Z[УЬ™\ЏZYJNГB€ЫЫњЭЫЬЩU\™Щ]^ШЫЬЩ\ЭњЩ[XЭЬЏOњЩ[XЭЬЏOOH–Щ]K]X›KXЫЬЩWHЏЮЩ]\Щ]ћЭX›PЫЬЩN€ђРRVKLHџ_N›ќ[NГB€]ШZ]X›R[™\‹љ[™\ЉЭ\™Щ]ЫЬЩU\™Щ]™]™[ќY][
-
-^ЯKЭЬ›ЬYШ][ЫЉ
-^ЯKЭЬ[[YYX]T›ЬYШ][ЫЉ
-^Я_JNГB€\ЬЩ\ќ™\]X[
-]Z[УЬ™\‹ђРRVKLH‹ќ[њZYX›HЫЬЩHY›ЭЬ[€]И^[Y[ќЩ]Z[И›ЭИЉNГB€\ЬЩ\ќ™\]X[
-ЫШ[—ЧШ\Э]KYZ[‹Ш\Ъ™YЪ\Э\‹XЭ]™Kќ[Ш\ЪШЬ™Y[€Y›Э[ќЬ\HpйШZ[[™XHњ[Ъ™\ЬЫњЩHЉNГB€ЫЫњЭ›ЩXЭ™]Ъ\ПYЫШ[—ЧЩ™]ЪЫЭ[ќИ‹Ш\KШYZ[‹Ь›ЩXЭИ—_ГB€]ШZ]™\љYћS]љYШ][ЫЉњ›ЩXЭИЉNГB€\ЬЩ\ќ™\]X[
-ЫШ[—ЧЩ™]ЪЫЭ[ќИ‹Ш\KШYZ[‹Ь›ЩXЭИ—_›ЩXЭ™]Ъ\Лњ™XЩ[ќШ][ЩИ™\ЬЫњЩHШ\И™]ЪYYШZ[€Ы€H]ZXЪИШЬ™Y[€ЭЪ]ЪЉNГB€]ШZ]ЫШ[—ЧШ\J‹Ш\KШYZ[‹ЬЭЬ™KX]Z[Xљ[]H‹ЫY]Щ€”UТ‹›ЩN€ћЯHџJNГB€]ШZ]ЫШ[—ЧШ\J‹Ш\KШYZ[‹Ь›ЩXЭИЉNГB€\ЬЩ\ќ™\]X[
-ЫШ[—ЧЩ™]ЪЫЭ[ќИ‹Ш\KШYZ[‹Ь›ЩXЭИ—_›ЩXЭ™]Ъ\КМKHЭXШЩ\ЬЩќ[\]HY›Э[ќ[Y]HШXЪYСU™\ЬЫњЩ\ИЉNГB€ЛИH›Э]HЪ][€^\Э[™ИЫ\ЪЭ]\ЭZ[ќЮ[Ъ›Ы›Э\ЫH]™[€Y€]ГB€ЛИXЪЩЬ›Э[™™Yњ™\Ъ\И[X™\][H[Ь[€ћHHЫЭИ™]ЫЬљЛѓB€ЫШ[—ЧШЫX\ђ\PШXЪJ
-NГB€ЫШ[—ЧЬ™[™\ђЫЭ[ќLГB€ЫШ[—ЧЬЩ]YZ[”™[™\™\Љ
-
-OOћЩЫШ[—ЧЬ™[™\ђЫЭ[ќ
-КЯJNГB€]™[X\ЩTЫЭС™]ЪГB€ЫШ[™™]ЪJ
-OO›™]И›ЫZ\ЩJ™\ЫЫ™OOћЬ™[X\ЩTЫЭС™]ЪJ
-OOњ™\ЫЫ™JЫЪОќќYKњЫЫЋ\Ю[К
-OOЉЬ›ЩXЭО–ЧKШ]YЫЬљY\О–ЧKЩ][™ЬО™ЫШ[—ЧШ\Э]KШ][ЩЛњЩ][™ЬЯJ_J_JNГB€ЫЫњЭЫЭУ]љYШ][ЫЏYЫШ[—ЧЫ]љYШ]PYZ[Љњ›ЩXЭИЉNГB€\ЬЩ\ќ™\]X[
-ЫШ[—ЧЬ™[™\ђЫЭ[ќKШXЪYШЬ™Y[€Y›Э™[™\€™Y›Ь™H]И™]ЫЬљИ™Yњ™\ЪЫЫ\]YЉNГB€™[X\ЩTЫЭС™]Ъ
-
-NГB€]ШZ]ЫЭУ]љYШ][ЫЋГB€\ЬЩ\ќ™\]X[
-ЫШ[—ЧЬ™[™\ђЫЭ[ќKXЪЩЬ›Э[™™Yњ™\Ъ[›™XЩ\ЬШ\љ[H™XќZ[HШЬ™Y[€[™ЫЭ[\ШШ\™\Щ\€[њ]ЉNГB€ЫЫњЫЫK›ЩКђYZ[€]љYШ][Ы€Ы[ЪЩH\Э\ЬЩY
-MИШЬ™Y[њКHЉNГB€›ШЩ\ЬЛ™^]
-
-NГBџJJ
-KШ]Ъ
-\њ›ЬЏOћШЫЫњЫЫK™\њ›ЬЉ\њ›ЬЉNЬ›ШЩ\ЬЛ™^]
-J_JNГB\ЬЩ\ќ
-YњЛњ™XYљ[TЮ[К	ЧЧЩ\›[Y_KЛ‹‹ЬЬЛЭЫЬљЩ\‹][\]KљњШќ]ЋЉKљ[ЫY\К	ФYШ[Y[ќО€	Ь^[Y[ќX™[
-Ь™\‹њ^[Y[ќЫY]Щ
-_H8 (‰КJNГB\ЬЩ\ќ
-њЛњ™XYљ[TЮ[К	ЧЧЩ\›[Y_KЛ‹‹ЬЬЛЭЫЬљЩ\‹][\]KљњШќ]ЋЉKљ[ЫY\К	Щ™X]\™YЬ›ЩXЭЫ[Z]	КJNГBЫЫњЭЫЬљЩ\”ЫЭ\ЩOYњЛњ™XYљ[TЮ[К	ЧЧЩ\›[Y_KЛ‹‹ЬЬЛЭЫЬљЩ\‹][\]KљњШќ]ЋЉNГB\ЬЩ\ќ
-ЫЬљЩ\”ЫЭ\ЩKљ[ЫY\К	Ш\ИИYYО€	Э\SX™[X	КJNГB\ЬЩ\ќ
-]ЫЬљЩ\”ЫЭ\ЩKљ[ЫY\К	ФСUФЋ€СTђS	КJNГBѓB
