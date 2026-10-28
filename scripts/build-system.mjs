@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const outputDir = process.argv[2] ? path.resolve(root, process.argv[2]) : path.join(root, "dist");
 const [template, html, css, cashierUiFixesCss, client, cashierPayment, cashRegister, adminFastNavigation, whatsappPix, whatsappPixCss, recovery, recoveryCss, adminOperations, adminOperationsCss, adminDashboard, adminDashboardCss, promotions, promotionsCss, cartFlow, cartFlowCss, cartResilience, cartResilienceCss, orderSound, orderSoundCss, paymentCopy, integrations, integrationsCss, selfServiceConfirm, selfServiceConfirmCss, acaiBuilder, acaiBuilderCss, primeOps, primeOpsCss, operationalFixes, operationalFixesCss, complementManagement, complementManagementCss, productFlavors, productFlavorsCss, fiscalIntegration, fiscalIntegrationCss, tableOperations] = await Promise.all([
   readFile(path.join(root, "src", "worker-template.js"), "utf8"),
   readFile(path.join(root, "src", "app.html"), "utf8"),
@@ -49,7 +50,7 @@ const [template, html, css, cashierUiFixesCss, client, cashierPayment, cashRegis
 ]);
 
 const mediaEntries = await readdir(path.join(root, "media"));
-const media = Object.fromEntries(await Promise.all(mediaEntries.filter(name => /\.(svg|webp|png|jpe?g)$/i.test(name)).map(async name => [
+const media = Object.fromEntries(await Promise.all(mediaEntries.filter(name => /\.(svg|webp|png|jpe?g|zip)$/i.test(name)).map(async name => [
   name,
   (await readFile(path.join(root, "media", name))).toString("base64"),
 ])));
@@ -60,11 +61,11 @@ const output = template
   .replace("__APP_JS__", JSON.stringify(`${client}\n${whatsappPix}\n${recovery}\n${adminOperations}\n${adminDashboard}\n${promotions}\n${cartFlow}\n${cartResilience}\n${orderSound}\n${paymentCopy}\n${integrations}\n${cashierPayment}\n${cashRegister}\n${adminFastNavigation}\n${acaiBuilder}\n${primeOps}\n${operationalFixes}\n${complementManagement}\n${productFlavors}\n${fiscalIntegration}\n${selfServiceConfirm}\n${tableOperations}`))
   .replace("__APP_MEDIA__", JSON.stringify(media));
 
-await rm(path.join(root, "dist"), { recursive: true, force: true });
-await mkdir(path.join(root, "dist", "server"), { recursive: true });
-await writeFile(path.join(root, "dist", "server", "index.js"), output);
-await mkdir(path.join(root, "dist", ".openai"), { recursive: true });
-await cp(path.join(root, ".openai", "hosting.json"), path.join(root, "dist", ".openai", "hosting.json"));
-await cp(path.join(root, "drizzle"), path.join(root, "dist", ".openai", "drizzle"), { recursive: true });
-console.log("Built dist/server/index.js");
+await rm(outputDir, { recursive: true, force: true });
+await mkdir(path.join(outputDir, "server"), { recursive: true });
+await writeFile(path.join(outputDir, "server", "index.js"), output);
+await mkdir(path.join(outputDir, ".openai"), { recursive: true });
+await cp(path.join(root, ".openai", "hosting.json"), path.join(outputDir, ".openai", "hosting.json"));
+await cp(path.join(root, "drizzle"), path.join(outputDir, ".openai", "drizzle"), { recursive: true });
+console.log(`Built ${path.relative(root, path.join(outputDir, "server", "index.js"))}`);
 

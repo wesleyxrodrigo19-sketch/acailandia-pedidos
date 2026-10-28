@@ -27,8 +27,5 @@ async function openAdminViewFast(view){
   }
 }
 
-const bindAdminFastNavigation=bindAdmin;
-bindAdmin=function(){
-  bindAdminFastNavigation();
-  document.querySelectorAll("[data-admin-view]").forEach(button=>button.onclick=event=>{event.preventDefault();openAdminViewFast(button.dataset.adminView)});
-};
+// O menu é tratado uma única vez pelo controlador delegado em
+// prime-operations-upgrade.js. Não atribua onclick concorrentes aqui.

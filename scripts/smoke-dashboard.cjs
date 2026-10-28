@@ -91,7 +91,12 @@ assert(workerSource.includes('url.pathname==="/api/admin/cashier-access"&&reques
 assert(workerSource.includes('await sha256(pin)'));
 assert(workerSource.includes('selected_complement_ids_json'));
 assert(posView().includes("Açaí Self-service por peso"));
-assert(cashierCounterOrdersView.toString().includes("counter-orders-grid"));
+state.cashier.view="counter-orders";state.cashier.orderFilter="all";state.cashier.orders=[{id:"COUNTER-TEST",channel:"counter",status:"novo",payment_status:"aberto",total_cents:1200,created_at:new Date().toISOString(),items:[]},{id:"ONLINE-TEST",channel:"online",status:"novo",payment_status:"aberto",total_cents:900,created_at:new Date().toISOString(),items:[]}];
+const cashierCounterMarkup=cashierCounterOrdersView();
+assert(cashierCounterMarkup.includes('class="counter-orders-tabs"'));
+assert(cashierCounterMarkup.includes('class="counter-orders-grid"'));
+assert(cashierCounterMarkup.includes("COUNTER-TEST"));
+assert(!cashierCounterMarkup.includes("ONLINE-TEST"));
 const cashierCounterCss=fs.readFileSync(__dirname+"/../src/cashier-ui-fixes.css","utf8");
 assert(cashierCounterCss.includes(".counter-orders-tabs button.active"));
 console.log("Dashboard smoke test passed");`;
