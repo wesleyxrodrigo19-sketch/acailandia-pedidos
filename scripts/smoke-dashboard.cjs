@@ -109,6 +109,13 @@ assert(cashierCounterMarkup.includes("COUNTER-TEST"));
 assert(!cashierCounterMarkup.includes("ONLINE-TEST"));
 const cashierCounterCss=fs.readFileSync(__dirname+"/../src/cashier-ui-fixes.css","utf8");
 assert(cashierCounterCss.includes(".counter-orders-tabs button.active"));
+const integrationSource=fs.readFileSync(__dirname+"/../src/integrations.js","utf8");
+assert(integrationSource.includes("diagnostico-balanca-acailandia.zip"));
+const diagnosticArchive=fs.readFileSync(__dirname+"/../media/diagnostico-balanca-acailandia.zip");
+assert.deepEqual(diagnosticArchive.subarray(0,2),Buffer.from("PK"));
+const diagnosticScript=fs.readFileSync(__dirname+"/../agents/acailandia/diagnostico/Diagnostico-Balanca-Acailandia.ps1","utf8");
+assert(diagnosticScript.includes("$ExpectedBaud = 4800"));
+assert(diagnosticScript.includes("$serial.Write([byte[]]@(5), 0, 1)"));
 console.log("Dashboard smoke test passed");`;
 
 source += "\nglobalThis.__appState=state;globalThis.__api=api;globalThis.__navigateAdmin=primeOpsNavigateAdmin;globalThis.__clearApiCache=()=>{apiGetCache.clear();apiGetPending.clear()};globalThis.__setAdminRenderer=fn=>renderAdmin=fn;globalThis.__setOrderEditor=fn=>openOrderEditor=fn;globalThis.__setOrderDetails=fn=>openOrderDetails=fn;globalThis.__setOrderLoader=fn=>loadAdminOrders=fn;";

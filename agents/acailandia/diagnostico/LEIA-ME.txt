@@ -1,0 +1,23 @@
+DIAGNOSTICO DA BALANCA - ACAILANDIA PE
+
+INSTALACAO
+1. Extraia o ZIP inteiro em uma pasta do computador conectado a balanca.
+2. Execute Instalar-Diagnostico-Balanca-Acailandia.bat.
+3. O instalador cria um atalho na Area de Trabalho e inicia o teste.
+4. Informe a porta COM (o valor sugerido e lido do agente instalado; sem agente, sugere COM10).
+5. Mantenha um peso na plataforma durante os testes e aguarde o relatorio.
+
+ANTES DO TESTE
+- Feche a janela antiga do agente/diagnostico para liberar a porta COM.
+- Deixe a balanca ligada e conectada por USB/serial.
+- Nao desconecte o cabo durante o teste.
+
+O QUE O TESTE FAZ
+- Lista as portas COM e le o arquivo de configuracao do agente sem mostrar o token.
+- Compara 4800, 9600, 2400 e 19200 bps, sempre em 8N1.
+- Testa recepcao sem fluxo e com RTS/CTS, primeiro sem transmitir.
+- Em cada configuracao envia apenas ENQ (0x05), uma consulta de leitura, e registra a resposta em HEX e texto.
+- Salva um relatorio na Area de Trabalho. O diagnostico nao envia nada pela internet e nao altera menus da balanca.
+
+O teste demora aproximadamente 80 segundos. Se a porta estiver ocupada pelo agente, feche-o e rode o atalho novamente.
+Se nenhum teste receber dados, envie o relatorio ao tecnico junto com o modelo exato da balanca e a configuracao da porta.
