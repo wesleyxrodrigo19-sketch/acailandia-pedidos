@@ -111,11 +111,19 @@ const cashierCounterCss=fs.readFileSync(__dirname+"/../src/cashier-ui-fixes.css"
 assert(cashierCounterCss.includes(".counter-orders-tabs button.active"));
 const integrationSource=fs.readFileSync(__dirname+"/../src/integrations.js","utf8");
 assert(integrationSource.includes("diagnostico-balanca-acailandia.zip"));
+assert(integrationSource.includes("4800 bps, 8N1, sem fluxo de hardware"));
 const diagnosticArchive=fs.readFileSync(__dirname+"/../media/diagnostico-balanca-acailandia.zip");
 assert.deepEqual(diagnosticArchive.subarray(0,2),Buffer.from("PK"));
 const diagnosticScript=fs.readFileSync(__dirname+"/../agents/acailandia/diagnostico/Diagnostico-Balanca-Acailandia.ps1","utf8");
 assert(diagnosticScript.includes("$ExpectedBaud = 4800"));
 assert(diagnosticScript.includes("$serial.Write([byte[]]@(5), 0, 1)"));
+const scaleAgent=fs.readFileSync(__dirname+"/../agents/acailandia/acailandia-agente-balanca.py","utf8");
+assert(scaleAgent.includes("PADRAO_QUADRO_PESO = re.compile") && scaleAgent.includes(String.fromCharCode(92)+"x02([0-9]{2}"));
+assert(scaleAgent.includes('getattr(config, "VELOCIDADE", 4800)'));
+assert(scaleAgent.includes('"x-scale-key": TOKEN'));
+const prix3FramePattern=new RegExp("\\x02([0-9]{2}\\.[0-9]{3})\\r");
+assert(prix3FramePattern.test(String.fromCharCode(2)+"00.182\\r"));
+assert(!prix3FramePattern.test("RAW: 000182"));
 console.log("Dashboard smoke test passed");`;
 
 source += "\nglobalThis.__appState=state;globalThis.__api=api;globalThis.__navigateAdmin=primeOpsNavigateAdmin;globalThis.__clearApiCache=()=>{apiGetCache.clear();apiGetPending.clear()};globalThis.__setAdminRenderer=fn=>renderAdmin=fn;globalThis.__setOrderEditor=fn=>openOrderEditor=fn;globalThis.__setOrderDetails=fn=>openOrderDetails=fn;globalThis.__setOrderLoader=fn=>loadAdminOrders=fn;";

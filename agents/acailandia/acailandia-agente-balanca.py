@@ -47,9 +47,8 @@ config_spec.loader.exec_module(config)
 
 URL_PDV = str(config.URL_PDV).rstrip("/")
 TOKEN = str(config.TOKEN).strip()
-PORTA = str(getattr(config, "PORTA", "COM4"))
-VELOCIDADE = int(getattr(config, "VELOCIDADE", 9600))
-UNIDADE = str(getattr(config, "UNIDADE", "auto")).lower()
+PORTA = str(getattr(config, "PORTA", "COM10"))
+VELOCIDADE = int(getattr(config, "VELOCIDADE", 4800))
 FLUXO_HARDWARE = bool(getattr(config, "FLUXO_HARDWARE", False))
 CAPACIDADE_MAXIMA_KG = float(getattr(config, "CAPACIDADE_MAXIMA_KG", 32.0))
 PESO_MINIMO = float(getattr(config, "PESO_MINIMO", 0.010))
@@ -59,48 +58,31 @@ REENVIO_SEGUNDOS = int(getattr(config, "REENVIO_SEGUNDOS", 30))
 # Algumas balanças Prix/Toledo só respondem quando recebem ENQ (0x05), em vez
 # de transmitir continuamente. Mantemos os dois modos para também aceitar
 # equipamentos configurados em envio automático.
-CONSULTAR_COM_ENQ = bool(getattr(config, "CONSULTAR_COM_ENQ", True))
+CONSULTAR_COM_ENQ = bool(getattr(config, "CONSULTAR_COM_ENQ", False))
 INTERVALO_ENQ_SEGUNDOS = float(getattr(config, "INTERVALO_ENQ_SEGUNDOS", 0.8))
 
-PADRAO_NUMERO = re.compile(r"[-+]?\d+(?:[.,]\d+)?")
+# Protocolo observado no agente funcional da Toledo Prix 3 Fit:
+# STX (0x02) + peso em kg com 3 casas (ex. 00.182) + CR (0x0D).
+PADRAO_QUADRO_PESO = re.compile(rb"\x02([0-9]{2}\.[0-9]{3})\r")
 
 
 def log(mensagem: str) -> None:
     print(f"[{time.strftime('%H:%M:%S')}] {mensagem}", flush=True)
 
 
-def limpar(texto: str) -> str:
-    return "".join(caractere for caractere in texto if caractere.isprintable())
-
-
-def para_kg(bruto: str) -> Optional[float]:
-    texto = bruto.strip().replace(" ", "")
-    if not texto:
-        return None
+def extrair_quadro_peso(dados: bytes) -> tuple[Optional[float], bytes]:
+    """Retorna o ultimo peso completo STX/CR e preserva bytes posteriores."""
+    quadros = list(PADRAO_QUADRO_PESO.finditer(dados))
+    if not quadros:
+        return None, dados[-256:]
+    quadro = quadros[-1]
     try:
-        valor = abs(float(texto.replace(",", ".")))
-    except ValueError:
-        return None
-    if UNIDADE == "kg":
-        return round(valor, 3)
-    if UNIDADE == "g":
-        return round(valor / 1000, 3)
-    return round(valor, 3) if ("," in texto or "." in texto) else round(valor / 1000, 3)
-
-
-def extrair_peso(linha: str) -> Optional[float]:
-    candidatos = []
-    for item in PADRAO_NUMERO.findall(limpar(linha)):
-        peso = para_kg(item)
-        if peso is not None and 0 <= peso <= CAPACIDADE_MAXIMA_KG:
-            candidatos.append((peso, "," in item or "." in item))
-    for peso, decimal in candidatos:
-        if peso >= PESO_MINIMO and decimal:
-            return peso
-    for peso, _ in candidatos:
-        if peso >= PESO_MINIMO:
-            return peso
-    return candidatos[0][0] if candidatos else None
+        peso = float(quadro.group(1).decode("ascii"))
+    except (UnicodeDecodeError, ValueError):
+        return None, dados[quadro.end():][-256:]
+    if not 0 <= peso <= CAPACIDADE_MAXIMA_KG:
+        return None, dados[quadro.end():][-256:]
+    return peso, dados[quadro.end():]
 
 
 def abrir_serial():
@@ -155,14 +137,15 @@ def enviar(peso_kg: float) -> bool:
 
 
 def rodar() -> None:
-    fluxo = "fluxo por hardware" if FLUXO_HARDWARE else "sem controle de fluxo"
+    fluxo = "fluxo RTS/CTS" if FLUXO_HARDWARE else "sem controle de fluxo"
     log(f"Lendo a balança em {PORTA} ({VELOCIDADE} bps, 8N1, {fluxo}).")
+    log("Protocolo Prix 3 Fit STX/peso/CR; recepção contínua sem ENQ.")
     log("Coloque um peso na balança. Para encerrar, feche esta janela.")
     ultimo_enviado: Optional[float] = None
     ultimo_envio_em = 0.0
     anterior: Optional[float] = None
     repeticoes = 0
-    buffer = ""
+    buffer = b""
     ultimo_debug = 0.0
     ultima_consulta = 0.0
 
@@ -179,17 +162,18 @@ def rodar() -> None:
             dados = porta.read(porta.in_waiting or 1)
             if not dados:
                 continue
-            buffer = (buffer + dados.decode("latin-1", errors="ignore"))[-512:]
-            peso = extrair_peso(buffer)
+            buffer += dados
+            peso, buffer = extrair_quadro_peso(buffer)
             agora = time.time()
             if peso is None:
                 if agora - ultimo_debug >= 3:
-                    visivel = "".join(caractere if caractere.isprintable() else "." for caractere in buffer[-100:])
-                    if visivel.strip(". "):
-                        log(f"RAW recebido: {visivel!r}")
+                    amostra = buffer[-48:]
+                    if amostra:
+                        visivel = "".join(chr(byte) if 32 <= byte <= 126 else "." for byte in amostra)
+                        log(f"[PROTOCOLO] sem quadro STX/peso/CR | HEX={amostra.hex(' ').upper()} | RAW={visivel!r}")
                     ultimo_debug = agora
                 continue
-            buffer = ""
+            log(f"Peso recebido da balança: {peso:.3f} kg")
             if peso == anterior:
                 repeticoes += 1
             else:
