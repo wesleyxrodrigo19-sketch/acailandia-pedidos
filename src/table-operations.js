@@ -1,62 +1,212 @@
-/* Mesas e comandas no formato operacional pedido pela AÃ§ailandia. */
-function tableOrderFor(table){return state.admin.orders.find(order=>String(order.id)===String(table.order_id))||state.admin.orders.find(order=>String(order.table_number)===String(table.number)&&order.channel==="counter"&&!['concluido','cancelado'].includes(order.status))}
-function tableOrderTotal(order){return Number(order?.total_cents||0)}
-function tableOrderStarted(order){if(!order?.created_at)return "Agora";const elapsed=Math.max(0,Math.floor((Date.now()-new Date(`${String(order.created_at).replace(' ','T')}Z`).getTime())/60000));return elapsed<1?"Agora":`${elapsed} min`}
-function tableFilterButton(value,label,count,filter){return `<button type="button" class="table-filter ${filter===value?'active':''}" data-table-filter="${value}"><strong>${count}</strong><span>${label}</span></button>`}
-const tableOperationsBaseBoard=tablesBoardMarkup;
-function tablesBoardMarkup(data,{admin=false}={}){
-  if(!admin)return tableOperationsBaseBoard(data,{admin});
-  const tables=data?.tables||[],occupied=tables.filter(table=>table.occupied),available=tables.filter(table=>!table.occupied);
-  const selectedNumber=String(state.admin.selectedTableNumber||occupied[0]?.number||available[0]?.number||""),selected=tables.find(table=>String(table.number)===selectedNumber),filter=state.admin.tableFilter||"all";
-  const shownOccupied=filter==="available"?[]:occupied,shownAvailable=filter==="occupied"?[]:available,selectedOrder=selected?.occupied?tableOrderFor(selected):null;
-  const orderItems=(selectedOrder?.items||[]).map(item=>`<div class="table-detail-item"><span>${Number(item.quantity||1)} Ã— ${esc(item.product_name)}</span><strong>${money(Number(item.quantity||1)*Number(item.unit_price_cents||0))}</strong></div>`).join("");
-  const tile=table=>{const order=table.occupied?tableOrderFor(table):null,active=String(table.number)===selectedNumber;return `<button type="button" class="table-tile ${table.occupied?'occupied':'available'} ${active?'selected':''}" data-table-select="${table.number}" aria-pressed="${active}" aria-label="${table.occupied?`Mesa ${table.number}, ${money(tableOrderTotal(order))}, aberta hÃ¡ ${tableOrderStarted(order)}`:`Mesa ${table.number}, disponÃ­vel`}"><span class="table-tile-title">MESA ${String(table.number).padStart(2,'0')}</span>${table.occupied?`<strong class="table-tile-amount">${money(tableOrderTotal(order))}</strong><span class="table-tile-store">${esc(state.catalog?.settings?.store_name||'AÃ§ailandia PE')}</span><span class="table-tile-meta">â—· ${tableOrderStarted(order)} <span>1 comanda</span></span>`:`<span class="table-tile-free">DisponÃ­vel</span>`}</button>`};
-  const selectedPanel=!selected?`<div class="table-detail-empty">Selecione uma mesa para ver a comanda e as aÃ§Ãµes.</div>`:selected.occupied?`<div class="table-detail-content"><div class="table-detail-status"><strong>${esc(tableStatusLabel(selected.status))} Â· Pedido #${esc(selected.order_id)}</strong><span>Mesa aberta hÃ¡ ${tableOrderStarted(selectedOrder)}</span></div><div class="table-detail-customer"><span>Cliente</span><strong>${esc(selectedOrder?.customer_name||'NÃ£o informado')}</strong><span>Pagamento</span><strong>${selectedOrder?.payment_status==='aberto'?'Pendente':'Pago'}${selectedOrder?.payment_method?` Â· ${esc(paymentLabel(selectedOrder.payment_method))}`:''}</strong></div><div class="table-detail-items">${orderItems||'<p class="muted">Os itens desta comanda nÃ£o foram carregados.</p>'}</div><div class="table-detail-total"><span>Subtotal / conta</span><strong>${money(tableOrderTotal(selectedOrder))}</strong></div><div class="table-detail-actions"><button type="button" class="secondary-btn" data-table-open="${selected.number}" data-order-id="${esc(selected.order_id)}">Editar comanda</button><button type="button" class="primary-btn" data-table-close="${esc(selected.order_id)}">${selectedOrder?.payment_status==='aberto'?'Receber e fechar conta':'Fechar conta'}</button></div></div>`:`<div class="table-detail-content"><div class="table-detail-status free"><strong>Mesa ${String(selected.number).padStart(2,'0')} disponÃ­vel</strong><span>Pronta para abrir uma nova comanda.</span></div><div class="table-detail-actions"><button type="button" class="primary-btn" data-table-open="${selected.number}">Abrir comanda</button></div></div>`;
-  return `<section class="tables-admin"><div class="tables-main panel"><div class="tables-main-heading"><div><span class="eyebrow">SALÃƒO Â· SÃƒO GONÃ‡ALO</span><h2>Mesas e Comandas</h2><p>Abra, edite e feche contas do atendimento presencial.</p></div><button type="button" class="secondary-btn" id="refresh-tables">Atualizar</button></div><div class="table-summary-tabs">${tableFilterButton('all','Todas',tables.length,filter)}${tableFilterButton('occupied','Abertas',occupied.length,filter)}${tableFilterButton('available','Fechadas',available.length,filter)}<span class="table-open-total"><strong>${money(occupied.reduce((sum,table)=>sum+tableOrderTotal(tableOrderFor(table)),0))}</strong><small>em comandas abertas</small></span></div>${shownOccupied.length?`<section class="table-section"><div class="table-section-title"><h3>Comandas abertas</h3><span>${shownOccupied.length} mesa(s)</span></div><div class="table-open-grid">${shownOccupied.map(tile).join('')}</div></section>`:''}${shownAvailable.length?`<section class="table-section table-available-section"><div class="table-section-title"><h3>Mesas fechadas / disponÃ­veis</h3><span>${shownAvailable.length} mesa(s)</span></div><div class="table-available-grid">${shownAvailable.map(tile).join('')}</div></section>`:''}${!tables.length?'<div class="empty table-empty">Configure a quantidade de mesas em ConfiguraÃ§Ãµes.</div>':''}</div><aside class="table-detail-panel panel"><div class="panel-head"><div><span class="eyebrow">DETALHES DA COMANDA</span><h2>${selected?`Mesa ${String(selected.number).padStart(2,'0')}`:'Selecione uma mesa'}</h2></div></div>${selectedPanel}</aside></section>`;
-}
-tablesView=function(){return tablesBoardMarkup(state.admin.tables,{admin:true})};
+Û^š›bh¥êß¢¹­…â'ŠØš–,ŞçÚº[C®+Ş²Š^­«b¢z'¶…ŠW’ÊË^ššè¾'^­ö¢•çKÊˆY\Ø\ÈHÛÛX[™\È›È›Ü›X]ÈÜ\˜XÚ[Û˜[YYÈ[HpéØZ[[™XKˆ
+‹ÃB™[˜İ[ÛˆX›SÜ™\‘›ÜŠX›J^Ü™]\›ˆİ]K˜YZ[‹›Ü™\œË™š[™
+Ü™\O”İš[™ÊÜ™\‹šY
+OOOTİš[™ÊX›K›Ü™\—ÚY
+J_İ]K˜YZ[‹›Ü™\œË™š[™
+Ü™\O”İš[™ÊÜ™\‹X›WÛ[X™\ŠOOOTİš[™ÊX›K›[X™\ŠI‰›Ü™\‹˜Ú[›™[OOH˜Ûİ[\ˆ‰‰ˆVÉØÛÛ˜ÛZYÉË	ØØ[˜Ù[YÉ×Kš[˜ÛY\ÊÜ™\‹œİ]\ÊJ_CB™[˜İ[ÛˆX›SÜ™\•İ[
+Ü™\Š^Ü™]\›ˆ[X™\ŠÜ™\Ëİ[ØÙ[ß
+_CB™[˜İ[ÛˆX›SÜ™\”İ\Y
+Ü™\Š^ÚYŠ[Ü™\Ë˜Ü™X]YØ]
+\™]\›ˆYÛÜ˜HØÛÛœİ[\ÙYSX]›X^
+X]™›ÛÜŠ
+]K››İÊ
+K[™]È]J	Ôİš[™ÊÜ™\‹˜Ü™X]YØ]
+Kœ™\XÙJ	È	Ë	Õ	Ê_V˜
+K™Ù][YJ
+JKÍŒ
+JNÜ™]\›ˆ[\ÙYOÈYÛÜ˜H˜	Ù[\ÙYHZ[˜CB™[˜İ[ÛˆX›Qš[\]ÛŠ˜[YKX™[Ûİ[š[\Š^Ü™]\›ˆ]Ûˆ\OH˜]ÛˆˆÛ\ÜÏHX›KYš[\ˆ	Ùš[\OO]˜[YOÉØXİ]™IÎ‰ÉßHˆ]K]X›KYš[\H‰İ˜[Y_Hİ›Û™Ï‰ØÛİ[OÜİ›Û™ÏÜ[‰ÛX™[OÜÜ[Ø]Û˜CB˜ÛÛœİX›SÜ\˜][ÛœĞ˜\ÙP›Ø\™]X›\Ğ›Ø\™X\šİ\ÃB™[˜İ[ÛˆX›\Ğ›Ø\™X\šİ\
+]KØYZ[Y˜[Ù_O^ßJ^ÃBˆYŠXYZ[Š\™]\›ˆX›SÜ\˜][ÛœĞ˜\ÙP›Ø\™
+]KØYZ[ŸJNÃBˆÛÛœİX›\ÏY]OËX›\ß×KØØİ\YY]X›\Ë™š[\ŠX›OOX›K›ØØİ\YY
+K]˜Z[X›O]X›\Ë™š[\ŠX›OOˆ]X›K›ØØİ\YY
+NÃBˆÛÛœİÙ[XİY[X™\Tİš[™Êİ]K˜YZ[‹œÙ[XİYX›S[X™\ŸØØİ\YYÌOË›[X™\Ÿ]˜Z[X›VÌOË›[X™\ŸˆŠKÙ[XİY]X›\Ë™š[™
+X›OO”İš[™ÊX›K›[X™\ŠOOO\Ù[XİY[X™\ŠKš[\\İ]K˜YZ[‹X›Qš[\Ÿ˜[ÃBˆÛÛœİÚİÛ“ØØİ\YYYš[\OOH˜]˜Z[X›HÖ×N›ØØİ\YYÚİÛ]˜Z[X›OYš[\OOH›ØØİ\YYÖ×N˜]˜Z[X›KÙ[XİYÜ™\\Ù[XİYË›ØØİ\YYİX›SÜ™\‘›ÜŠÙ[XİY
+N›[ÃBˆÛÛœİÜ™\’][\ÏJÙ[XİYÜ™\Ëš][\ß×JK›X\
+][OO˜]ˆÛ\ÜÏHX›KY]Z[Z][HÜ[‰Ó[X™\Š][Kœ]X[]_J_H0åÈ	Ù\ØÊ][Kœ›ÙXİÛ˜[YJ_OÜÜ[İ›Û™Ï‰Û[Û™^J[X™\Š][Kœ]X[]_JJ“[X™\Š][K[š]ÜšXÙWØÙ[ß
+J_OÜİ›Û™ÏÙ]˜
+Kš›Ú[ŠˆŠNÃBˆÛÛœİ[O]X›OOØÛÛœİÜ™\]X›K›ØØİ\YYİX›SÜ™\‘›ÜŠX›JN›[Xİ]™OTİš[™ÊX›K›[X™\ŠOOO\Ù[XİY[X™\Ü™]\›ˆ]Ûˆ\OH˜]ÛˆˆÛ\ÜÏHX›K][H	İX›K›ØØİ\YYÉÛØØİ\YY	Î‰Ø]˜Z[X›IßH	ØXİ]™OÉÜÙ[XİY	Î‰ÉßHˆ]K]X›K\Ù[XİH‰İX›K›[X™\ŸHˆ\šXK\™\ÜÙYH‰ØXİ]™_Hˆ\šXK[X™[H‰İX›K›ØØİ\YYØY\ØH	İX›K›[X™\ŸK	Û[Û™^JX›SÜ™\•İ[
+Ü™\ŠJ_KX™\H0èH	İX›SÜ™\”İ\Y
+Ü™\Š_X˜Y\ØH	İX›K›[X™\ŸK\ÜÛ°ë]™[HÜ[ˆÛ\ÜÏHX›K][K]]H“QTĞH	Ôİš[™ÊX›K›[X™\ŠKœYİ\
+‹	Ì	Ê_OÜÜ[‰İX›K›ØØİ\YYØİ›Û™ÈÛ\ÜÏHX›K][KX[[İ[‰Û[Û™^JX›SÜ™\•İ[
+Ü™\ŠJ_OÜİ›Û™ÏÜ[ˆÛ\ÜÏHX›K][K\İÜ™H‰Ù\ØÊİ]K˜Ø][ÙÏËœÙ][™ÜÏËœİÜ™WÛ˜[Y_	ĞpéØZ[[™XHIÊ_OÜÜ[Ü[ˆÛ\ÜÏHX›K][K[Y]H¸¥íÈ	İX›SÜ™\”İ\Y
+Ü™\Š_HÜ[ŒHÛÛX[™OÜÜ[ÜÜ[˜˜Ü[ˆÛ\ÜÏHX›K][KYœ™YH‘\ÜÛ°ë]™[ÜÜ[˜OØ]Û˜NÃBˆÛÛœİÙ[XİY[™[H\Ù[XİYØ]ˆÛ\ÜÏHX›KY]Z[Y[\H”Ù[XÚ[Û™H[XHY\ØH\˜H™\ˆHÛÛX[™HH\ÈpéğíY\ËÙ]˜œÙ[XİY›ØØİ\YYØ]ˆÛ\ÜÏHX›KY]Z[XÛÛ[]ˆÛ\ÜÏHX›KY]Z[\İ]\Èİ›Û™Ï‰Ù\ØÊX›Tİ]\ÓX™[
+Ù[XİYœİ]\ÊJ_H0­ÈYYÈÉÙ\ØÊÙ[XİY›Ü™\—ÚY
+_OÜİ›Û™ÏÜ[“Y\ØHX™\H0èH	İX›SÜ™\”İ\Y
+Ù[XİYÜ™\Š_OÜÜ[Ù]]ˆÛ\ÜÏHX›KY]Z[Xİ\İÛY\ˆÜ[ÛY[OÜÜ[İ›Û™Ï‰Ù\ØÊÙ[XİYÜ™\Ë˜İ\İÛY\—Û˜[Y_	Ó°èÛÈ[™›Ü›XYÉÊ_OÜİ›Û™ÏÜ[”YØ[Y[ÏÜÜ[İ›Û™Ï‰ÜÙ[XİYÜ™\Ëœ^[Y[Üİ]\ÏOOIØX™\ÉÏÉÔ[™[IÎ‰ÔYÛÉßIÜÙ[XİYÜ™\Ëœ^[Y[ÛY]ÙØ0­È	Ù\ØÊ^[Y[X™[
+Ù[XİYÜ™\‹œ^[Y[ÛY]Ù
+J_X‰ÉßOÜİ›Û™ÏÙ]]ˆÛ\ÜÏHX›KY]Z[Z][\È‰ÛÜ™\’][\ß	ÏÛ\ÜÏH›]]Y“ÜÈ][œÈ\İHÛÛX[™H°èÛÈ›Ü˜[HØ\œ™YØYÜËÜ‰ßOÙ]]ˆÛ\ÜÏHX›KY]Z[]İ[Ü[”İXİ[ÈÛÛOÜÜ[İ›Û™Ï‰Û[Û™^JX›SÜ™\•İ[
+Ù[XİYÜ™\ŠJ_OÜİ›Û™ÏÙ]]ˆÛ\ÜÏHX›KY]Z[XXİ[ÛœÈX›KY]Z[XXİ[ÛœË\İXÚÈ]Ûˆ\OH˜]ÛˆˆÛ\ÜÏHœš[X\KXˆˆ]K]X›KXYZ][\ÏH‰Ù\ØÊÙ[XİY›Ü™\—ÚY
+_H»ï"ÈYXÚ[Û˜\ˆ][OØ]Û]]Ûˆ\OH˜]ÛˆˆÛ\ÜÏHœÙXÛÛ™\KXˆˆ]K]X›K[Ü[H‰ÜÙ[XİY›[X™\ŸHˆ]K[Ü™\‹ZYH‰Ù\ØÊÙ[XİY›Ü™\—ÚY
+_H‘Y]\ˆÛÛX[™OØ]Û]Ûˆ\OH˜]ÛˆˆÛ\ÜÏHœÙXÛÛ™\KXˆˆ]K]X›KXÛÜÙOH‰Ù\ØÊÙ[XİY›Ü™\—ÚY
+_H‰ÜÙ[XİYÜ™\Ëœ^[Y[Üİ]\ÏOOIØX™\ÉÏÉÔ™XÙX™\ˆH™XÚ\ˆÛÛIÎ‰Ñ™XÚ\ˆÛÛIßOØ]ÛÙ]Ù]Ù]˜˜]ˆÛ\ÜÏHX›KY]Z[XÛÛ[]ˆÛ\ÜÏHX›KY]Z[\İ]\Èœ™YHİ›Û™Ï“Y\ØH	Ôİš[™ÊÙ[XİY›[X™\ŠKœYİ\
+‹	Ì	Ê_H\ÜÛ°ë]™[Üİ›Û™ÏÜ[”›ÛH\˜HXœš\ˆ[XH›İ˜HÛÛX[™KÜÜ[Ù]]ˆÛ\ÜÏHX›KY]Z[XXİ[ÛœÈ]Ûˆ\OH˜]ÛˆˆÛ\ÜÏHœš[X\KXˆˆ]K]X›K[Ü[H‰ÜÙ[XİY›[X™\ŸHXœš\ˆÛÛX[™OØ]ÛÙ]Ù]˜ÃBˆ™]\›ˆÙXİ[ÛˆÛ\ÜÏHX›\ËXYZ[ˆ]ˆÛ\ÜÏHX›\Ë[XZ[ˆ[™[]ˆÛ\ÜÏHX›\Ë[XZ[‹ZXY[™È]Ü[ˆÛ\ÜÏH™^YXœ›İÈ”ĞS0àÓÈ0­ÈğàÓÈÓÓ°áĞSÏÜÜ[“Y\Ø\ÈHÛÛX[™\ÏÚXœ˜KY]HH™XÚHÛÛ\ÈÈ][™[Y[È™\Ù[˜ÚX[ÜÙ]]Ûˆ\OH˜]ÛˆˆÛ\ÜÏHœÙXÛÛ™\KXˆˆYHœ™Yœ™\Ú]X›\È]X[^˜\Ø]ÛÙ]]ˆÛ\ÜÏHX›K\İ[[X\K]XœÈ‰İX›Qš[\]ÛŠ	Ø[	Ë	ÕÙ\ÉËX›\Ë›[™İš[\Š_IİX›Qš[\]ÛŠ	ÛØØİ\YY	Ë	ĞX™\\ÉËØØİ\YY›[™İš[\Š_IİX›Qš[\]ÛŠ	Ø]˜Z[X›IË	Ñ™XÚY\ÉË]˜Z[X›K›[™İš[\Š_OÜ[ˆÛ\ÜÏHX›K[Ü[‹]İ[İ›Û™Ï‰Û[Û™^JØØİ\YYœ™YXÙJ
+İ[KX›JOOœİ[JİX›SÜ™\•İ[
+X›SÜ™\‘›ÜŠX›JJK
+J_OÜİ›Û™ÏÛX[™[HÛÛX[™\ÈX™\\ÏÜÛX[ÜÜ[Ù]‰ÜÚİÛ“ØØİ\YY›[™İØÙXİ[ÛˆÛ\ÜÏHX›K\ÙXİ[Ûˆ]ˆÛ\ÜÏHX›K\ÙXİ[Û‹]]HÏÛÛX[™\ÈX™\\ÏÚÏÜ[‰ÜÚİÛ“ØØİ\YY›[™İHY\ØJÊOÜÜ[Ù]]ˆÛ\ÜÏHX›K[Ü[‹YÜšY‰ÜÚİÛ“ØØİ\YY›X\
+[JKš›Ú[Š	ÉÊ_OÙ]ÜÙXİ[Û˜‰ÉßIÜÚİÛ]˜Z[X›K›[™İØÙXİ[ÛˆÛ\ÜÏHX›K\ÙXİ[ÛˆX›KX]˜Z[X›K\ÙXİ[Ûˆ]ˆÛ\ÜÏHX›K\ÙXİ[Û‹]]HÏ“Y\Ø\È™XÚY\ÈÈ\ÜÛ°ë]™Z\ÏÚÏÜ[‰ÜÚİÛ]˜Z[X›K›[™İHY\ØJÊOÜÜ[Ù]]ˆÛ\ÜÏHX›KX]˜Z[X›KYÜšY‰ÜÚİÛ]˜Z[X›K›X\
+[JKš›Ú[Š	ÉÊ_OÙ]ÜÙXİ[Û˜‰ÉßIÈ]X›\Ë›[™İÉÏ]ˆÛ\ÜÏH™[\HX›KY[\HÛÛ™šYİ\™HH]X[YYHHY\Ø\È[HÛÛ™šYİ\˜péğíY\ËÙ]‰Î‰ÉßOÙ]\ÚYHÛ\ÜÏHX›KY]Z[\[™[[™[]ˆÛ\ÜÏHœ[™[ZXY]Ü[ˆÛ\ÜÏH™^YXœ›İÈ‘USTÈHÓÓPS‘OÜÜ[‰ÜÙ[XİYØY\ØH	Ôİš[™ÊÙ[XİY›[X™\ŠKœYİ\
+‹	Ì	Ê_X‰ÔÙ[XÚ[Û™H[XHY\ØIßOÚÙ]Ù]‰ÜÙ[XİY[™[OØ\ÚYOÜÙXİ[Û˜ÃBŸCBX›\ÕšY]ÏY[˜İ[ÛŠ
+^Ü™]\›ˆX›\Ğ›Ø\™X\šİ\
+İ]K˜YZ[‹X›\ËØYZ[Y_J_NÃBƒB˜ÛÛœİX›SÜ\˜][ÛœĞ˜\ÙSÜ™\‘Y]Ü[Ü[“Ü™\‘Y]ÜÃB›Ü[“Ü™\‘Y]ÜX\Ş[˜È[˜İ[ÛŠY
+^ÃBˆÛÛœİÜ™\\İ]K˜YZ[‹›Ü™\œË™š[™
+][OOš][KšYOOZY
+NÚYŠ[Ü™\Š\™]\›ÃBˆYŠ\İ]K˜Ø][ÙÊ\İ]K˜Ø][ÙÏX]ØZ]\J	ËØ\KØYZ[‹Ü›ÙXİÉÊNÃBˆÛÛœİÜšYÚ[˜[][\Ï[Ü™\‹š][\ÎÛÜ™\‹š][\ÏJÜšYÚ[˜[][\ß×JK™š[\Š][OOš][Kœ›ÙXİÚY
+NÃBˆ^Ü™]\›ˆ]ØZ]X›SÜ\˜][ÛœĞ˜\ÙSÜ™\‘Y]ÜŠY
+_Yš[˜[^ÛÜ™\‹š][\Ï[ÜšYÚ[˜[][\ßCBŸNÃBƒB˜ÛÛœİX›SÜ\˜][ÛœĞ˜\ÙSÜ™\‘]Z[Ï[Ü[“Ü™\‘]Z[ÎÃB›Ü[“Ü™\‘]Z[ÏY[˜İ[ÛŠÜ™\’Y
+^ÃBˆX›SÜ\˜][ÛœĞ˜\ÙSÜ™\‘]Z[ÊÜ™\’Y
+NÃBˆÛÛœİÜ™\\İ]K˜YZ[‹›Ü™\œË™š[™
+][OOš][KšYOO[Ü™\’Y
+NÚYŠÜ™\Ë˜Ú[›™[OOIØÛİ[\‰ß[Ü™\‹X›WÛ[X™\ŸÜ™\‹œİ]\ÏOOIØØ[˜Ù[YÉÊ\™]\›ÃBˆÛÛœİXİ[ÛœÏYØİ[Y[œ]Y\TÙ[XİÜŠ	Ë›Ü™\‹Y]Z[XXİ[ÛœÉÊNÚYŠXXİ[ÛœÊ\™]\›ÃBˆ]ÛÜÙUX›OI
+	ÈÙ]Z[\™[X\ÙK]X›IÊNÃBˆYŠXÛÜÙUX›J^ØÛÜÙUX›OYØİ[Y[˜Ü™X]Q[[Y[
+	Ø]Û‰ÊNØÛÜÙUX›KšYIÙ]Z[\™[X\ÙK]X›IÎØÛÜÙUX›K\OIØ]Û‰ÎØÛÜÙUX›K˜Û\ÜÓ˜[YOIÜÙXÛÛ™\KX‰ÎØXİ[ÛœË˜\[™
+ÛÜÙUX›J_CBˆÛÜÙUX›K^ÛÛ[[Ü™\‹œ^[Y[Üİ]\ÏOOIØX™\ÉÏÉÔYØ\ˆH™XÚ\ˆY\ØIÎ‰Ñ™XÚ\ˆY\ØIÎÃBˆÛÜÙUX›K›Û˜ÛXÚÏX\Ş[˜Ê
+OOÃBˆYŠÜ™\‹œ^[Y[Üİ]\ÏOOIØX™\ÉÊ^ÃBˆÜ[”^[Y[Ù][Y[
+Ü™\’Y
+NØÛÛœİÛÛ™š\›P]ÛI
+	ÈØÛÛ™š\›K\^[Y[	ÊNÚYŠXÛÛ™š\›P]ÛŠ\™]\›ÃBˆÛÛœİÛÛ™š\›T^[Y[XÛÛ™š\›P]Û‹›Û˜ÛXÚÎØÛÛ™š\›P]Û‹^ÛÛ[IĞÛÛ™š\›X\ˆYØ[Y[ÈH™XÚ\ˆY\ØIÎÃBˆÛÛ™š\›P]Û‹›Û˜ÛXÚÏX\Ş[˜È]™[OØ]ØZ]ÛÛ™š\›T^[Y[˜Ø[
+ÛÛ™š\›P]Û‹]™[
+NØÛÛœİ\]Y\İ]K˜YZ[‹›Ü™\œË™š[™
+][OOš][KšYOO[Ü™\’Y
+NÚYŠ\]YËœ^[Y[Üİ]\ÈOOIÜYÛÉÊ\™]\›İ^Ø]ØZ]\JØ\KØYZ[‹ÛÜ™\œËÉÙ[˜ÛÙUT’PÛÛ\Û™[
+Ü™\’Y
+_XÛY]Ù‰ÔUÒ	Ë›ÙN’”ÓÓ‹œİš[™ÚYJÜİ]\Î‰ØÛÛ˜ÛZYÉßJ_JNØ]ØZ]ØYYZ[“Ü™\œÊ
+NÜİ]K˜YZ[‹X›\ÏX]ØZ]\J	ËØ\KØYZ[‹İX›\ÉÊNØÛÜÙS^Y\Š
+NÜ™[™\YZ[Š
+NİØ\İ
+	ÔYØ[Y[ÈÛÛ™š\›XYÈHY\ØHX™\˜YIÊ_XØ]Ú
+\œ›ÜŠ^İØ\İ
+YØ[Y[È™YÚ\İ˜YËX\ÈHY\ØH°èÛÈ›ÚHX™\˜YNˆ	Ù\œ›Ü‹›Y\ÜØYÙ_X
+__NÜ™]\›ÃBˆCBˆYŠXÛÛ™š\›J™XÚ\ˆHY\ØH	ÛÜ™\‹X›WÛ[X™\ŸOÈHÛÛX[™HÙ\°èHÛÛ˜ÛpëYHHHY\ØHšXØ\°èH\ÜÛ°ë]™[˜
+J\™]\›ÃBˆ^Ø]ØZ]\JØ\KØYZ[‹ÛÜ™\œËÉÙ[˜ÛÙUT’PÛÛ\Û™[
+Ü™\’Y
+_XÛY]Ù‰ÔUÒ	Ë›ÙN’”ÓÓ‹œİš[™ÚYJÜİ]\Î‰ØÛÛ˜ÛZYÉßJ_JNØ]ØZ]ØYYZ[“Ü™\œÊ
+NÜİ]K˜YZ[‹X›\ÏX]ØZ]\J	ËØ\KØYZ[‹İX›\ÉÊNØÛÜÙS^Y\Š
+NÜ™[™\YZ[Š
+NİØ\İ
+Y\ØH	ÛÜ™\‹X›WÛ[X™\ŸHX™\˜YX
+_XØ]Ú
+\œ›ÜŠ^İØ\İ
+\œ›Ü‹›Y\ÜØYÙJ_CBˆNÃBŸNÃBƒB˜\Ş[˜È[˜İ[ÛˆX›SÜ\˜][ÛœÓÜ[]˜Z[X›JX›S[X™\Š^ÃBˆÛÛœİÙ[XİYTİš[™ÊX›S[X™\ŠKØØ][ÙËX›\×OX]ØZ]›ÛZ\ÙK˜[
+Ø\J	ËØ\KØYZ[‹Ü›ÙXİÉÊK\J	ËØ\KØYZ[‹İX›\ÉÊWJNÃBˆÛÛœİX›O]X›\ËX›\ÏË™š[™
+][OO”İš[™Ê][K›[X™\ŠOOO\Ù[XİY
+NÚYŠ]X›_X›K›ØØİ\YY
+]›İÈ™]È\œ›ÜŠ	Ñ\İHY\ØH°èÛÈ\İ0èHXZ\È\ÜÛ°ë]™[ˆ]X[^™HH[HHY\Ø\Ë‰ÊNÃBˆİ]K˜Ø][ÙÏXØ][ÙÎÜİ]K˜YZ[‹X›\Ï]X›\ÎÜİ]K˜YZ[‹œÜĞØ\V×NÜİ]K˜YZ[‹œÙ[XİYX›S[X™\\Ù[XİYÜİ]K˜YZ[‹™Y]Ü™\’Y[[Üİ]K˜YZ[‹™Y]^\İ[™ÔÙ[”Ù\šXÙOV×NÜİ]K˜YZ[‹šY]ÏIÜÜÉÎÜ™[™\YZ[Š
+NÃBˆÛÛœİ›Ü›OI
+	ÈÜÜËY›Ü›IÊNÚYŠY›Ü›J\™]\›Ù›Ü›K™[[Y[Ë›Ü™\—İ\K˜[YOIÙ[™WÚ[‰ÎÙ›Ü›K™[[Y[ËX›WÛ[X™\‹˜[YO\Ù[XİYÙ›Ü›K™[[Y[Ë›Ü™\—İ\K™\Ü]Ú]™[
+™]È]™[
+	ØÚ[™ÙIËØX˜›\ÎY_JJNÙ›Ü›K™[[Y[ËX›WÛ[X™\‹™\Ü]Ú]™[
+™]È]™[
+	ØÚ[™ÙIËØX˜›\ÎY_JJNÃBŸCBƒB™[˜İ[ÛˆX›R][TXÚÙ\“X\šİ\
+Ü™\’YØ]YÛÜOIÕÙ\ÉË]Y\OIÉÊ^ÃBˆÛÛœİÜ™\\İ]K˜YZ[‹›Ü™\œË™š[™
+][OO”İš[™Ê][KšY
+OOOTİš[™ÊÜ™\’Y
+JNÚYŠ[Ü™\Š\™]\›ÃBˆÛÛœİØ]YÛÜšY\ÏVÉÕÙ\ÉË‹‹Šİ]K˜Ø][ÙË˜Ø]YÛÜšY\ßË‹‹›™]ÈÙ]
+İ]K˜Ø][ÙËœ›ÙXİË›X\
+›ÙXİOœ›ÙXİ˜Ø]YÛÜJJWJWNÃBˆÛÛœİ\›O\]Y\Kš[J
+KÓØØ[SİÙ\Ø\ÙJ	ÜP”‰ÊNÃBˆÛÛœİ›ÙXİÏ\İ]K˜Ø][ÙËœ›ÙXİË™š[\Š›ÙXİOœ›ÙXİš\×Ø]˜Z[X›I‰ŠØ]YÛÜOOOIÕÙ\Éß›ÙXİ˜Ø]YÛÜOOOXØ]YÛÜJI‰Š]\›_	Ü›ÙXİ›˜[Y_H	Ü›ÙXİ™\ØÜš\[ÛŸ	ÉßH	Ü›ÙXİ˜Ø]YÛÜ_XÓØØ[SİÙ\Ø\ÙJ	ÜP”‰ÊKš[˜ÛY\Ê\›JJJNÃBˆÛÛœİ][\Ï\İ]K˜YZ[‹™Y]Ü™\Ø\×Kİ[XØ\İ[
+][\ÊNÃBˆ^Y\Š]ˆÛ\ÜÏHX›K\XÚÙ\‹ZXY]Ü[ˆÛ\ÜÏH™^YXœ›İÈ“QTĞH	Ôİš[™ÊÜ™\‹X›WÛ[X™\Ÿ	ÉÊKœYİ\
+‹	Ì	Ê_OÜÜ[YXÚ[Û˜\ˆ][OÚÙ]]Ûˆ\OH˜]ÛˆˆÛ\ÜÏHšXÛÛ‹Xˆˆ]KXÛÜÙH\šXK[X™[H‘™XÚ\ˆ°åÏØ]ÛÙ]]ˆÛ\ÜÏHX›K\XÚÙ\‹[^[İ]˜]ˆÛ\ÜÏHX›K\XÚÙ\‹XØ]YÛÜšY\Èˆ\šXK[X™[HØ]YÛÜšX\È‰ØØ]YÛÜšY\Ë›X\
+˜[YOO˜]Ûˆ\OH˜]ÛˆˆÛ\ÜÏH‰ØØ]YÛÜOOO[˜[YOÉØXİ]™IÎ‰ÉßHˆ]K]X›K\XÚÙ\‹XØ]YÛÜOH‰Ù\ØÊ˜[YJ_H‰Ù\ØÊ˜[YJ_OØ]Û˜
+Kš›Ú[Š	ÉÊ_OÛ˜]ÙXİ[ÛˆÛ\ÜÏHX›K\XÚÙ\‹XØ][ÙÈX™[Û\ÜÏHX›K\XÚÙ\‹\ÙX\˜Ú¸£%O[œ]YHX›K\XÚÙ\‹\ÙX\˜ÚˆXÙZÛ\H\ØØ\ˆ›Ù]È›ÈØ\™0è\[Èˆ˜[YOH‰Ù\ØÊ]Y\J_HÛX™[]ˆÛ\ÜÏHX›K\XÚÙ\‹\›ÙXİÈ‰Ü›ÙXİË›[™İØ	Ü›ÙXİË›X\
+›ÙXİO˜]Ûˆ\OH˜]ÛˆˆÛ\ÜÏHX›K\XÚÙ\‹\›ÙXİˆ]K]X›K\XÚÙ\‹\›ÙXİH‰Ü›ÙXİšYHˆ]K\ÙX\˜ÚH‰Ù\ØÊ	Ü›ÙXİ›˜[Y_H	Ü›ÙXİ™\ØÜš\[ÛŸ	ÉßH	Ü›ÙXİ˜Ø]YÛÜ_XÓØØ[SİÙ\Ø\ÙJ	ÜP”‰ÊJ_H[YÈÜ˜ÏH‰Ù\ØÊ›ÙXİš[XYÙWİ\›•×ÓÑÓÊ_Hˆ[HˆÜ[İ›Û™Ï‰Ù\ØÊ›ÙXİ›˜[YJ_OÜİ›Û™ÏÛX[‰Û[Û™^J›ÙXİœšXÙWØÙ[Ê_OÜÛX[ÜÜ[»ï"ÏØØ]Û˜
+Kš›Ú[Š	ÉÊ_O]ˆÛ\ÜÏHX›K\XÚÙ\‹[›Ë\™\İ[ÈY[ˆ“™[š[H›Ù]È[˜ÛÛ˜YËÙ]˜‰Ï]ˆÛ\ÜÏH™[\H“™[š[H›Ù]È[˜ÛÛ˜YÈ™\İHØ]YÛÜšXKÙ]‰ßOÙ]ÜÙXİ[Û\ÚYHÛ\ÜÏHX›K\XÚÙ\‹XØ\Ï“›İ›ÈYYÏÚÏİ›Û™ÏØ\œš[šÏÜİ›Û™Ï]ˆÛ\ÜÏHX›K\XÚÙ\‹XØ\Z][\È‰Ú][\Ë›[™İÚ][\Ë›X\
+][OO˜]ˆÛ\ÜÏHX›K\XÚÙ\‹XØ\Z][H]‰Ù\ØÊ][Kœ›ÙXİ›˜[YJ_OØÛX[‰Ú][K˜ÛÛ\[Y[ÏË›[™İÙ\ØÊ][K˜ÛÛ\[Y[Ë›X\
+Ü[ÛO˜	ÛÜ[Û‹œ]X[]_påÈ	ÛÜ[Û‹›˜[Y_X
+Kš›Ú[Š	Ë	ÊJN‰ÉßIÚ][K››İ\ÏØ0­È	Ù\ØÊ][K››İ\Ê_X‰ÉßOÜÛX[]ˆÛ\ÜÏHX›K\XÚÙ\‹\]H]Ûˆ\OH˜]Ûˆˆ]K]X›K\XÚÙ\‹\]OH‹LHˆ]K]X›K\XÚÙ\‹ZÙ^OH‰Ù\ØÊ][KšÙ^J_H¸¢$Ø]ÛÜ[‰Ú][Kœ]X[]_OÜÜ[]Ûˆ\OH˜]Ûˆˆ]K]X›K\XÚÙ\‹\]OHŒHˆ]K]X›K\XÚÙ\‹ZÙ^OH‰Ù\ØÊ][KšÙ^J_H»ï"ÏØ]ÛÙ]Ù]İ›Û™Ï‰Û[Û™^J][Kœ]X[]Jš][K[š]ÜšXÙWØÙ[Ê_OÜİ›Û™ÏÙ]˜
+Kš›Ú[Š	ÉÊN‰Ï]ˆÛ\ÜÏHX›K\XÚÙ\‹Y[\HÜ[¸¥¬OÜÜ[Ø\œš[šÈ˜^š[ÏÜÙ]‰ßOÙ]]ˆÛ\ÜÏHX›K\XÚÙ\‹XØ\]İ[Ü[”İXİ[ÜÜ[İ›Û™Ï‰Û[Û™^Jİ[
+_OÜİ›Û™ÏÙ]]Ûˆ\OH˜]ÛˆˆÛ\ÜÏHœš[X\KXˆ[ˆYHX›K\XÚÙ\‹\Ø]™Hˆ	Ú][\Ë›[™İÉÉÎ‰Ù\ØX›Y	ßOYXÚ[Û˜\ˆ0èÛÛX[™H0­È	Û[Û™^Jİ[
+_OØ]ÛØ\ÚYOÙ]˜	İX›KZ][K\XÚÙ\‰ÊNÃBˆ	
+	ÈÛİ™\›^HÙ]KXÛÜÙWIÊK›Û˜ÛXÚÏXÛÜÙS^Y\ÃBˆØİ[Y[œ]Y\TÙ[XİÜ[
+	ÖÙ]K]X›K\XÚÙ\‹XØ]YÛÜWIÊK™›Ü‘XXÚ
+]ÛO˜]Û‹›Û˜ÛXÚÏJ
+OOX›R][TXÚÙ\“X\šİ\
+Ü™\’Y]Û‹™]\Ù]X›TXÚÙ\Ø]YÛÜK	
+	ÈİX›K\XÚÙ\‹\ÙX\˜Ú	ÊOË˜[Y_	ÉÊJNÃBˆ	
+	ÈİX›K\XÚÙ\‹\ÙX\˜Ú	ÊK›Ûš[œ]Y]™[OØÛÛœİ\›OY]™[\™Ù]˜[YKš[J
+KÓØØ[SİÙ\Ø\ÙJ	ÜP”‰ÊNÛ]š\ÚX›OLÙØİ[Y[œ]Y\TÙ[XİÜ[
+	ÖÙ]K]X›K\XÚÙ\‹\›ÙXİIÊK™›Ü‘XXÚ
+]ÛOØÛÛœİX]ÚX]Û‹™]\Ù]œÙX\˜Úš[˜ÛY\Ê\›JNØ]Û‹˜Û\ÜÓ\İÙÙÛJ	ÚY[‰Ë[X]Ú
+NÚYŠX]Ú
+]š\ÚX›JÊßJNÉ
+	ËX›K\XÚÙ\‹[›Ë\™\İ[ÉÊOË˜Û\ÜÓ\İÙÙÛJ	ÚY[‰Ëš\ÚX›OŒ
+_NÃBˆØİ[Y[œ]Y\TÙ[XİÜ[
+	ÖÙ]K]X›K\XÚÙ\‹\›ÙXİIÊK™›Ü‘XXÚ
+]ÛO˜]Û‹›Û˜ÛXÚÏJ
+OOØÛÛœİ›ÙXİ\İ]K˜Ø][ÙËœ›ÙXİË™š[™
+][OOš][KšYOOS[X™\Š]Û‹™]\Ù]X›TXÚÙ\”›ÙXİ
+JNÛÜ[”›ÙXİ
+›ÙXİšYİ]K˜YZ[‹™Y]Ü™\Ø\
 
-const tableOperationsBaseOrderEditor=openOrderEditor;
-openOrderEditor=async function(id){
-  const order=state.admin.orders.find(item=>item.id===id);if(!order)return;
-  if(!state.catalog)state.catalog=await api('/api/admin/products');
-  const originalItems=order.items;order.items=(originalItems||[]).filter(item=>item.product_id);
-  try{return await tableOperationsBaseOrderEditor(id)}finally{order.items=originalItems}
-};
+OOØÛÛœİXİ]™OYØİ[Y[œ]Y\TÙ[XİÜŠ	ÖÙ]K]X›K\XÚÙ\‹XØ]YÛÜWK˜Xİ]™IÊOË™]\Ù]X›TXÚÙ\Ø]YÛÜ_	ÕÙ\ÉÎİX›R][TXÚÙ\“X\šİ\
+Ü™\’YXİ]™K	
+	ÈİX›K\XÚÙ\‹\ÙX\˜Ú	ÊOË˜[Y_	ÉÊ_J_JNÃBˆØİ[Y[œ]Y\TÙ[XİÜ[
+	ÖÙ]K]X›K\XÚÙ\‹\]WIÊK™›Ü‘XXÚ
+]ÛO˜]Û‹›Û˜ÛXÚÏJ
+OOİ\]T]J]Û‹™]\Ù]X›TXÚÙ\’Ù^K[X™\Š]Û‹™]\Ù]X›TXÚÙ\”]JKİ]K˜YZ[‹™Y]Ü™\Ø\
+NİX›R][TXÚÙ\“X\šİ\
+Ü™\’YØ]YÛÜK]Y\J_JNÃBˆ	
+	ÈİX›K\XÚÙ\‹\Ø]™IÊK›Û˜ÛXÚÏX\Ş[˜È]Û‘]™[OØÛÛœİ]ÛX]Û‘]™[˜İ\œ™[\™Ù]Ø]Û‹™\ØX›Y]YNİ^Ø]ØZ]\JØ\KØYZ[‹ÛÜ™\œËÉÙ[˜ÛÙUT’PÛÛ\Û™[
+Ü™\’Y
+_KÚ][\ØÛY]Ù‰ÔUÒ	Ë›ÙN’”ÓÓ‹œİš[™ÚYJÚ][\Îœİ]K˜YZ[‹™Y]Ü™\Ø\›X\
+][OOŠÜ›ÙXİÚYš][Kœ›ÙXİšY]X[]Nš][Kœ]X[]KÛÛ\[Y[Îš][K˜ÛÛ\[Y[ß×K›İ\Îš][K››İ\ß	ÉßJJ_J_JNØ]ØZ]ØYYZ[“Ü™\œÊ
+NÜİ]K˜YZ[‹X›\ÏX]ØZ]\J	ËØ\KØYZ[‹İX›\ÉÊNØÛÜÙS^Y\Š
+NÜ™[™\YZ[Š
+NİØ\İ
+	Ò][œÈYXÚ[Û˜YÜÈ0èÛÛX[™IÊ_XØ]Ú
+\œ›ÜŠ^İØ\İ
+\œ›Ü‹›Y\ÜØYÙJNØ]Û‹™\ØX›YY˜[Ù__NÃBŸCBƒB˜\Ş[˜È[˜İ[ÛˆÜ[•X›R][TXÚÙ\ŠÜ™\’Y
+^ÃBˆYŠ\İ]K˜Ø][ÙÊ\İ]K˜Ø][ÙÏX]ØZ]\J	ËØ\KØYZ[‹Ü›ÙXİÉÊNÃBˆYŠ\İ]K˜YZ[‹›Ü™\œËœÛÛYJÜ™\O”İš[™ÊÜ™\‹šY
+OOOTİš[™ÊÜ™\’Y
+JJX]ØZ]ØYYZ[“Ü™\œÊ
+NÃBˆÛÛœİÜ™\\İ]K˜YZ[‹›Ü™\œË™š[™
+][OO”İš[™Ê][KšY
+OOOTİš[™ÊÜ™\’Y
+JNÚYŠ[Ü™\Š]›İÈ™]È\œ›ÜŠ	ĞHÛÛX[™H°èÛÈ\İ0èHXZ\È]]˜Kˆ]X[^™H\ÈY\Ø\Ë‰ÊNÃBˆİ]K˜YZ[‹™Y]Ü™\’Y[Ü™\‹šYÃBˆİ]K˜YZ[‹™Y]Ü™\Ø\JÜ™\‹š][\ß×JK™š[\Š][OOš][Kœ›ÙXİÚY
+K›X\
+][OOØÛÛœİ›ÙXİ\İ]K˜Ø][ÙËœ›ÙXİË™š[™
+OœšYOOZ][Kœ›ÙXİÚY
+_ÚYš][Kœ›ÙXİÚY˜[YNš][Kœ›ÙXİÛ˜[YK[XYÙWİ\›’•×ÓÑÓËšXÙWØÙ[Îš][K[š]ÜšXÙWØÙ[ßNÛ]ÛÛ\[Y[ÏV×Nİ^ØÛÛ\[Y[ÏR”ÓÓ‹œ\œÙJ][K˜ÛÛ\[Y[×ÚœÛÛŸ	Ö×IÊ_XØ]ÚßXÛÛœİ›İ\ÏZ][K››İ\ß	ÉÎÜ™]\›ˆÜ›ÙXİ]X[]Nš][Kœ]X[]K[š]ÜšXÙWØÙ[Îš][K[š]ÜšXÙWØÙ[ËÛÛ\[Y[Ë›İ\ËÙ^N˜Ø\][RÙ^J›ÙXİÛÛ\[Y[Ë›İ\Ê__JNÃBˆX›R][TXÚÙ\“X\šİ\
+Ü™\’Y
+NÃBŸCBƒB™Øİ[Y[˜Y]™[\İ[™\Š	ØÛXÚÉË\Ş[˜È]™[OÃBˆÛÛœİÙ[XİY]™[\™Ù]˜ÛÜÙ\İ
+	ÖÙ]K]X›K\Ù[XİIÊKš[\Y]™[\™Ù]˜ÛÜÙ\İ
+	ÖÙ]K]X›KYš[\—IÊK™Yœ™\ÚY]™[\™Ù]˜ÛÜÙ\İ
+	ÈÜ™Yœ™\Ú]X›\ÉÊKÜ[Y]™[\™Ù]˜ÛÜÙ\İ
+	ÖÙ]K]X›K[Ü[—IÊKY][\ÏY]™[\™Ù]˜ÛÜÙ\İ
+	ÖÙ]K]X›KXYZ][\×IÊKÛÜÙOY]™[\™Ù]˜ÛÜÙ\İ
+	ÖÙ]K]X›KXÛÜÙWIÊNÃBˆYŠ\Ù[Xİ	‰ˆYš[\‰‰ˆ\™Yœ™\Ú	‰ˆ[Ü[‰‰ˆXY][\É‰ˆXÛÜÙJ\™]\›ÃBˆ]™[œ™]™[Y˜][
 
-const tableOperationsBaseOrderDetails=openOrderDetails;
-openOrderDetails=function(orderId){
-  tableOperationsBaseOrderDetails(orderId);
-  const order=state.admin.orders.find(item=>item.id===orderId);if(order?.channel!=='counter'||!order.table_number||order.status==='cancelado')return;
-  const actions=document.querySelector('.order-detail-actions');if(!actions)return;
-  let closeTable=$('#detail-release-table');
-  if(!closeTable){closeTable=document.createElement('button');closeTable.id='detail-release-table';closeTable.type='button';closeTable.className='secondary-btn';actions.append(closeTable)}
-  closeTable.textContent=order.payment_status==='aberto'?'Pagar e fechar mesa':'Fechar mesa';
-  closeTable.onclick=async()=>{
-    if(order.payment_status==='aberto'){
-      openPaymentSettlement(orderId);const confirmButton=$('#confirm-payment');if(!confirmButton)return;
-      const confirmPayment=confirmButton.onclick;confirmButton.textContent='Confirmar pagamento e fechar mesa';
-      confirmButton.onclick=async event=>{await confirmPayment.call(confirmButton,event);const updated=state.admin.orders.find(item=>item.id===orderId);if(updated?.payment_status!=='pago')return;try{await api(`/api/admin/orders/${encodeURIComponent(orderId)}`,{method:'PATCH',body:JSON.stringify({status:'concluido'})});await loadAdminOrders();state.admin.tables=await api('/api/admin/tables');closeLayer();renderAdmin();toast('Pagamento confirmado e mesa liberada')}catch(error){toast(`Pagamento registrado, mas a mesa nÃ£o foi liberada: ${error.message}`)}};return;
-    }
-    if(!confirm(`Fechar a mesa ${order.table_number}? A comanda serÃ¡ concluÃ­da e a mesa ficarÃ¡ disponÃ­vel.`))return;
-    try{await api(`/api/admin/orders/${encodeURIComponent(orderId)}`,{method:'PATCH',body:JSON.stringify({status:'concluido'})});await loadAdminOrders();state.admin.tables=await api('/api/admin/tables');closeLayer();renderAdmin();toast(`Mesa ${order.table_number} liberada`)}catch(error){toast(error.message)}
-  };
-};
-
-async function tableOperationsOpenAvailable(tableNumber){
-  const selected=String(tableNumber),[catalog,tables]=await Promise.all([api('/api/admin/products'),api('/api/admin/tables')]);
-  const table=tables.tables?.find(item=>String(item.number)===selected);if(!table||table.occupied)throw new Error('Esta mesa nÃ£o estÃ¡ mais disponÃ­vel. Atualize a tela de mesas.');
-  state.catalog=catalog;state.admin.tables=tables;state.admin.posCart=[];state.admin.selectedTableNumber=selected;state.admin.editOrderId=null;state.admin.editExistingSelfService=[];state.admin.view='pos';renderAdmin();
-  const form=$('#pos-form');if(!form)return;form.elements.order_type.value='dine_in';form.elements.table_number.value=selected;form.elements.order_type.dispatchEvent(new Event('change',{bubbles:true}));form.elements.table_number.dispatchEvent(new Event('change',{bubbles:true}));
-}
-
-document.addEventListener('click',async event=>{
-  const select=event.target.closest('[data-table-select]'),filter=event.target.closest('[data-table-filter]'),refresh=event.target.closest('#refresh-tables'),open=event.target.closest('[data-table-open]'),close=event.target.closest('[data-table-close]');
-  if(!select&&!filter&&!refresh&&!open&&!close)return;
-  event.preventDefault();event.stopImmediatePropagation();
-  if(select){state.admin.selectedTableNumber=String(select.dataset.tableSelect);renderAdmin();return}
-  if(filter){state.admin.tableFilter=filter.dataset.tableFilter;renderAdmin();return}
-  if(refresh){try{await Promise.all([loadAdminOrders(),api('/api/admin/tables').then(data=>state.admin.tables=data)]);renderAdmin()}catch(error){toast(error.message)}return}
-  if(open){const orderId=open.dataset.orderId;if(orderId){try{await loadAdminOrders();await openOrderEditor(orderId)}catch(error){toast(error.message)}return}try{await tableOperationsOpenAvailable(open.dataset.tableOpen)}catch(error){toast(error.message)}return}
-  if(close){const id=close.dataset.tableClose;try{if(!state.admin.orders.some(order=>order.id===id))await loadAdminOrders();const order=state.admin.orders.find(item=>item.id===id);if(!order)return toast('A comanda nÃ£o estÃ¡ mais ativa. Atualize as mesas.');if(order.payment_status!=='pago'){openOrderDetails(id);return}if(!confirm(`Fechar a mesa ${order.table_number}? A comanda serÃ¡ concluÃ­da e a mesa ficarÃ¡ disponÃ­vel.`))return;await api(`/api/admin/orders/${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify({status:'concluido'})});state.admin.tables=await api('/api/admin/tables');await loadAdminOrders();renderAdmin();toast(`Mesa ${order.table_number} liberada`)}catch(error){toast(error.message)}}
-},true);
+NÙ]™[œİÜ[[YYX]T›ÜYØ][ÛŠ
+NÃBˆYŠÙ[Xİ
+^Üİ]K˜YZ[‹œÙ[XİYX›S[X™\Tİš[™ÊÙ[Xİ™]\Ù]X›TÙ[Xİ
+NÜ™[™\YZ[Š
+NÜ™]\›ŸCBˆYŠš[\Š^Üİ]K˜YZ[‹X›Qš[\Yš[\‹™]\Ù]X›Qš[\Ü™[™\YZ[Š
+NÜ™]\›ŸCBˆYŠ™Yœ™\Ú
+^İ^Ø]ØZ]›ÛZ\ÙK˜[
+ÛØYYZ[“Ü™\œÊ
+K\J	ËØ\KØYZ[‹İX›\ÉÊK[Š]OOœİ]K˜YZ[‹X›\ÏY]JWJNÜ™[™\YZ[Š
+_XØ]Ú
+\œ›ÜŠ^İØ\İ
+\œ›Ü‹›Y\ÜØYÙJ_\™]\›ŸCBˆYŠY][\Ê^İ^Ø]ØZ]Ü[•X›R][TXÚÙ\ŠY][\Ë™]\Ù]X›PY][\Ê_XØ]Ú
+\œ›ÜŠ^İØ\İ
+\œ›Ü‹›Y\ÜØYÙJ_\™]\›ŸCBˆYŠÜ[Š^ØÛÛœİÜ™\’Y[Ü[‹™]\Ù]›Ü™\’YÚYŠÜ™\’Y
+^İ^Ø]ØZ]ØYYZ[“Ü™\œÊ
+NØ]ØZ]Ü[“Ü™\‘Y]ÜŠÜ™\’Y
+_XØ]Ú
+\œ›ÜŠ^İØ\İ
+\œ›Ü‹›Y\ÜØYÙJ_\™]\›Ÿ]^Ø]ØZ]X›SÜ\˜][ÛœÓÜ[]˜Z[X›JÜ[‹™]\Ù]X›SÜ[Š_XØ]Ú
+\œ›ÜŠ^İØ\İ
+\œ›Ü‹›Y\ÜØYÙJ_\™]\›ŸCBˆYŠÛÜÙJ^ØÛÛœİYXÛÜÙK™]\Ù]X›PÛÜÙNİ^ÚYŠ\İ]K˜YZ[‹›Ü™\œËœÛÛYJÜ™\O›Ü™\‹šYOOZY
+JX]ØZ]ØYYZ[“Ü™\œÊ
+NØÛÛœİÜ™\\İ]K˜YZ[‹›Ü™\œË™š[™
+][OOš][KšYOOZY
+NÚYŠ[Ü™\Š\™]\›ˆØ\İ
+	ĞHÛÛX[™H°èÛÈ\İ0èHXZ\È]]˜Kˆ]X[^™H\ÈY\Ø\Ë‰ÊNÚYŠÜ™\‹œ^[Y[Üİ]\ÈOOIÜYÛÉÊ^ÛÜ[“Ü™\‘]Z[ÊY
+NÜ™]\›ŸZYŠXÛÛ™š\›J™XÚ\ˆHY\ØH	ÛÜ™\‹X›WÛ[X™\ŸOÈHÛÛX[™HÙ\°èHÛÛ˜ÛpëYHHHY\ØHšXØ\°èH\ÜÛ°ë]™[˜
+J\™]\›Ø]ØZ]\JØ\KØYZ[‹ÛÜ™\œËÉÙ[˜ÛÙUT’PÛÛ\Û™[
+Y
+_XÛY]Ù‰ÔUÒ	Ë›ÙN’”ÓÓ‹œİš[™ÚYJÜİ]\Î‰ØÛÛ˜ÛZYÉßJ_JNÜİ]K˜YZ[‹X›\ÏX]ØZ]\J	ËØ\KØYZ[‹İX›\ÉÊNØ]ØZ]ØYYZ[“Ü™\œÊ
+NÜ™[™\YZ[Š
+NİØ\İ
+Y\ØH	ÛÜ™\‹X›WÛ[X™\ŸHX™\˜YX
+_XØ]Ú
+\œ›ÜŠ^İØ\İ
+\œ›Ü‹›Y\ÜØYÙJ__CBŸKYJNÃB
