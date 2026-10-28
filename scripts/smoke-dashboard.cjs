@@ -1,7 +1,7 @@
 const fs = require("node:fs");
 const assert = require("node:assert/strict");
 const selfServiceScaleSource=fs.readFileSync(`${__dirname}/../src/self-service-confirmation.js`,"utf8");
-assert.match(selfServiceScaleSource,/setInterval\(\(\)=>updateReading\(\),500\)/);
+assert.match(selfServiceScaleSource,/setInterval\(\(\)=>updateReading\(\),250\)/);
 assert.match(selfServiceScaleSource,/clearInterval\(pollId\)/);
 
 global.location = { pathname:"/test" };
