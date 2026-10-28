@@ -3,7 +3,7 @@ const APP_CSS = __APP_CSS__;
 const APP_JS = __APP_JS__;
 const APP_MEDIA = __APP_MEDIA__;
 
-// Cardápio exclusivo da Açaí Prime, preservado durante a modernização do sistema.
+// Produtos e complementos específicos da Açailandia PE.
 const PRODUCT_SEED = [[1,"Monte sua marmita","Marmita 500ml","Açaí, cremes e acompanhamentos escolhidos até a capacidade da embalagem.",2600,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687247/202512032249_S6I4_.jpeg",1,0,0],[2,"Monte seu copo","Copo 300ml","Açaí, cremes e acompanhamentos escolhidos até a capacidade da embalagem.",2200,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3717671/17908253COPO300ML.jpg",1,0,1],[3,"Açaí na garrafa","Açaí na garrafa","500ml. Açaí batido com leite e cobertura de leite condensado.",2300,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3843615/3509ee45garr.jpeg",1,0,2],[4,"Pote de açaí 1 litro","Pote de açaí 1 litro","Açaí tradicional.",3000,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687242/thumb_202504051847_3RV4_.jpeg",0,0,3],[5,"Monte seu copo","Copo 400ml","Açaí, cremes e acompanhamentos escolhidos até a capacidade da embalagem.",2400,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687243/thumb_d6b0d1a2COPO300ML.jpg",0,0,4],[6,"Monte seu copo","Copo 500ml","Açaí, cremes e acompanhamentos escolhidos até a capacidade da embalagem.",2600,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687244/thumb_dd9845f9COPO300ML.jpg",0,0,5],[7,"Monte sua marmita","Marmita 750ml","Açaí, cremes e acompanhamentos escolhidos até a capacidade da embalagem.",3800,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687248/thumb_202512032310_XY9W_.jpeg",0,0,6],[8,"Monte sua marmita","Marmita 1 litro","Açaí, cremes e acompanhamentos escolhidos até a capacidade da embalagem.",4500,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687250/thumb_202512040009_4MCG_.jpeg",0,0,7],[9,"Escolha seu Milkshake","Milk-shake 330ml","Escolha seu sabor favorito.",1800,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687251/thumb_fd4f3118MILK.jpeg",0,0,8],[10,"Escolha seu Milkshake","Milk-shake 440ml","Escolha seu sabor favorito.",2000,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687252/thumb_f1934c6cMILK.jpeg",0,0,9],[11,"Brownie","Brownie com sorvete","Brownie recheado, duas bolas de sorvete, amendoim granulado e calda quente.",2000,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687253/thumb_202508292007_8UYO_.jpeg",0,0,10],[12,"Brownie","Brownie recheado","Brownie recheado.",800,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687254/thumb_507300f4val.jpeg",0,0,11],[13,"Lanches","Pastel de forno","Frango.",800,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687256/thumb_202507041943_2SRD_.jpeg",0,0,12],[14,"Lanches","Pastel de forno Carne seca","Carne seca, queijo e catupiry.",800,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3795766/thumb_f9675530Carne_seca.jpeg",0,0,13],[15,"Lanches","Pão Salsicha","Salsicha, molho, queijo, batata palha e catupiry.",800,null,"/media/menu-pao-salsicha.png",0,0,14],[16,"Lanches","Pão Hambúrguer","Carne de hambúrguer, presunto e queijo.",800,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3789975/thumb_81f382a7hamb.jpeg",0,0,15],[17,"Bebidas","Refrigerante Coca-Cola Lata 350ml","Lata 350ml.",600,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687257/thumb_202210200237_btcjxya1zoh.jpg",0,0,16],[18,"Bebidas","Refrigerante Coca Cola Zero Lata 350ml","Lata 350ml.",600,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687262/thumb_202601080004_b7yghpp2htq.jpeg",0,0,17],[19,"Bebidas","Fanta Laranja Lata 350ml","Lata 350ml.",600,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687269/thumb_202210211307_zym9dpas7in.jpg",0,0,18],[20,"Bebidas","Refrigerante Guaraná Antarctica Lata 350ml","Lata 350ml.",600,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687259/thumb_202302231327_s871e9d8h5.jpg",0,0,19],[21,"Bebidas","Cajuína São Geraldo","350ml.",600,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687260/thumb_202507071939_353H_.jpeg",0,0,20],[22,"Bebidas","Refrigerante Pepsi Garrafa 200ml","Garrafa 200ml.",300,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687258/thumb_202411121548_79td3oy0kov.png",0,0,21],[23,"Bebidas","Refrigerante Guaraná Antarctica 200ml","Embalagem 200ml.",300,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687265/thumb_202408301212_r4tx1h63gk.png",0,0,22],[24,"Bebidas","Guaraná Antarctica 1l","Embalagem 1l.",800,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687264/thumb_202210190235_7yak7flqtt9.jpg",0,0,23],[25,"Bebidas","Água mineral sem gás","500ml.",300,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687266/thumb_202104091802_WSPn_.jpeg",0,0,24],[26,"Bebidas","Água mineral com gás","500ml.",450,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687267/thumb_202104091807_QnVl_.jpeg",0,0,25],[27,"Bebidas","Refrigerante H2O Limoneto Pet 500ml","Garrafa 500ml.",650,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687263/thumb_202210192314_4txx6jh01yc.jpg",0,0,26],[28,"Bebidas","Suco de laranja","300ml.",500,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/3687268/thumb_202510172158_P0P8_.jpeg",0,0,27],[29,"Mentos","Mentos","Mentos.",1500,null,"/media/menu-mentos.png",0,0,28]];
 
 const BLISS_PRODUCT_SEED=[[1,"Garrafinha trufada","Garrafinha trufada 300 ml","Açaí trufado: ninho, maracujá, Nutella, cookies, Oreo, morango ou café.",1999,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1789071935170blob.webp",1,0,0],[2,"Garrafinha trufada","Garrafinha trufada 500 ml","Garrafinha trufada de açaí.",3300,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1786994112355blob.webp",1,0,1],[3,"Garrafinha trufada","Garrafinha açaí zero & whey","Açaí zero trufado com pasta de amendoim e whey.",2290,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1787860115693blob.webp",1,0,2],[4,"Açaí","Monte seu açaí 300 g","Monte com seus acompanhamentos.",2100,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1786205416813blob.webp",1,0,3],[5,"Açaí","Monte seu açaí 500 g","Açaí com 5 acompanhamentos.",3400,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1786205430361blob.webp",1,0,4],[6,"Açaí","Monte seu açaí 1 kg","Açaí com 5 acompanhamentos.",6599,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1786205443947blob.webp",0,0,5],[7,"Copos trufados","Nuteninho com morango","Copo trufado com Nutella, creme de ninho, açaí e morango fresco. 300 ml.",2400,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1789072765010blob.webp",1,0,6],[8,"Copos trufados","Nuteninho com Oreo","Copo trufado com Nutella, creme de ninho, açaí e Oreo. 300 ml.",2400,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785518921513blob.webp",0,0,7],[9,"Copos trufados","Nuteninho tradicional","Copo trufado com Nutella, creme de ninho e açaí. 300 ml.",2400,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785519349421blob.webp",0,0,8],[10,"Milk shake","Milk shake 300 ml","Escolha seu sabor preferido.",1500,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1786205817961blob.webp",1,0,9],[11,"Milk shake","Milk shake 500 ml","Escolha seu sabor preferido.",1800,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1786205817961blob.webp",0,0,10],[12,"Milk shake","Milkshake na garrafa","Consulte sabores disponíveis.",1800,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1789072017755blob.webp",1,0,11],[13,"Barca de açaí","Barca de açaí 400 g","Monte a barca do seu jeito.",2990,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1789072467814blob.webp",1,0,12],[14,"Sorvetes Gellatos","Pavê italiano","Sorvete Gellato pavê italiano.",1000,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785520631138blob.webp",0,0,13],[15,"Sorvetes Gellatos","Mousse de maracujá","Sorvete Gellato mousse de maracujá.",1000,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785520741059blob.webp",0,0,14],[16,"Sorvetes Gellatos","Ninho trufado","Sorvete Gellato ninho trufado.",1000,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785520795411blob.webp",0,0,15],[17,"Sorvetes Gellatos","Côco da Malásia","Sorvete Gellato côco da Malásia.",1000,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785520876732blob.webp",0,0,16],[18,"Sorvetes Gellatos","Ovomaltine","Sorvete Gellato Ovomaltine.",1000,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785520911074blob.webp",0,0,17],[19,"Sorvetes Gellatos","Morango recheado","Sorvete Gellato com pedaços de morango.",1000,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785520973807blob.webp",0,0,18],[20,"Sorvetes Gellatos","Morango zero lactose","Sorvete Gellato zero lactose.",1000,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785521020371blob.webp",0,0,19],[21,"Sorvetes Gellatos","Chocobrownie","Sorvete Gellato chocobrownie.",1000,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785521061912blob.webp",0,0,20],[22,"Sorvetes Gellatos","Torta de limão","Sorvete Gellato torta de limão.",1000,null,"https://client-assets.anota.ai/produtos/6a6a55d96f09799abdc49170/-1785521093905blob.webp",0,0,21],[23,"Água mineral","Água mineral 500 ml","Água mineral sem gás.",350,null,"https://pedido.anota.ai/assets/item_no_image-DJEgmuUL.png",0,0,22]];
@@ -16,9 +16,9 @@ const ACAILANDIA_PRODUCT_SEED=[
   [3,"Copos promocionais","Copo 2","Açaí, leite em pó, leite condensado e morango. Escolha o tamanho no pedido.",1890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834910/thumb_3b6e2c3666562f5f-ed57-4e5a-9ffc-3091de05fde0.jpeg",1,1,2],
   [4,"Copos promocionais","Copo 3","Açaí, leite condensado, morango e paçoca. Escolha o tamanho no pedido.",1890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834908/thumb_0415a4adIMG_3050.png",1,1,3],
   [5,"Copos promocionais","Copo 4","Açaí intercalado de creme de ninho, leite em pó e morango. Escolha o tamanho no pedido.",1890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",1,1,4],
-  [6,"Monte seu combo pote","Combo açaí 500 ml","Escolha 3 complementos grátis. Itens enviados separadamente para preservar a textura.",3990,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",1,0,5],
-  [7,"Monte seu combo pote","Combo açaí 1000 ml","Escolha 3 complementos grátis. Itens enviados separadamente para preservar a textura.",5490,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",1,0,6],
-  [8,"Monte seu açaí no copo","Monte seu copo","Açaí no copo com até 6 complementos grátis, em uma única embalagem.",2590,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834905/thumb_c51c7f19f060d541-7023-4bb8-bd70-51ec04205da2.jpeg",1,0,7],
+  [6,"Monte seu combo pote","Combo açaí 500 ml","Escolha 1 creme, até 3 complementos grátis e até 10 extras pagos. Itens enviados separadamente para preservar a textura.",3990,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",1,0,5],
+  [7,"Monte seu combo pote","Combo açaí 1000 ml","Escolha 1 creme, até 3 complementos grátis e até 10 extras pagos. Itens enviados separadamente para preservar a textura.",5490,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",1,0,6],
+  [8,"Monte seu açaí no copo","Monte seu copo","Escolha o tamanho, 1 creme e até 5 complementos grátis.",2590,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1587239/thumb_05da6f30IMG_2688.jpeg",1,0,7],
   [9,"Potes individuais","Pote de açaí","A partir de R$ 29,90. Escolha seu tamanho e complementos.",2990,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",0,0,8],
   [10,"Potes individuais","Pote de creme","A partir de R$ 28,90. Escolha seu tamanho e sabor.",2890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",0,0,9],
   [11,"Potes individuais","Pote de sorvete","A partir de R$ 23,00. Escolha seu tamanho e sabor.",2300,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",0,0,10],
@@ -28,8 +28,8 @@ const ACAILANDIA_PRODUCT_SEED=[
   [15,"Milk shake","Milk 770 ml","Milk shake cremoso.",2100,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1723902/thumb_694c4ebeIMG_6071.jpeg",0,0,14],
   [16,"Bebidas","Água mineral","Água mineral sem gás.",300,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1916004/thumb_b651a2d718974_1.jpg_agua_mineral.jpg",0,0,15],
   [17,"Bebidas","Água mineral com gás","Água mineral com gás.",400,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1916005/thumb_c319d4c0image-removebg-preview_1_cbdc38fa-89cd-44e0-a4dd-4338ba6123c7.png",0,0,16],
-  [18,"Monte seu pote","Monte seu pote 500 g","Escolha até 5 complementos favoritos grátis. Para adicionar mais, selecione as opções desejadas.",4290,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",1,0,17],
-  [19,"Monte seu pote","Monte seu pote 1 kg","Escolha até 5 complementos favoritos grátis. Para adicionar mais, selecione as opções desejadas.",6890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",1,0,18],
+  [18,"Monte seu pote","Monte seu pote 500 g","Escolha seus 5 complementos favoritos grátis e deixe seu açaí do jeitinho que você gosta. Tudo preparado junto, em camadas, em uma única embalagem.",4290,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834985/thumb_5d21a0ebIMG_2937.png",1,0,17],
+  [19,"Monte seu pote","Monte seu pote 1 kg","Escolha seus 5 complementos favoritos grátis e deixe seu açaí do jeitinho que você gosta. Tudo preparado junto, em camadas, em uma única embalagem.",6890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834985/thumb_5d21a0ebIMG_2937.png",1,0,18],
   [20,"Copos trufados","Copo trufado 300 ml","Escolha o sabor: Sensação, Surpresinha de Uva, Brownie, Cookies Oreo, Ouro Branco, Ninhotella, Kit Kat Especial ou Ovomaltine Black.",3190,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",1,0,19],
   [21,"Copos trufados","Copo trufado 400 ml","Escolha o sabor: Sensação, Surpresinha de Uva, Brownie, Cookies Oreo, Ouro Branco, Ninhotella, Kit Kat Especial ou Ovomaltine Black.",3490,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",1,0,20],
   [22,"Açaí na garrafa","Açaí na garrafa 300 ml","Escolha um sabor com mousse ou uma versão trufada.",2000,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1723792/thumb_306440ebIMG_6071.jpeg",0,0,21],
@@ -37,15 +37,15 @@ const ACAILANDIA_PRODUCT_SEED=[
 ];
 
 const ACAILANDIA_COMPLEMENT_SEED=[
-  [3,["300 ml","400 ml"]],
-  [4,["300 ml","400 ml"]],
-  [5,["300 ml","400 ml"]],
+  [3,[{name:"300 ml",price_cents:0,max_quantity:1,group_id:"size"},{name:"400 ml",price_cents:500,max_quantity:1,group_id:"size"}]],
+  [4,[{name:"300 ml",price_cents:0,max_quantity:1,group_id:"size"},{name:"400 ml",price_cents:500,max_quantity:1,group_id:"size"}]],
+  [5,[{name:"300 ml",price_cents:0,max_quantity:1,group_id:"size"},{name:"400 ml",price_cents:500,max_quantity:1,group_id:"size"}]],
   [6,["Banana","Morango","Manga","Kiwi","Leite em pó","Leite condensado","Granola","Paçoca","Ovomaltine","Nutella","Creme de ninho"]],
   [7,["Banana","Morango","Manga","Kiwi","Leite em pó","Leite condensado","Granola","Paçoca","Ovomaltine","Nutella","Creme de ninho"]],
-  [8,["Banana","Morango","Manga","Kiwi","Leite em pó","Leite condensado","Granola","Paçoca","Ovomaltine","Nutella","Creme de ninho"]],
-  [9,["Açaí tradicional","Açaí com leite em pó","Açaí com leite condensado","Açaí com morango","Açaí com paçoca","Açaí com granola"]],
-  [10,["Creme de ninho","Creme de morango","Creme de maracujá","Creme de amendoim","Creme de Oreo"]],
-  [11,["Ninho trufado","Mousse de maracujá","Morango recheado","Ovomaltine","Chocobrownie","Torta de limão"]],
+  [8,[{name:"300 ml",price_cents:0,max_quantity:1,group_id:"size"},{name:"500 ml",price_cents:300,max_quantity:1,group_id:"size"}]],
+  [9,[{name:"500 ml",price_cents:0,max_quantity:1,group_id:"size"},{name:"1 L",price_cents:2000,max_quantity:1,group_id:"size"}]],
+  [10,[{name:"500 ml",price_cents:0,max_quantity:1,group_id:"size"},{name:"1 L",price_cents:2700,max_quantity:1,group_id:"size"}]],
+  [11,[{name:"500 ml",price_cents:0,max_quantity:1,group_id:"size"},{name:"1 L",price_cents:1500,max_quantity:1,group_id:"size"}]],
   [12,["Morango","Ninho","Ovomaltine","Nutella","Paçoca","Oreo","Maracujá"]],
   [13,["Morango","Ninho","Ovomaltine","Nutella","Paçoca","Oreo","Maracujá"]],
   [14,["Morango","Ninho","Ovomaltine","Nutella","Paçoca","Oreo","Maracujá"]],
@@ -86,8 +86,10 @@ function media(name) {
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   const extension = name.toLowerCase().split(".").pop();
-  const contentType = extension === "svg" ? "image/svg+xml" : extension === "png" ? "image/png" : extension === "jpg" || extension === "jpeg" ? "image/jpeg" : "image/webp";
-  return new Response(bytes, { headers: { "content-type": contentType, "cache-control": "public, max-age=31536000, immutable" } });
+  const contentType = extension === "zip" ? "application/zip" : extension === "svg" ? "image/svg+xml" : extension === "png" ? "image/png" : extension === "jpg" || extension === "jpeg" ? "image/jpeg" : "image/webp";
+  const headers = { "content-type": contentType, "cache-control": "public, max-age=31536000, immutable" };
+  if (extension === "zip") headers["content-disposition"] = `attachment; filename="${name}"`;
+  return new Response(bytes, { headers });
 }
 
 function brandPlaceholder() {
@@ -197,7 +199,11 @@ async function seed(db) {
     VALUES (?,?,?,?,?,?,?,?,?,1,?)`).bind(...p));
   await db.batch(statements);
   await db.batch(ACAILANDIA_PRODUCT_SEED.map(p => db.prepare(`UPDATE products SET image_url=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(p[6],p[0])));
-  await db.batch(ACAILANDIA_COMPLEMENT_SEED.map(([id,names]) => db.prepare(`UPDATE products SET complements_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(JSON.stringify(names.map(name=>({name,price_cents:0,max_quantity:1}))),id)));
+  await db.prepare(`UPDATE products SET image_gallery_json=? WHERE id=8 AND image_gallery_json='[]'`).bind(JSON.stringify([
+    "https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1587239/thumb_05da6f30IMG_2688.jpeg",
+    "https://storage.googleapis.com/prod-cardapio-web/uploads/item_image/image/64601/thumb_710ddf8270f25d9d-dc3b-46db-922d-f796c2575165.jpeg"
+  ])).run();
+  await db.batch(ACAILANDIA_COMPLEMENT_SEED.map(([id,names]) => db.prepare(`UPDATE products SET complements_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(JSON.stringify(names.map(option=>typeof option==="string"?{name:option,price_cents:0,max_quantity:1}:option)),id)));
   await db.batch([[20,ACAILANDIA_RV_FLAVORS.slice(0,8)],[21,ACAILANDIA_RV_FLAVORS.slice(0,8)],[22,ACAILANDIA_RV_FLAVORS.slice(8)],[23,ACAILANDIA_RV_FLAVORS.slice(8)]].map(([id,flavors])=>db.prepare(`UPDATE products SET enable_flavors=1,flavors_json=? WHERE id=? AND flavors_json='[]' AND enable_flavors=0`).bind(JSON.stringify(flavors),id)));
 }
 
@@ -244,26 +250,32 @@ function parseJson(value, fallback = []) {
 
 function cleanComplements(value) {
   const source = Array.isArray(value) ? value : parseJson(value, []);
-  return source.slice(0, 20).map(item => ({
+  return source.slice(0, 40).map(item => ({
     name: clean(item?.name, 80),
     price_cents: Math.max(0, int(item?.price_cents)),
-    max_quantity: Math.max(1, Math.min(20, int(item?.max_quantity, 1)))
+    max_quantity: Math.max(1, Math.min(20, int(item?.max_quantity, 1))),
+    ...(clean(item?.group_id,20)?{group_id:clean(item?.group_id,20)}:{})
   })).filter(item => item.name);
 }
 
-const ACAI_COMPLEMENT_GROUPS = new Set(["base","cream","topping","fruit","extra","flavor"]);
+const ACAI_COMPLEMENT_GROUPS = new Set(["base","cream","topping","rv_topping","fruit","extra","flavor"]);
 let primeOperationsSchemaReady = false;
 let operationalColumnsReady = false;
 let cashierAccessSchemaReady = false;
 async function ensureCashierAccessTable(db){if(cashierAccessSchemaReady)return;await db.prepare(`CREATE TABLE IF NOT EXISTS cashier_access (id INTEGER PRIMARY KEY CHECK(id=1),pin_hash TEXT NOT NULL DEFAULT '',updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();await db.prepare(`INSERT OR IGNORE INTO cashier_access (id) VALUES (1)`).run();cashierAccessSchemaReady=true}
 const ACAILANDIA_RV_FLAVORS=["Sensação","Surpresinha de Uva","Brownie Trufado","Cookies Oreo","Ouro Branco","Ninhotella","Kit Kat Especial","Ovomaltine Black","Mousse de Maracujá","Mousse de Maracujá com Calda de Nutella","Mousse de Ninho","Mousse de Ninho com Calda de Nutella","Mousse de Morango","Mousse de Morango com Calda de Nutella","Mousse de Amendoim","Mousse de Amendoim com Calda de Nutella","Leite Condensado com Farinha Láctea","Leite Condensado com Paçoca","Calda de Nutella com Paçoca","Calda de Nutella com Leite em Pó","Calda de Nutella com Ovomaltine","Calda de Nutella com Morango em Calda","Calda de Ninho com Leite em Pó","Calda de Ninho com Ovomaltine","Calda de Ninho com Morango em Calda"];
-const ACAILANDIA_RV_FREE_COMPLEMENTS=["Banana","Morango","Manga","Kiwi","Leite em pó","Leite condensado","Granola","Paçoca","Ovomaltine","Nutella","Creme de ninho"];
+const ACAILANDIA_RV_FREE_COMPLEMENTS=["Morango","Kiwi","Banana","Uva","Manga","Uva passas","Cereja","Morango em calda","Abacaxi ao vinho","Granola","Leite em pó","Paçoca","Amendoim granulado","Farofa de amendoim","Farinha LACTA","Disquete","Granulado","Gotas de chocolate","Leite condensado","Pasta de amendoim","Chocolate branco","Calda de Ninho","Calda quente","Ovomaltine","Nutela","Jujuba","Choco Power","Choco Power Mini","Mel","Xarope","Cobertura de morango","Cobertura de chocolate","Calda de Oreo","Brownie"];
+const ACAILANDIA_RV_CREAMS=["Açaí","Açaí com creme de Ninho","Açaí com creme de Maracujá","Açaí com creme de Morango","Açaí com creme de Nutella","Açaí com creme de Oreo","Açaí com creme de Amendoim","Açaí com creme de Cupuaçu"];
+const ACAILANDIA_RV_ALL_CREAMS=[...ACAILANDIA_RV_CREAMS,"Creme de Ninho","Creme de Nutela","Creme de Oreo","Creme de Maracuja","Creme de Amendoin","Creme de Cupuaçu"];
+const ACAILANDIA_RV_PAID_COMPLEMENTS=[["Morango",400],["Kiwi",350],["Banana",250],["Uva",300],["Manga",250],["Uva passas",300],["Cereja",350],["Morango em calda",400],["Abacaxi ao vinho",400],["Granola",300],["Paçoca",300],["Farofa de amendoim",300],["Farinha láctea",250],["Disquete",400],["Gotas de chocolate",400],["Leite condensado",250],["Pasta de amendoim",400],["Chocolate branco",400],["Calda quente",400],["Choco Ball Mini",300],["Ovomaltine",300],["Choco Ball Black",300],["Fini Bananinha",400],["Jujuba",300],["Calda de Nutela",450],["Calda de Ninho",400],["Pasta de Ovomaltine",450],["Calda de Oreo",400],["Brownie",400]];
+const ACAILANDIA_RV_MILKSHAKE_FLAVORS=["Abacaxi","Abacaxi ao vinho","Amendoim","Brigadeiro","Cupuaçu","Chocomenta","Chocolate branco","Dois chocolates","Frutas vermelhas","Farinha láctea","Ganache","Leite Ninho","Leite condensado","Maracujá","Morango","Oreo","Ouro Branco","Nutella","Ovomaltine","Prestígio","Açaí","Ameixa","Sonho de Valsa","Flocos","Diamante Negro","Bis","Kit Kat"];
+const ACAILANDIA_RV_ICECREAM_FLAVORS=["Brigadeiro","Flocos","Chocomenta","Passas","Toffe","Salada de frutas","Nata goiaba","Sonho de Valsa","Chocolate belga","Unicórnio"];
 function cleanFlavors(value) { const source=Array.isArray(value)?value:parseJson(value,[]),seen=new Set(),result=[]; for(const raw of source){const name=clean(raw,80),key=name.toLocaleLowerCase("pt-BR");if(name&&!seen.has(key)){seen.add(key);result.push(name)}if(result.length>=40)break}return result; }
 async function ensurePrimeOperationsSchema(db) {
   if(primeOperationsSchemaReady)return;
   const columns=(await db.prepare(`PRAGMA table_info(products)`).all()).results||[];
   const add=async(name,definition)=>{if(!columns.some(column=>column.name===name))await db.prepare(`ALTER TABLE products ADD COLUMN ${definition}`).run();};
-  await add("enable_acai_complements","enable_acai_complements INTEGER NOT NULL DEFAULT 0"); await add("enable_acai_extras","enable_acai_extras INTEGER NOT NULL DEFAULT 0"); await add("enable_flavors","enable_flavors INTEGER NOT NULL DEFAULT 0"); await add("flavors_json","flavors_json TEXT NOT NULL DEFAULT '[]'"); await add("selected_complement_ids_json","selected_complement_ids_json TEXT NOT NULL DEFAULT '[]'");
+  await add("enable_acai_complements","enable_acai_complements INTEGER NOT NULL DEFAULT 0"); await add("enable_acai_extras","enable_acai_extras INTEGER NOT NULL DEFAULT 0"); await add("enable_flavors","enable_flavors INTEGER NOT NULL DEFAULT 0"); await add("flavors_json","flavors_json TEXT NOT NULL DEFAULT '[]'"); await add("selected_complement_ids_json","selected_complement_ids_json TEXT NOT NULL DEFAULT '[]'"); await add("image_gallery_json","image_gallery_json TEXT NOT NULL DEFAULT '[]'");
   await db.batch([db.prepare(`CREATE TABLE IF NOT EXISTS acai_complements (id INTEGER PRIMARY KEY AUTOINCREMENT,group_id TEXT NOT NULL,name TEXT NOT NULL,price_cents INTEGER NOT NULL DEFAULT 0,sort_order INTEGER NOT NULL DEFAULT 0,is_active INTEGER NOT NULL DEFAULT 1,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`),db.prepare(`CREATE TABLE IF NOT EXISTS fiscal_config (id INTEGER PRIMARY KEY CHECK(id=1),provider TEXT NOT NULL DEFAULT 'focus',environment TEXT NOT NULL DEFAULT 'homologation',enabled INTEGER NOT NULL DEFAULT 0,token_homologation TEXT NOT NULL DEFAULT '',token_production TEXT NOT NULL DEFAULT '',cnpj TEXT NOT NULL DEFAULT '',legal_name TEXT NOT NULL DEFAULT '',trade_name TEXT NOT NULL DEFAULT 'Açailandia PE',state_registration TEXT NOT NULL DEFAULT '',tax_regime TEXT NOT NULL DEFAULT '1',series TEXT NOT NULL DEFAULT '1',csc_id TEXT NOT NULL DEFAULT '',csc_token TEXT NOT NULL DEFAULT '',municipality_code TEXT NOT NULL DEFAULT '',default_cfop TEXT NOT NULL DEFAULT '5102',default_csosn TEXT NOT NULL DEFAULT '102',default_pis_cst TEXT NOT NULL DEFAULT '49',default_cofins_cst TEXT NOT NULL DEFAULT '49',updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`),db.prepare(`INSERT OR IGNORE INTO fiscal_config (id) VALUES (1)`),db.prepare(`CREATE TABLE IF NOT EXISTS product_fiscal (product_id INTEGER PRIMARY KEY,ncm TEXT NOT NULL DEFAULT '',cest TEXT NOT NULL DEFAULT '',cfop TEXT NOT NULL DEFAULT '',csosn TEXT NOT NULL DEFAULT '',pis_cst TEXT NOT NULL DEFAULT '',cofins_cst TEXT NOT NULL DEFAULT '',unit TEXT NOT NULL DEFAULT 'UN',origin TEXT NOT NULL DEFAULT '0',updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`) ]);
   const complements=(await db.prepare(`SELECT COUNT(*) AS total FROM acai_complements`).first())?.total||0;
   if(!complements){await db.batch(ACAILANDIA_RV_FLAVORS.map((name,index)=>db.prepare(`INSERT INTO acai_complements (group_id,name,price_cents,sort_order,is_active) VALUES ('flavor',?,0,?,1)`).bind(name,index)))}
@@ -276,6 +288,103 @@ async function ensurePrimeOperationsSchema(db) {
     const updates=[];
     for(const product of products){if(parseJson(product.selected_complement_ids_json,[]).length)continue;const names=int(product.id)===18||int(product.id)===19?cleanComplements(product.complements_json).map(option=>option.name):bool(product.enable_flavors)?cleanFlavors(product.flavors_json):[];const selectedIds=names.map(name=>catalogByName.get(name.toLocaleLowerCase("pt-BR"))?.id).filter(Boolean);if(selectedIds.length)updates.push(db.prepare(`UPDATE products SET selected_complement_ids_json=?,enable_acai_complements=CASE WHEN id IN (18,19) THEN 1 ELSE enable_acai_complements END,updated_at=CURRENT_TIMESTAMP WHERE id=? AND selected_complement_ids_json='[]'`).bind(JSON.stringify(selectedIds),product.id))}
     updates.push(db.prepare(`INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-catalog-2026-10')`));
+    await db.batch(updates);
+  }
+  const parityMigration=await db.prepare(`SELECT name FROM acai_complement_migrations WHERE name='rv-product-parity-2026-10-v2'`).first();
+  if(!parityMigration){
+    const groups=[
+      ["cream",ACAILANDIA_RV_CREAMS.map(name=>[name,0])],
+      ["rv_topping",ACAILANDIA_RV_FREE_COMPLEMENTS.map(name=>[name,0])],
+      ["extra",ACAILANDIA_RV_PAID_COMPLEMENTS],
+      ["flavor",[...ACAILANDIA_RV_MILKSHAKE_FLAVORS,...ACAILANDIA_RV_ICECREAM_FLAVORS].map(name=>[name,0])]
+    ];
+    let sort=300;
+    for(const [group,rows] of groups)for(const [name,price] of rows){await db.prepare(`INSERT INTO acai_complements (group_id,name,price_cents,sort_order,is_active) SELECT ?,?,?,?,1 WHERE NOT EXISTS (SELECT 1 FROM acai_complements WHERE group_id=? AND name=?)`).bind(group,name,price,sort++,group,name).run();await db.prepare(`UPDATE acai_complements SET price_cents=?,is_active=1,updated_at=CURRENT_TIMESTAMP WHERE group_id=? AND name=?`).bind(price,group,name).run()}
+    const catalog=(await db.prepare(`SELECT id,name,group_id FROM acai_complements WHERE is_active=1`).all()).results||[];
+    const selectGroups={6:["cream","rv_topping","extra"],7:["cream","rv_topping","extra"],8:["cream","rv_topping"],9:["cream"],10:["cream","extra"],11:["flavor","extra"],12:["flavor"],13:["flavor"],14:["flavor"],15:["flavor"],18:["extra"],19:["extra"]};
+    const changes=[];
+    for(const [id,groupsForProduct] of Object.entries(selectGroups)){
+      const selected=catalog.filter(row=>groupsForProduct.includes(row.group_id)&&!(Number(id)===11&&row.group_id==="flavor"&&!ACAILANDIA_RV_ICECREAM_FLAVORS.includes(row.name))&&!(Number(id)>=12&&Number(id)<=15&&!ACAILANDIA_RV_MILKSHAKE_FLAVORS.includes(row.name))).map(row=>Number(row.id));
+      if(Number(id)===18||Number(id)===19){const existing=(await db.prepare(`SELECT selected_complement_ids_json FROM products WHERE id=?`).bind(Number(id)).first())?.selected_complement_ids_json;selected.unshift(...parseJson(existing,[]).map(Number).filter(value=>catalog.some(row=>Number(row.id)===value)));}
+      changes.push(db.prepare(`UPDATE products SET selected_complement_ids_json=?,enable_acai_complements=CASE WHEN id BETWEEN 1 AND 15 OR id IN (18,19) THEN 1 ELSE enable_acai_complements END,enable_acai_extras=CASE WHEN id IN (6,7,10,11,18,19) THEN 1 ELSE enable_acai_extras END,enable_flavors=CASE WHEN id BETWEEN 12 AND 15 THEN 0 ELSE enable_flavors END,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(JSON.stringify([...new Set(selected)]),Number(id)));
+    }
+    changes.push(db.prepare(`UPDATE products SET name='Copo 1',description='Açaí, leite condensado, leite em pó, granola e banana. Escolha o tamanho.',enable_acai_complements=1,complements_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=1`).bind(JSON.stringify([{name:"300 ml",price_cents:0,max_quantity:1,group_id:"size"},{name:"400 ml",price_cents:500,max_quantity:1,group_id:"size"}])));
+    changes.push(db.prepare(`UPDATE products SET description=CASE WHEN id IN (6,7) THEN 'Escolha 1 creme, até 3 complementos grátis e até 10 extras pagos. Itens enviados separadamente para preservar a textura.' ELSE 'Escolha o tamanho, 1 creme e até 5 complementos grátis.' END,updated_at=CURRENT_TIMESTAMP WHERE id IN (6,7,8)`));
+    changes.push(db.prepare(`UPDATE products SET is_available=0,updated_at=CURRENT_TIMESTAMP WHERE id=2`));
+    changes.push(db.prepare(`INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-product-parity-2026-10-v2')`));
+    await db.batch(changes);
+  }
+  const parityRepair=await db.prepare(`SELECT name FROM acai_complement_migrations WHERE name='rv-product-parity-2026-10-v3'`).first();
+  if(!parityRepair){
+    const catalog=(await db.prepare(`SELECT id,name,group_id FROM acai_complements WHERE is_active=1`).all()).results||[];
+    const selectGroups={6:["cream","rv_topping","extra"],7:["cream","rv_topping","extra"],8:["cream","rv_topping"],9:["cream"],10:["cream","extra"],11:["flavor","extra"],12:["flavor"],13:["flavor"],14:["flavor"],15:["flavor"]};
+    const repair=[];
+    for(const [id,groupsForProduct] of Object.entries(selectGroups)){
+      const selected=catalog.filter(row=>groupsForProduct.includes(row.group_id)&&!(Number(id)===11&&row.group_id==="flavor"&&!ACAILANDIA_RV_ICECREAM_FLAVORS.includes(row.name))&&!(Number(id)>=12&&Number(id)<=15&&!ACAILANDIA_RV_MILKSHAKE_FLAVORS.includes(row.name))).map(row=>Number(row.id));
+      repair.push(db.prepare(`UPDATE products SET selected_complement_ids_json=?,enable_acai_complements=1,enable_acai_extras=CASE WHEN id IN (6,7,10,11) THEN 1 ELSE enable_acai_extras END,enable_flavors=0,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(JSON.stringify(selected),Number(id)));
+    }
+    repair.push(db.prepare(`UPDATE products SET enable_acai_complements=1,complements_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=1`).bind(JSON.stringify([{name:"300 ml",price_cents:0,max_quantity:1,group_id:"size"},{name:"400 ml",price_cents:500,max_quantity:1,group_id:"size"}])));
+    repair.push(db.prepare(`UPDATE products SET enable_acai_complements=1,complements_json=?,updated_at=CURRENT_TIMESTAMP WHERE id IN (3,4,5)`).bind(JSON.stringify([{name:"300 ml",price_cents:0,max_quantity:1,group_id:"size"},{name:"400 ml",price_cents:500,max_quantity:1,group_id:"size"}])));
+    repair.push(db.prepare(`UPDATE products SET is_available=0,updated_at=CURRENT_TIMESTAMP WHERE id=2`));
+    repair.push(db.prepare(`INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-product-parity-2026-10-v3')`));
+    await db.batch(repair);
+  }
+  const creamChoiceMigration=await db.prepare(`SELECT name FROM acai_complement_migrations WHERE name='acai-com-creme-only-2026-10-v1'`).first();
+  if(!creamChoiceMigration){
+    await db.prepare(`UPDATE acai_complements SET is_active=0,updated_at=CURRENT_TIMESTAMP WHERE group_id='cream' AND name LIKE 'Creme de %'`).run();
+    for(const [index,name] of ACAILANDIA_RV_CREAMS.entries()){
+      await db.prepare(`INSERT INTO acai_complements (group_id,name,price_cents,sort_order,is_active) SELECT 'cream',?,0,?,1 WHERE NOT EXISTS (SELECT 1 FROM acai_complements WHERE group_id='cream' AND name=?)`).bind(name,300+index,name).run();
+      await db.prepare(`UPDATE acai_complements SET is_active=1,updated_at=CURRENT_TIMESTAMP WHERE group_id='cream' AND name=?`).bind(name).run();
+    }
+    const inactiveCreams=(await db.prepare(`SELECT id FROM acai_complements WHERE group_id='cream' AND is_active=0`).all()).results||[];
+    const inactiveCreamIds=new Set(inactiveCreams.map(row=>Number(row.id)));
+    const selectedProducts=(await db.prepare(`SELECT id,selected_complement_ids_json FROM products WHERE selected_complement_ids_json<>'[]'`).all()).results||[];
+    const cleanup=[];
+    for(const product of selectedProducts){
+      const current=parseJson(product.selected_complement_ids_json,[]).map(Number);
+      const next=current.filter(id=>!inactiveCreamIds.has(id));
+      if(next.length!==current.length)cleanup.push(db.prepare(`UPDATE products SET selected_complement_ids_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(JSON.stringify(next),product.id));
+    }
+    cleanup.push(db.prepare(`INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('acai-com-creme-only-2026-10-v1')`));
+    await db.batch(cleanup);
+  }
+  const rvDetailParity=await db.prepare(`SELECT name FROM acai_complement_migrations WHERE name='rv-menu-detail-parity-2026-10-v4'`).first();
+  if(!rvDetailParity){
+    await db.prepare(`UPDATE acai_complements SET is_active=0,updated_at=CURRENT_TIMESTAMP WHERE group_id='rv_topping'`).run();
+    const rvToppingIds=[];
+    for(const [index,name] of ACAILANDIA_RV_FREE_COMPLEMENTS.entries()){
+      let row=await db.prepare(`SELECT id FROM acai_complements WHERE group_id='rv_topping' AND name=? ORDER BY id LIMIT 1`).bind(name).first();
+      if(!row){await db.prepare(`INSERT INTO acai_complements (group_id,name,price_cents,sort_order,is_active) VALUES ('rv_topping',?,0,?,1)`).bind(name,2000+index*10).run();row=await db.prepare(`SELECT id FROM acai_complements WHERE group_id='rv_topping' AND name=? ORDER BY id LIMIT 1`).bind(name).first();}
+      await db.prepare(`UPDATE acai_complements SET price_cents=0,sort_order=?,is_active=1,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(2000+index*10,row.id).run();
+      await db.prepare(`UPDATE acai_complements SET is_active=0,updated_at=CURRENT_TIMESTAMP WHERE group_id='rv_topping' AND name=? AND id<>?`).bind(name,row.id).run();
+      rvToppingIds.push(Number(row.id));
+    }
+    const allCreamIds={};
+    await db.prepare(`UPDATE acai_complements SET is_active=0,updated_at=CURRENT_TIMESTAMP WHERE group_id='cream'`).run();
+    for(const [index,name] of ACAILANDIA_RV_ALL_CREAMS.entries()){
+      let row=await db.prepare(`SELECT id FROM acai_complements WHERE group_id='cream' AND name=? ORDER BY id LIMIT 1`).bind(name).first();
+      if(!row){await db.prepare(`INSERT INTO acai_complements (group_id,name,price_cents,sort_order,is_active) VALUES ('cream',?,0,?,1)`).bind(name,300+index).run();row=await db.prepare(`SELECT id FROM acai_complements WHERE group_id='cream' AND name=? ORDER BY id LIMIT 1`).bind(name).first();}
+      await db.prepare(`UPDATE acai_complements SET price_cents=0,sort_order=?,is_active=1,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(300+index,row.id).run();
+      await db.prepare(`UPDATE acai_complements SET is_active=0,updated_at=CURRENT_TIMESTAMP WHERE group_id='cream' AND name=? AND id<>?`).bind(name,row.id).run();
+      allCreamIds[name]=Number(row.id);
+    }
+    const current=(await db.prepare(`SELECT id,name,group_id,sort_order FROM acai_complements WHERE is_active=1 ORDER BY group_id,sort_order,id`).all()).results||[];
+    const idsFor=(group,names=null)=>current.filter(row=>row.group_id===group&&(!names||names.includes(row.name))).map(row=>Number(row.id));
+    const creamEight=ACAILANDIA_RV_CREAMS.map(name=>allCreamIds[name]);
+    const creamFourteen=ACAILANDIA_RV_ALL_CREAMS.map(name=>allCreamIds[name]);
+    const milkFlavors=idsFor("flavor",ACAILANDIA_RV_MILKSHAKE_FLAVORS);
+    const iceCreamFlavors=idsFor("flavor",ACAILANDIA_RV_ICECREAM_FLAVORS);
+    const trufadoFlavors=idsFor("flavor",ACAILANDIA_RV_FLAVORS.slice(0,8));
+    const garrafaFlavors=idsFor("flavor",ACAILANDIA_RV_FLAVORS.slice(8));
+    const extras=idsFor("extra");
+    const selected={6:[...creamEight,...rvToppingIds,...extras],7:[...creamEight,...rvToppingIds,...extras],8:[...creamFourteen,...rvToppingIds],9:creamFourteen,10:[...creamFourteen,...extras],11:[...iceCreamFlavors,...extras],12:milkFlavors,13:milkFlavors,14:milkFlavors,15:milkFlavors,18:[...rvToppingIds,...extras],19:[...rvToppingIds,...extras],20:trufadoFlavors,21:trufadoFlavors,22:garrafaFlavors,23:garrafaFlavors};
+    const updates=[];
+    for(const [id,selectedIds] of Object.entries(selected))updates.push(db.prepare(`UPDATE products SET selected_complement_ids_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(JSON.stringify([...new Set(selectedIds)]),Number(id)));
+    updates.push(db.prepare(`UPDATE products SET image_url=?,updated_at=CURRENT_TIMESTAMP WHERE id=8`).bind(ACAILANDIA_PRODUCT_SEED.find(product=>product[0]===8)[6]));
+    updates.push(db.prepare(`UPDATE products SET image_url=?,description=?,updated_at=CURRENT_TIMESTAMP WHERE id=18`).bind(ACAILANDIA_PRODUCT_SEED.find(product=>product[0]===18)[6],ACAILANDIA_PRODUCT_SEED.find(product=>product[0]===18)[3]));
+    updates.push(db.prepare(`UPDATE products SET image_url=?,description=?,updated_at=CURRENT_TIMESTAMP WHERE id=19`).bind(ACAILANDIA_PRODUCT_SEED.find(product=>product[0]===19)[6],ACAILANDIA_PRODUCT_SEED.find(product=>product[0]===19)[3]));
+    updates.push(db.prepare(`UPDATE acai_complements SET name='Calda de Nutela',updated_at=CURRENT_TIMESTAMP WHERE group_id='extra' AND name='Calda de Nutella'`));
+    updates.push(db.prepare(`INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-menu-detail-parity-2026-10-v4')`));
     await db.batch(updates);
   }
   primeOperationsSchemaReady=true;
@@ -322,25 +431,29 @@ async function normalizeOrderItems(db, requestedItems) {
   })).filter(item => item.product_id);
   const ids = [...new Set(requested.map(item => item.product_id))];
   if (!ids.length) throw new Error("Pedido sem produtos válidos.");
-  const found = await db.prepare(`SELECT id,name,price_cents,is_available,complements_json,enable_flavors,flavors_json,selected_complement_ids_json FROM products WHERE id IN (${ids.map(() => "?").join(",")})`).bind(...ids).all();
+  const found = await db.prepare(`SELECT id,name,price_cents,is_available,complements_json,enable_acai_complements,enable_acai_extras,enable_flavors,flavors_json,selected_complement_ids_json FROM products WHERE id IN (${ids.map(() => "?").join(",")})`).bind(...ids).all();
   const products = new Map(found.results.map(product => [int(product.id), product]));
   if (products.size !== ids.length || [...products.values()].some(product => !product.is_available)) throw new Error("Um produto do pedido não está disponível.");
   const centralComplements=(await db.prepare(`SELECT id,name,price_cents,group_id,is_active FROM acai_complements WHERE is_active=1`).all()).results||[];
   return requested.map(item => {
     const product = products.get(item.product_id);
-    const allowed = new Map(cleanComplements(product.complements_json).map(option => [option.name.toLocaleLowerCase("pt-BR"), option]));
+    const allowed = new Map(),addAllowed=option=>{const normalized={...option,group_id:clean(option.group_id,20)};allowed.set(`${normalized.group_id}|${normalized.name.toLocaleLowerCase("pt-BR")}`,normalized);if(!allowed.has(normalized.name.toLocaleLowerCase("pt-BR")))allowed.set(normalized.name.toLocaleLowerCase("pt-BR"),normalized)};
+    for(const option of cleanComplements(product.complements_json))addAllowed(option);
     const selectedCatalogIds=parseJson(product.selected_complement_ids_json,[]).map(Number).filter(Number.isFinite);
-    for(const option of centralComplements){if(selectedCatalogIds.length&&!selectedCatalogIds.includes(Number(option.id)))continue;if(selectedCatalogIds.length||allowed.has(String(option.name).toLocaleLowerCase("pt-BR")))allowed.set(String(option.name).toLocaleLowerCase("pt-BR"),{name:option.name,price_cents:option.group_id==="extra"?int(option.price_cents):0,max_quantity:1})}
+    for(const option of centralComplements){if(selectedCatalogIds.length&&!selectedCatalogIds.includes(Number(option.id)))continue;if(selectedCatalogIds.length||allowed.has(String(option.name).toLocaleLowerCase("pt-BR")))addAllowed({name:option.name,group_id:option.group_id,price_cents:option.group_id==="extra"?int(option.price_cents):0,max_quantity:1})}
     const flavors=cleanFlavors(product.flavors_json),selectedFlavorIds=new Set(centralComplements.filter(option=>String(option.group_id).startsWith("flavor")&&(!selectedCatalogIds.length||selectedCatalogIds.includes(Number(option.id)))).map(option=>String(option.name).toLocaleLowerCase("pt-BR")));
-    if(bool(product.enable_flavors))for(const flavor of flavors){const key=flavor.toLocaleLowerCase("pt-BR");if(!selectedCatalogIds.length||selectedFlavorIds.has(key))allowed.set(key,{name:flavor,price_cents:0,max_quantity:1})}
+    if(bool(product.enable_flavors))for(const flavor of flavors){const key=flavor.toLocaleLowerCase("pt-BR");if(!selectedCatalogIds.length||selectedFlavorIds.has(key))addAllowed({name:flavor,group_id:"flavor",price_cents:0,max_quantity:1})}
     const selected = [];
     for (const raw of item.complements.slice(0, 20)) {
-      const option = allowed.get(clean(raw?.name, 80).toLocaleLowerCase("pt-BR"));
+      const name=clean(raw?.name,80).toLocaleLowerCase("pt-BR"),group=clean(raw?.group_id,20),option=allowed.get(group?`${group}|${name}`:name);
       if (!option) continue;
       const quantity = Math.max(1, Math.min(option.max_quantity, int(raw?.quantity, 1)));
-      selected.push({ name:option.name, price_cents:option.price_cents, quantity });
+      selected.push({ name:option.name, group_id:option.group_id, price_cents:option.price_cents, quantity });
     }
-    const productId=int(product.id),requiresFlavor=bool(product.enable_flavors),selectedFlavor=selected.find(option=>flavors.some(name=>name.toLocaleLowerCase("pt-BR")===option.name.toLocaleLowerCase("pt-BR")));
+    const productId=int(product.id),groupCount=group=>selected.filter(option=>option.group_id===group).length,productRules={1:{size:[1,1]},3:{size:[1,1]},4:{size:[1,1]},5:{size:[1,1]},6:{cream:[1,1],rv_topping:[0,3]},7:{cream:[1,1],rv_topping:[0,3]},8:{size:[1,1],cream:[1,1],rv_topping:[0,5]},9:{size:[1,1],cream:[1,1]},10:{size:[1,1],cream:[1,1]},11:{size:[1,1],flavor:[1,3]},12:{flavor:[1,2]},13:{flavor:[1,2]},14:{flavor:[1,2]},15:{flavor:[1,2]},18:{rv_topping:[0,5]},19:{rv_topping:[0,5]}},rules=productRules[productId]||{};
+    for(const [group,[minimum,maximum]] of Object.entries(rules)){const count=groupCount(group);if(count<minimum||count>maximum)throw new Error(`${product.name}: selecione ${minimum===maximum?`exatamente ${minimum}`:`de ${minimum} a ${maximum}`} opção(ões) em ${group==="rv_topping"?"Acompanhamentos grátis":group==="size"?"Tamanho":group==="cream"?"Açaí ou creme":group==="flavor"?"Sabores":group}.`)}
+    const extraLimit=[6,7,10,11,18,19].includes(productId)?10:20;if(bool(product.enable_acai_extras)&&selected.filter(option=>option.group_id==="extra").length>extraLimit)throw new Error(`${product.name}: escolha no máximo ${extraLimit} extras.`);
+    const requiresFlavor=bool(product.enable_flavors),selectedFlavor=selected.find(option=>option.group_id==="flavor");
     if(requiresFlavor&&(!flavors.length||!selectedFlavor))throw new Error(`Escolha um sabor válido para ${product.name}.`);
     const additions = selected.reduce((sum, option) => sum + option.price_cents * option.quantity, 0);
     // Garrafinhas trufadas e milk shakes têm sabor obrigatório, mas o sabor já
@@ -385,8 +498,8 @@ async function getCatalog(env, includeAdminSettings = false, branchId = "acailan
   return {
     settings: { ...publicSettings, store_name:branch?.name||"Açailandia PE", store_address:branch?.address||publicSettings.store_address, branch_id:branchId, branch_name:branch?.name||BRANCHES[branchId].name, ...storeAvailability(settingsRow), ...(includeAdminSettings?{reception_printer,kitchen_printer,pedeai_enabled:Boolean(pedeai_enabled),pedeai_environment:pedeai_environment||"sandbox",pedeai_store_id:pedeai_store_id||"",pedeai_client_id:pedeai_client_id||"",pedeai_api_base_url:pedeai_api_base_url||"",pedeai_api_token_configured:Boolean(pedeai_api_token),pedeai_webhook_secret_configured:Boolean(pedeai_webhook_secret),pedeai_last_sync_at:pedeai_last_sync_at||"",pedeai_last_error:pedeai_last_error||""}:{}), delivery_neighborhood_fees:neighborhoodFeeRows.results, delivery_rate_tiers:rateRows.results, waiter_fee_enabled:Boolean(settingsRow.waiter_fee_enabled), auto_print_enabled:Boolean(settingsRow.auto_print_enabled), delivery_surcharge_enabled:Boolean(settingsRow.delivery_surcharge_enabled), print_bridge_configured:Boolean(print_bridge_key) },
     categories,
-    products: sortedProducts.map(p => ({ ...p, image_url:hostedImageUrl(p.image_url), complements:cleanComplements(p.complements_json), flavors:cleanFlavors(p.flavors_json), selected_complement_ids:parseJson(p.selected_complement_ids_json,[]).map(Number).filter(Number.isFinite), enable_acai_complements:Boolean(p.enable_acai_complements), enable_acai_extras:Boolean(p.enable_acai_extras), enable_flavors:Boolean(p.enable_flavors), is_featured:automaticFeatured.has(int(p.id)), is_promo:Boolean(p.is_promo), catalog_available:Boolean(p.is_available), branch_available:Boolean(p.branch_available), is_available:Boolean(p.is_available)&&Boolean(p.branch_available) })),
-    acai_complements: includeAdminSettings ? (await env.DB.prepare(`SELECT * FROM acai_complements ORDER BY group_id,sort_order,id`).all()).results : undefined
+    products: sortedProducts.filter(p=>includeAdminSettings||int(p.id)!==2).map(p => ({ ...p, image_url:hostedImageUrl(p.image_url), image_gallery:parseJson(p.image_gallery_json,[]).map(hostedImageUrl).filter(Boolean), complements:cleanComplements(p.complements_json), flavors:cleanFlavors(p.flavors_json), selected_complement_ids:parseJson(p.selected_complement_ids_json,[]).map(Number).filter(Number.isFinite), enable_acai_complements:Boolean(p.enable_acai_complements), enable_acai_extras:Boolean(p.enable_acai_extras), enable_flavors:Boolean(p.enable_flavors), is_featured:automaticFeatured.has(int(p.id)), is_promo:Boolean(p.is_promo), catalog_available:Boolean(p.is_available), branch_available:Boolean(p.branch_available), is_available:Boolean(p.is_available)&&Boolean(p.branch_available) })),
+    acai_complements: (await env.DB.prepare(`SELECT * FROM acai_complements ${includeAdminSettings?"":"WHERE is_active=1 "}ORDER BY group_id,sort_order,id`).all()).results
   };
 }
 
@@ -746,7 +859,7 @@ async function revenueReport(env, url, branchId = "") {
 
 function ticketText(order, items, target, settings) {
   const typeLabel=order.order_type === "delivery" ? "Entrega/Delivery" : order.order_type === "dine_in" ? "Consumir no local" : "Retirada";
-  const lines = [settings.store_name || "Bliss Açaiteria", target === "kitchen" ? "*** COZINHA ***" : "*** CAIXA / RECEPÇÃO ***", `Pedido: ${order.id}`, `Origem: ${order.channel === "online" ? "SITE" : "BALCÃO"}`, `Cliente: ${order.customer_name || "Cliente"}`, `Tipo do pedido: ${typeLabel}`];
+  const lines = [settings.store_name || "Açailandia PE", target === "kitchen" ? "*** COZINHA ***" : "*** CAIXA / RECEPÇÃO ***", `Pedido: ${order.id}`, `Origem: ${order.channel === "online" ? "SITE" : "BALCÃO"}`, `Cliente: ${order.customer_name || "Cliente"}`, `Tipo do pedido: ${typeLabel}`];
   if (order.order_type === "dine_in" && order.table_number) lines.push(`Mesa: ${order.table_number}`);
   if (order.phone) lines.push(`Telefone: ${order.phone}`);
   if (order.city) {
@@ -794,7 +907,7 @@ async function listPrintJobs(env) {
 function ps(value) { return String(value || "").replace(/'/g,"''"); }
 function bridgeScript(settings, siteOrigin) {
   return [
-    "# Conector gratuito de impressão - Açaí Prime",
+    "# Conector gratuito de impressão - Açailandia PE",
     "# Comanda térmica em bobina de 100 mm. A impressora corta ao fim de cada pedido.",
     `$Site = '${ps(siteOrigin)}'`,
     `$Chave = '${ps(settings.print_bridge_key)}'`,
@@ -855,7 +968,7 @@ function bridgeScript(settings, siteOrigin) {
     "  $Documento.Print()",
     "  $Documento.Dispose()",
     "}",
-    "Write-Host 'Conector Açaí Prime iniciado. Pressione Ctrl+C para encerrar.'",
+    "Write-Host 'Conector Açailandia PE iniciado. Pressione Ctrl+C para encerrar.'",
     "while ($true) {",
     "  try {",
     "    $Resposta = Invoke-RestMethod -Uri \"$Site/api/print/jobs\" -Headers $Headers -Method Get",
@@ -1113,7 +1226,7 @@ async function api(request, env, url) {
     return json({ scale:{ configured:Boolean(env.SCALE_BRIDGE_KEY||row?.scale_agent_token_hash),grams:int(row?.scale_last_grams),captured_at:row?.scale_captured_at||"",token_created_at:row?.scale_agent_token_created_at||""} });
   }
   if (url.pathname === "/api/admin/integrations/scale-token" && request.method === "POST") {
-    const bytes=crypto.getRandomValues(new Uint8Array(24)),token=`bliss-scale-${Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("")}`;
+    const bytes=crypto.getRandomValues(new Uint8Array(24)),token=`acailandia-scale-${Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("")}`;
     await env.DB.prepare(`UPDATE settings SET scale_agent_token_hash=?,scale_agent_token_created_at=?,updated_at=CURRENT_TIMESTAMP WHERE id=1`).bind(await sha256(token),new Date().toISOString()).run();
     return json({token,agent_url:`${url.origin}/api/scale/weight`});
   }

@@ -1,0 +1,17 @@
+"""Exemplo sem credenciais do agente de balanca da Acailandia PE."""
+
+URL_PDV = "https://acailandia.wpnz.com.br"
+TOKEN = "COLE_A_CHAVE_GERADA_EM_INTEGRACOES"
+
+PORTA = "COM4"
+VELOCIDADE = 9600
+UNIDADE = "auto"
+FLUXO_HARDWARE = True
+
+CAPACIDADE_MAXIMA_KG = 32.0
+PESO_MINIMO = 0.010
+VARIACAO_MINIMA = 0.005
+LEITURAS_ESTAVEIS = 3
+REENVIO_SEGUNDOS = 30
+CONSULTAR_COM_ENQ = True
+INTERVALO_ENQ_SEGUNDOS = 0.8

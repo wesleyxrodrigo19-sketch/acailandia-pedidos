@@ -91,6 +91,14 @@ assert(workerSource.includes('url.pathname==="/api/admin/cashier-access"&&reques
 assert(workerSource.includes('await sha256(pin)'));
 assert(workerSource.includes('selected_complement_ids_json'));
 assert(posView().includes("Açaí Self-service por peso"));
+state.cashier.view="counter-orders";state.cashier.orderFilter="all";state.cashier.orders=[{id:"COUNTER-TEST",channel:"counter",status:"novo",payment_status:"aberto",total_cents:1200,created_at:new Date().toISOString(),items:[]},{id:"ONLINE-TEST",channel:"online",status:"novo",payment_status:"aberto",total_cents:900,created_at:new Date().toISOString(),items:[]}];
+const cashierCounterMarkup=cashierCounterOrdersView();
+assert(cashierCounterMarkup.includes('class="counter-orders-tabs"'));
+assert(cashierCounterMarkup.includes('class="counter-orders-grid"'));
+assert(cashierCounterMarkup.includes("COUNTER-TEST"));
+assert(!cashierCounterMarkup.includes("ONLINE-TEST"));
+const cashierCounterCss=fs.readFileSync(__dirname+"/../src/cashier-ui-fixes.css","utf8");
+assert(cashierCounterCss.includes(".counter-orders-tabs button.active"));
 console.log("Dashboard smoke test passed");`;
 
 source += "\nglobalThis.__appState=state;globalThis.__api=api;globalThis.__navigateAdmin=primeOpsNavigateAdmin;globalThis.__clearApiCache=()=>{apiGetCache.clear();apiGetPending.clear()};globalThis.__setAdminRenderer=fn=>renderAdmin=fn;globalThis.__setOrderEditor=fn=>openOrderEditor=fn;globalThis.__setOrderDetails=fn=>openOrderDetails=fn;globalThis.__setOrderLoader=fn=>loadAdminOrders=fn;";
