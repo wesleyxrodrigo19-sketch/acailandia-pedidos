@@ -43,4 +43,3 @@ renderAdmin=function(){productFlavorsRenderAdmin();if(state.admin.view==="produc
 
 const productFlavorsOpenProductEditor=openProductEditor;
 openProductEditor=function(id){productFlavorsOpenProductEditor(id);if(!id)return;const product=state.catalog.products.find(item=>item.id===Number(id)),footer=document.querySelector(".admin-product-drawer .drawer-footer");if(!product||!footer)return;footer.classList.add("product-editor-actions");footer.insertAdjacentHTML("afterbegin",`<button type="button" class="danger-btn" id="delete-product">Excluir produto</button>`);$("#delete-product").onclick=async()=>{if(!confirm(`Excluir ${product.name}? O produto sairá do cardápio e do balcão.`))return;const button=$("#delete-product");button.disabled=true;try{await api(`/api/admin/products/${product.id}`,{method:"DELETE"});state.catalog=await api("/api/admin/products");closeLayer();renderAdmin();toast("Produto excluído")}catch(error){toast(error.message);button.disabled=false}}};
-

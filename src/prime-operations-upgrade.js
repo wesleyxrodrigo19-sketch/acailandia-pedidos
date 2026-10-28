@@ -41,7 +41,7 @@ async function primeOpsNavigateAdmin(view){
     if(request!==primeAdminNavigationRequest)return;
     // A first visit still needs its initial render; a cached screen is left
     // untouched while refreshing so an in-progress form or order is not lost.
-    if(!hasSnapshot)renderAdmin();
+    if(!hasSnapshot||view==='tables')renderAdmin();
   }catch(error){
     if(request!==primeAdminNavigationRequest)return;
     if(!hasSnapshot)primeOpsRenderNavigationState(view,error);
@@ -75,7 +75,10 @@ async function primeOpsLoadAdminView(view){
     if(view==='settings')state.admin.printStatus=await api('/api/admin/print-status').catch(()=>state.admin.printStatus||{});
     if(view==='neighborhoods')await loadBranchNeighborhoodFees();
   }
-  else if(view==='tables')state.admin.tables=await api('/api/admin/tables');
+  else if(view==='tables'){
+    const [,tables]=await Promise.all([loadAdminOrders(),api('/api/admin/tables')]);
+    state.admin.tables=tables;
+  }
   else if(view==='revenue')await loadRevenue();
   else if(view==='management')await loadOrderManagement();
   else if(view==='audit')await loadAudit();

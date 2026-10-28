@@ -40,7 +40,7 @@ export const catalogCorrections = [
 ];
 
 export const defaultSettings = {
-  store_name: "Bliss Açaiteria",
+  store_name: "Açailandia PE",
   store_open: "1",
   closing_time: "23:30",
   minimum_order: "10",
