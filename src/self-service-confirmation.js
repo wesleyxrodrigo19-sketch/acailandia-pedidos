@@ -15,7 +15,7 @@ addSelfServiceFromScale=async function(){
     const sync=()=>{const grams=weight();$("#ss-weight").textContent=`${(grams/1000).toFixed(3).replace(".",",")} kg`;$("#ss-total").textContent=money(Math.round(grams*settingPrice/1000));$("#ss-confirm").disabled=!grams||grams>30000};
     let polling=false;
     const updateReading=async(showError=false)=>{if(polling||manual)return;polling=true;try{reading=await api("/api/admin/scale/current");$("#ss-status").textContent=fresh()?`Leitura disponível: ${(Number(reading.grams)/1000).toFixed(3).replace(".",",")} kg`:"Aguardando uma leitura recente da balança…";sync()}catch(error){if(showError)toast(error.message)}finally{polling=false}};
-    const pollId=setInterval(()=>updateReading(),500),closeModal=()=>{clearInterval(pollId);closeLayer()};
+    const pollId=setInterval(()=>updateReading(),250),closeModal=()=>{clearInterval(pollId);closeLayer()};
     document.querySelectorAll("[data-ss-close]").forEach(el=>el.onclick=closeModal);
     $("#ss-toggle-manual").onclick=async()=>{manual=!manual;$("#ss-manual-fields").classList.toggle("hidden",!manual);$("#ss-toggle-manual").textContent=manual?"Usar balança":"Peso manual";$("#ss-status").textContent=manual?"O peso informado manualmente será marcado para conferência.":(fresh()?`Leitura disponível: ${(Number(reading.grams)/1000).toFixed(3).replace(".",",")} kg`:"Aguardando leitura válida da balança.");sync();if(!manual)await updateReading()};
     $("#ss-read-scale").onclick=async event=>{const control=event.currentTarget;control.disabled=true;control.textContent="Lendo…";manual=false;$("#ss-manual-fields").classList.add("hidden");await updateReading(true);control.disabled=false;control.textContent="⚖ Ler da balança"};
