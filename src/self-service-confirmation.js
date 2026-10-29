@@ -1,9 +1,10 @@
+Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 /* Fluxo de pesagem do balcão: leitura automática ou peso manual auditado. */
 const selfServiceBasePosView=posView;
 posView=function(){return selfServiceBasePosView().replace(/<section class="self-service-card">[\s\S]*?<\/section>/,`<button type="button" class="self-service-product-card" id="add-self-service"><span class="self-service-scale-icon">⚖</span><span><strong>Açaí Self-service por peso</strong><b>${money(Math.max(1,Number(state.catalog.settings.self_service_price_per_kg_cents||3000)))}/kg</b><small>Toque para pesar</small></span></button>`)};
 
-addSelfServiceFromScale=async function(){
-  const button=$("#add-self-service");if(!button)return;button.disabled=true;button.textContent="Abrindo pesagem…";
+addSelfServiceFromScale=async function(options={}){
+  const button=options.button||$("#add-self-service"),targetCart=Array.isArray(options.cart)?options.cart:state.admin.posCart;if(!button&&!Array.isArray(options.cart))return;if(button){button.disabled=true;button.textContent="Abrindo pesagem…"}
   try{
     const settingPrice=Math.max(1,Number(state.catalog.settings.self_service_price_per_kg_cents||3000));
     let reading={grams:0,captured_at:""},manual=false;
@@ -21,6 +22,7 @@ addSelfServiceFromScale=async function(){
     $("#ss-read-scale").onclick=async event=>{const control=event.currentTarget;control.disabled=true;control.textContent="Lendo…";manual=false;$("#ss-manual-fields").classList.add("hidden");await updateReading(true);control.disabled=false;control.textContent="⚖ Ler da balança"};
     updateReading();
     $("#ss-gross").oninput=sync;$("#ss-tare").oninput=sync;
-    $("#ss-confirm").onclick=()=>{const grams=weight();if(!grams||grams>30000)return toast("Informe um peso líquido entre 1 g e 30 kg.");const capturedAt=manual?"":String(reading.captured_at||""),grossGrams=manual?toGrams($("#ss-gross").value):grams,tareGrams=manual?toGrams($("#ss-tare").value):0,key=`self-service-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,item={selfService:true,manual,grams,capturedAt,grossGrams,tareGrams,pricePerKgCents:settingPrice,quantity:1,key,unit_price_cents:Math.round(grams*settingPrice/1000),product:{id:"self-service",name:"Açaí Self-service",price_cents:Math.round(grams*settingPrice/1000),image_url:JW_LOGO},notes:`${grams} g • ${money(settingPrice)}/kg • ${manual?"peso manual":"Prix 3 Toledo"}`};state.admin.posCart.unshift(item);clearInterval(pollId);closeLayer();renderAdmin();toast(`Self-service adicionado • ${money(item.unit_price_cents)}`)};
-  }catch(error){toast(error.message)}finally{if(document.body.contains(button)){button.disabled=false;button.textContent="Selecionar peso"}}
+    $("#ss-confirm").onclick=()=>{const grams=weight();if(!grams||grams>30000)return toast("Informe um peso líquido entre 1 g e 30 kg.");const capturedAt=manual?"":String(reading.captured_at||""),grossGrams=manual?toGrams($("#ss-gross").value):grams,tareGrams=manual?toGrams($("#ss-tare").value):0,key=`self-service-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,item={selfService:true,manual,grams,capturedAt,grossGrams,tareGrams,pricePerKgCents:settingPrice,quantity:1,key,unit_price_cents:Math.round(grams*settingPrice/1000),product:{id:"self-service",name:"Açaí Self-service",price_cents:Math.round(grams*settingPrice/1000),image_url:JW_LOGO},notes:`${grams} g • ${money(settingPrice)}/kg • ${manual?"peso manual":"Prix 3 Toledo"}`};targetCart.unshift(item);clearInterval(pollId);closeLayer();if(typeof options.onAdded==="function"){options.onAdded();toast(`Self-service adicionado • ${money(item.unit_price_cents)}`)}else{renderAdmin();toast(`Self-service adicionado • ${money(item.unit_price_cents)}`)}};
+  }catch(error){toast(error.message)}finally{if(button&&document.body.contains(button)){button.disabled=false;button.textContent="Selecionar peso"}}
 };
+
