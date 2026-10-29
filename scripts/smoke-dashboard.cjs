@@ -3,6 +3,12 @@ const assert = require("node:assert/strict");
 const selfServiceScaleSource=fs.readFileSync(`${__dirname}/../src/self-service-confirmation.js`,"utf8");
 assert.match(selfServiceScaleSource,/setInterval\(\(\)=>updateReading\(\),250\)/);
 assert.match(selfServiceScaleSource,/clearInterval\(pollId\)/);
+const thermalPrintSource=fs.readFileSync(`${__dirname}/../src/thermal-print.js`,"utf8");
+assert.match(thermalPrintSource,/Bobina 80mm/);
+assert.match(thermalPrintSource,/PaperSize\('Bobina 80mm',315/);
+assert.match(thermalPrintSource,/LogoUri/);
+assert.match(thermalPrintSource,/OriginAtMargins = \$true/);
+assert.match(thermalPrintSource,/Length -gt 33/);
 
 global.location = { pathname:"/test" };
 global.__documentListeners=[];

@@ -49,13 +49,19 @@ const [template, html, css, cashierUiFixesCss, client, cashierPayment, cashRegis
   readFile(path.join(root, "src", "table-operations.js"), "utf8"),
 ]);
 
+const thermalPrint = await readFile(path.join(root, "src", "thermal-print.js"), "utf8");
+const bridgeStart = template.indexOf("function bridgeScript(settings, siteOrigin) {");
+const bridgeEnd = template.indexOf("\nasync function api(request, env, url) {", bridgeStart);
+if (bridgeStart < 0 || bridgeEnd < 0) throw new Error("Could not locate the print bridge in the worker template.");
+const templateWithThermalBridge = template.slice(0, bridgeStart) + thermalPrint.trim() + template.slice(bridgeEnd);
+
 const mediaEntries = await readdir(path.join(root, "media"));
 const media = Object.fromEntries(await Promise.all(mediaEntries.filter(name => /\.(svg|webp|png|jpe?g|zip)$/i.test(name)).map(async name => [
   name,
   (await readFile(path.join(root, "media", name))).toString("base64"),
 ])));
 
-const output = template
+const output = templateWithThermalBridge
   .replace("__APP_HTML__", JSON.stringify(html))
   .replace("__APP_CSS__", JSON.stringify(`${css}\n${whatsappPixCss}\n${recoveryCss}\n${adminOperationsCss}\n${adminDashboardCss}\n${promotionsCss}\n${cartFlowCss}\n${cartResilienceCss}\n${orderSoundCss}\n${integrationsCss}\n${selfServiceConfirmCss}\n${cashierUiFixesCss}\n${acaiBuilderCss}\n${primeOpsCss}\n${operationalFixesCss}\n${complementManagementCss}\n${productFlavorsCss}\n${fiscalIntegrationCss}`))
   .replace("__APP_JS__", JSON.stringify(`${client}\n${whatsappPix}\n${recovery}\n${adminOperations}\n${adminDashboard}\n${promotions}\n${cartFlow}\n${cartResilience}\n${orderSound}\n${paymentCopy}\n${integrations}\n${cashierPayment}\n${cashRegister}\n${adminFastNavigation}\n${acaiBuilder}\n${primeOps}\n${operationalFixes}\n${complementManagement}\n${productFlavors}\n${fiscalIntegration}\n${selfServiceConfirm}\n${tableOperations}`))
