@@ -1,4 +1,3 @@
-Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 /* Fluxo de pesagem do balcão: leitura automática ou peso manual auditado. */
 const selfServiceBasePosView=posView;
 posView=function(){return selfServiceBasePosView().replace(/<section class="self-service-card">[\s\S]*?<\/section>/,`<button type="button" class="self-service-product-card" id="add-self-service"><span class="self-service-scale-icon">⚖</span><span><strong>Açaí Self-service por peso</strong><b>${money(Math.max(1,Number(state.catalog.settings.self_service_price_per_kg_cents||3000)))}/kg</b><small>Toque para pesar</small></span></button>`)};
