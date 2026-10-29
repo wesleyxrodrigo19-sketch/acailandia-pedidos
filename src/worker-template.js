@@ -562,7 +562,8 @@ async function createOrder(env, body, channel) {
   const settings = await env.DB.prepare(`SELECT * FROM settings WHERE id=1`).first();
   const counterItems=channel==="counter"?await counterOrderItems(env,body,settings):null;
   const items=counterItems?counterItems.items:(Array.isArray(body?.items)&&body.items.length?await normalizeOrderItems(env.DB,body.items):[]);
-  if(!items.length)throw new Error("Pedido sem produtos válidos.");
+  const openingEmptyTable=channel==="counter"&&body?.open_table===true&&body?.order_type==="dine_in";
+  if(!items.length&&!openingEmptyTable)throw new Error("Pedido sem produtos válidos.");
   const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price_cents, 0);
   if (channel === "online" && !storeAvailability(settings).is_open) throw new Error("A loja está fechada no momento. Consulte os horários de funcionamento.");
   if (channel === "online" && subtotal < settings.minimum_order_cents) throw new Error("O pedido não atingiu o valor mínimo.");
@@ -612,7 +613,7 @@ async function createOrder(env, body, channel) {
   const abandonedCartId = clean(body?.abandoned_cart_id, 64);
   if (channel === "online" && /^[0-9a-f-]{20,64}$/i.test(abandonedCartId)) statements.push(env.DB.prepare(`UPDATE abandoned_carts SET status='converted',updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(abandonedCartId));
   statements.push(auditStatement(env.DB,"order_created","order",id,`Pedido ${id} criado`,{ channel,customer_name:customerName,order_type:orderType,payment_status:initialPaymentStatus,payment_method:selectedPaymentMethod,total_cents:total,table_number:tableNumber||null,self_service:(counterItems?.selfServiceEntries||[]).map(entry=>({grams:int(entry?.grams),manual:bool(entry?.manual)})) }));
-  if (settings.auto_print_enabled) {
+  if (settings.auto_print_enabled && items.length) {
     const copies=Math.max(1,Math.min(5,int(settings.print_copies,1)));
     if (clean(settings.reception_printer,120)) for (let copy=0;copy<copies;copy++) statements.push(env.DB.prepare(`INSERT INTO print_jobs (order_id,target,status) VALUES (?,'reception','pending')`).bind(id));
     if (clean(settings.kitchen_printer,120) && settings.kitchen_printer !== settings.reception_printer) for (let copy=0;copy<copies;copy++) statements.push(env.DB.prepare(`INSERT INTO print_jobs (order_id,target,status) VALUES (?,'kitchen','pending')`).bind(id));
@@ -747,14 +748,13 @@ async function updateOrderItems(env, orderId, body) {
     const settings = await env.DB.prepare(`SELECT self_service_price_per_kg_cents FROM settings WHERE id=1`).first();
     const weighted = await counterOrderItems(env, { items:[], self_service_items:body.self_service_items }, settings);
     items = [...items,...weighted.items];
-  } else {
-    // Edições do editor clássico só enviam produtos do cardápio. Preserve os
-    // itens pesados separadamente para que salvar produtos não apague o açaí.
-    const existing = (await env.DB.prepare(`SELECT product_name,quantity,unit_price_cents,complements_json,notes FROM order_items WHERE order_id=? AND product_id IS NULL ORDER BY id`).bind(orderId).all()).results||[];
-    for (const item of existing) {
-      let complements=[];try{complements=JSON.parse(item.complements_json||"[]")}catch{}
-      items.push({product_id:null,product_name:item.product_name,quantity:item.quantity,unit_price_cents:item.unit_price_cents,complements,notes:item.notes||""});
-    }
+  }
+  // Pesagens existentes não são editáveis no seletor de produtos; preserve-as
+  // tanto nas edições comuns quanto quando uma nova pesagem é adicionada.
+  const existing = (await env.DB.prepare(`SELECT product_name,quantity,unit_price_cents,complements_json,notes FROM order_items WHERE order_id=? AND product_id IS NULL ORDER BY id`).bind(orderId).all()).results||[];
+  for (const item of existing) {
+    let complements=[];try{complements=JSON.parse(item.complements_json||"[]")}catch{}
+    items.push({product_id:null,product_name:item.product_name,quantity:item.quantity,unit_price_cents:item.unit_price_cents,complements,notes:item.notes||""});
   }
   const subtotal = items.reduce((sum,item) => sum + item.quantity * item.unit_price_cents, 0);
   const waiterFee = order.waiter_fee_cents && order.subtotal_cents ? Math.round(subtotal * order.waiter_fee_cents / order.subtotal_cents) : 0;
