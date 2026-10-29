@@ -1,4 +1,3 @@
-Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 /* Mesas e comandas no formato operacional pedido pela Açailandia. */
 function tableOrderFor(table){return state.admin.orders.find(order=>String(order.id)===String(table.order_id))||state.admin.orders.find(order=>String(order.table_number)===String(table.number)&&order.channel==="counter"&&!['concluido','cancelado'].includes(order.status))}
 function tableOrderTotal(order){return Number(order?.total_cents||0)}
