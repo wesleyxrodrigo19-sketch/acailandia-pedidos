@@ -672,7 +672,7 @@ async function listAdminOrders(env, branchId="") {
   const orders = (await (branch?env.DB.prepare(`SELECT * FROM orders WHERE branch_id=? ORDER BY datetime(created_at) DESC LIMIT 200`).bind(branch):env.DB.prepare(`SELECT * FROM orders ORDER BY datetime(created_at) DESC LIMIT 200`)).all()).results;
   if (!orders.length) return [];
   // Evita exceder o limite de parâmetros do D1 quando a lista estiver cheia.
-  const items = (await env.DB.prepare(`SELECT oi.* FROM order_items oi INNER JOIN (SELECT id FROM orders ORDER BY datetime(created_at) DESC LIMIT 200) recent_orders ON recent_orders.id=oi.order_id ORDER BY oi.id`).all()).results;
+  const items = (await env.DB.prepare(`SELECT oi.*,tl.label AS table_label FROM order_items oi LEFT JOIN table_item_labels tl ON tl.order_item_id=oi.id INNER JOIN (SELECT id FROM orders ORDER BY datetime(created_at) DESC LIMIT 200) recent_orders ON recent_orders.id=oi.order_id ORDER BY oi.id`).all()).results;
   const grouped = new Map();
   for (const item of items) { if (!grouped.has(item.order_id)) grouped.set(item.order_id, []); grouped.get(item.order_id).push(item); }
   return orders.map(o => ({ ...o, items: grouped.get(o.id) || [] }));
@@ -752,18 +752,38 @@ async function updateOrderItems(env, orderId, body) {
   }
   // Pesagens existentes não são editáveis no seletor de produtos; preserve-as
   // tanto nas edições comuns quanto quando uma nova pesagem é adicionada.
-  const existing = (await env.DB.prepare(`SELECT product_name,quantity,unit_price_cents,complements_json,notes FROM order_items WHERE order_id=? AND product_id IS NULL ORDER BY id`).bind(orderId).all()).results||[];
+  const identified = (await env.DB.prepare(`SELECT oi.* FROM order_items oi JOIN table_item_labels tl ON tl.order_item_id=oi.id WHERE oi.order_id=? ORDER BY oi.id`).bind(orderId).all()).results||[];
+  for (const original of identified.filter(item=>item.product_id)) {
+    const match=items.find(item=>item.product_id===original.product_id && item.quantity>0 && item.notes===(original.notes||"") && JSON.stringify(item.complements)===JSON.stringify(parseJson(original.complements_json,[])));
+    if(!match)throw new Error("Não foi possível preservar os itens identificados. Use o menu do item para editá-los ou excluí-los.");
+    match.quantity--;
+  }
+  items=items.filter(item=>item.quantity>0);
+  const existing = (await env.DB.prepare(`SELECT oi.product_name,oi.quantity,oi.unit_price_cents,oi.complements_json,oi.notes FROM order_items oi LEFT JOIN table_item_labels tl ON tl.order_item_id=oi.id WHERE oi.order_id=? AND oi.product_id IS NULL AND tl.order_item_id IS NULL ORDER BY oi.id`).bind(orderId).all()).results||[];
   for (const item of existing) {
     let complements=[];try{complements=JSON.parse(item.complements_json||"[]")}catch{}
     items.push({product_id:null,product_name:item.product_name,quantity:item.quantity,unit_price_cents:item.unit_price_cents,complements,notes:item.notes||""});
   }
-  const subtotal = items.reduce((sum,item) => sum + item.quantity * item.unit_price_cents, 0);
+  const subtotal = items.reduce((sum,item) => sum + item.quantity * item.unit_price_cents, 0)+identified.reduce((sum,item)=>sum+int(item.quantity)*int(item.unit_price_cents),0);
   const waiterFee = order.waiter_fee_cents && order.subtotal_cents ? Math.round(subtotal * order.waiter_fee_cents / order.subtotal_cents) : 0;
-  const statements = [env.DB.prepare(`DELETE FROM order_items WHERE order_id=?`).bind(orderId)];
+  const statements = [
+    env.DB.prepare(`INSERT INTO table_item_mutation_guard(valid) SELECT CASE WHEN EXISTS (
+      SELECT 1 FROM orders WHERE id=? AND subtotal_cents=? AND total_cents=?
+      AND NOT EXISTS (SELECT 1 FROM order_bill_splits WHERE order_id=orders.id)
+    ) AND COALESCE((SELECT group_concat(id,',') FROM (
+      SELECT oi.id FROM order_items oi JOIN table_item_labels tl ON tl.order_item_id=oi.id WHERE oi.order_id=? ORDER BY oi.id
+    )),'')=? THEN 1 ELSE 0 END`).bind(orderId,order.subtotal_cents,order.total_cents,orderId,identified.map(item=>item.id).join(",")),
+    env.DB.prepare(`DELETE FROM table_item_mutation_guard`),
+    env.DB.prepare(`DELETE FROM order_items WHERE order_id=? AND id NOT IN (SELECT order_item_id FROM table_item_labels)`).bind(orderId)
+  ];
   for (const item of items) statements.push(env.DB.prepare(`INSERT INTO order_items (order_id,product_id,product_name,quantity,unit_price_cents,complements_json,notes) VALUES (?,?,?,?,?,?,?)`).bind(orderId,item.product_id,item.product_name,item.quantity,item.unit_price_cents,JSON.stringify(item.complements),item.notes));
   statements.push(env.DB.prepare(`UPDATE orders SET subtotal_cents=?,waiter_fee_cents=?,total_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(subtotal,waiterFee,subtotal+waiterFee+(order.delivery_fee_cents||0),orderId));
-  statements.push(auditStatement(env.DB,"order_edited","order",orderId,`Itens do pedido ${orderId} alterados`,{ previous_total_cents:order.total_cents,total_cents:subtotal+waiterFee+(order.delivery_fee_cents||0),item_count:items.reduce((sum,item)=>sum+item.quantity,0) }));
-  await env.DB.batch(statements);
+  statements.push(auditStatement(env.DB,"order_edited","order",orderId,`Itens do pedido ${orderId} alterados`,{ previous_total_cents:order.total_cents,total_cents:subtotal+waiterFee+(order.delivery_fee_cents||0),item_count:items.reduce((sum,item)=>sum+item.quantity,0)+identified.reduce((sum,item)=>sum+int(item.quantity),0) }));
+  try { await env.DB.batch(statements); }
+  catch(error) {
+    if(String(error.message).includes("CHECK constraint failed"))throw new Error("A comanda foi alterada. Atualize e tente novamente.");
+    throw error;
+  }
   return { ok:true, subtotal_cents:subtotal, delivery_fee_cents:order.delivery_fee_cents||0, waiter_fee_cents:waiterFee, total_cents:subtotal+waiterFee+(order.delivery_fee_cents||0) };
 }
 
@@ -1306,12 +1326,66 @@ async function api(request, env, url) {
     try { return json(await updateOrderItems(env,orderItems[1],await readJson(request))); }
     catch (error) { return json({ error:error.message || "Não foi possível editar o pedido." },400); }
   }
+  const tableItemAction=url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/table-items\/(\d+)$/);
+  if(tableItemAction&&request.method==="PATCH"){
+    const body=await readJson(request),action=body?.action,orderId=tableItemAction[1],itemId=int(tableItemAction[2]);
+    if(!new Set(["identify","edit","delete"]).has(action))return json({error:"Ação inválida."},400);
+    const order=await env.DB.prepare(`SELECT * FROM orders WHERE id=?`).bind(orderId).first();
+    const item=await env.DB.prepare(`SELECT oi.*,tl.label AS table_label FROM order_items oi LEFT JOIN table_item_labels tl ON tl.order_item_id=oi.id WHERE oi.id=? AND oi.order_id=?`).bind(itemId,orderId).first();
+    if(!order||!item)return json({error:"Item não encontrado nesta comanda."},404);
+    if(order.channel!=="counter"||!order.table_number||order.status==="concluido"||order.status==="cancelado"||order.payment_status!=="aberto")return json({error:"A comanda precisa estar aberta e sem pagamento finalizado."},400);
+    const splitRows=(await env.DB.prepare(`SELECT id,items_json,total_cents FROM order_bill_splits WHERE order_id=?`).bind(orderId).all()).results||[];
+    if(splitRows.length&&action!=="identify")return json({error:"Não é possível alterar itens após iniciar a divisão da conta."},409);
+    const used=splitRows.reduce((total,split)=>total+JSON.parse(split.items_json||"[]").reduce((sum,entry)=>sum+(int(entry.order_item_id)===itemId?int(entry.quantity):0),0),0);
+    if(action==="identify"&&used>=int(item.quantity))return json({error:"Este item já foi pago e não pode mais ser identificado."},409);
+    if(action!=="identify"&&int(order.discount_cents))return json({error:"Remova o desconto da conta antes de alterar os itens."},400);
+    const label=clean(body?.label,80),quantity=Number(body?.quantity),notes=clean(body?.notes,300);
+    if(action==="edit"&&(!Number.isInteger(quantity)||quantity<1||quantity>20))return json({error:"Informe uma quantidade entre 1 e 20."},400);
+    if(action==="edit"&&item.table_label&&quantity!==1)return json({error:"Um item identificado representa uma unidade. Para outras unidades, adicione outro item."},400);
+    const guard=env.DB.prepare(`INSERT INTO table_item_mutation_guard(valid)
+      SELECT CASE WHEN EXISTS (
+        SELECT 1 FROM orders o JOIN order_items oi ON oi.order_id=o.id
+        WHERE o.id=? AND oi.id=? AND oi.quantity=? AND COALESCE(oi.notes,'')=? AND oi.unit_price_cents=? AND oi.product_name=?
+        AND COALESCE((SELECT label FROM table_item_labels WHERE order_item_id=oi.id),'')=? AND o.subtotal_cents=? AND o.total_cents=?
+        AND o.channel='counter' AND o.table_number IS NOT NULL AND o.status NOT IN ('concluido','cancelado')
+        AND o.payment_status='aberto'
+        AND (SELECT COUNT(*) FROM order_bill_splits WHERE order_id=o.id)=(SELECT COUNT(*) FROM json_each(?))
+        AND NOT EXISTS (SELECT 1 FROM json_each(?) j WHERE NOT EXISTS (
+          SELECT 1 FROM order_bill_splits s WHERE s.order_id=o.id AND s.id=json_extract(j.value,'$.id')
+          AND s.items_json=json_extract(j.value,'$.items_json') AND s.total_cents=json_extract(j.value,'$.total_cents')
+        ))
+      ) THEN 1 ELSE 0 END`).bind(orderId,itemId,item.quantity,item.notes||"",item.unit_price_cents,item.product_name,item.table_label||"",order.subtotal_cents,order.total_cents,JSON.stringify(splitRows),JSON.stringify(splitRows));
+    const statements=[guard,env.DB.prepare(`DELETE FROM table_item_mutation_guard`)];
+    if(action==="identify"){
+      if(label&&int(item.quantity)>1){
+        statements.push(env.DB.prepare(`UPDATE order_items SET quantity=quantity-1 WHERE id=? AND order_id=?`).bind(itemId,orderId));
+        statements.push(env.DB.prepare(`INSERT INTO order_items (order_id,product_id,product_name,quantity,unit_price_cents,complements_json,notes) SELECT order_id,product_id,product_name,1,unit_price_cents,complements_json,notes FROM order_items WHERE id=? AND order_id=?`).bind(itemId,orderId));
+        statements.push(env.DB.prepare(`INSERT INTO table_item_labels(order_item_id,label) SELECT MAX(id),? FROM order_items WHERE order_id=?`).bind(label,orderId));
+      }else if(label){
+        statements.push(env.DB.prepare(`INSERT INTO table_item_labels(order_item_id,label) VALUES (?,?) ON CONFLICT(order_item_id) DO UPDATE SET label=excluded.label`).bind(itemId,label));
+      }else statements.push(env.DB.prepare(`DELETE FROM table_item_labels WHERE order_item_id=?`).bind(itemId));
+    }else{
+      if(action==="delete")statements.push(env.DB.prepare(`DELETE FROM order_items WHERE id=? AND order_id=?`).bind(itemId,orderId));
+      else statements.push(env.DB.prepare(`UPDATE order_items SET quantity=?,notes=? WHERE id=? AND order_id=?`).bind(quantity,notes,itemId,orderId));
+      const newSubtotal=Math.max(0,int(order.subtotal_cents)+(action==="delete"?-int(item.quantity)*int(item.unit_price_cents):(quantity-int(item.quantity))*int(item.unit_price_cents)));
+      const fee=order.waiter_fee_cents&&order.subtotal_cents?Math.round(newSubtotal*int(order.waiter_fee_cents)/int(order.subtotal_cents)):0;
+      const total=newSubtotal+fee+int(order.delivery_fee_cents);
+      statements.push(env.DB.prepare(`UPDATE orders SET subtotal_cents=?,waiter_fee_cents=?,total_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(newSubtotal,fee,total,orderId));
+      statements.push(auditStatement(env.DB,action==="delete"?"order_item_deleted":"order_item_edited","order",orderId,`Item da comanda ${orderId} ${action==="delete"?"excluído":"alterado"}`,{item_id:itemId,previous_total_cents:order.total_cents,total_cents:total}));
+    }
+    try { await env.DB.batch(statements); }
+    catch(error) {
+      if(String(error.message).includes("CHECK constraint failed"))return json({error:"A comanda foi alterada. Atualize e tente novamente."},409);
+      throw error;
+    }
+    return json({ok:true});
+  }
   const orderBillSplits=url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/bill-splits$/);
   if(orderBillSplits&&request.method==="GET"){
     const order=await env.DB.prepare(`SELECT id,total_cents,status,channel,table_number FROM orders WHERE id=?`).bind(orderBillSplits[1]).first();
     if(!order)return json({error:"Pedido nÃ£o encontrado."},404);
     const [itemRows,splitRows]=await Promise.all([
-      env.DB.prepare(`SELECT id,product_name,quantity,unit_price_cents FROM order_items WHERE order_id=? ORDER BY id`).bind(order.id).all(),
+      env.DB.prepare(`SELECT oi.id,oi.product_name,oi.quantity,oi.unit_price_cents,tl.label AS table_label FROM order_items oi LEFT JOIN table_item_labels tl ON tl.order_item_id=oi.id WHERE oi.order_id=? ORDER BY oi.id`).bind(order.id).all(),
       env.DB.prepare(`SELECT id,customer_name,items_json,total_cents,created_at FROM order_bill_splits WHERE order_id=? ORDER BY created_at,id`).bind(order.id).all()
     ]);
     const allocated=new Map();
@@ -1326,30 +1400,30 @@ async function api(request, env, url) {
   }
   if(orderBillSplits&&request.method==="POST"){
     const body=await readJson(request),order=await env.DB.prepare(`SELECT * FROM orders WHERE id=?`).bind(orderBillSplits[1]).first();
-    if(!order)return json({error:"Pedido nÃ£o encontrado."},404);
-    if(order.status==="cancelado"||order.channel!=="counter"||!order.table_number)return json({error:"A divisÃ£o por itens estÃ¡ disponÃ­vel apenas para comandas ativas de mesa."},400);
-    if(order.payment_status==="pago")return json({error:"Esta comanda jÃ¡ foi paga."},400);
+    if(!order)return json({error:"Pedido não encontrado."},404);
+    if(order.status==="cancelado"||order.status==="concluido"||order.channel!=="counter"||!order.table_number)return json({error:"A divisão por itens está disponível apenas para comandas ativas de mesa."},400);
+    if(order.payment_status==="pago")return json({error:"Esta comanda já foi paga."},400);
     const requestedItems=Array.isArray(body?.items)?body.items:[],allocated=new Map();
     if(!requestedItems.length)return json({error:"Selecione ao menos um item."},400);
     for(const allocation of requestedItems){
       const itemId=int(allocation?.order_item_id),quantity=int(allocation?.quantity);
-      if(!itemId||quantity<1||allocated.has(itemId))return json({error:"A seleÃ§Ã£o de itens Ã© invÃ¡lida."},400);
+      if(!itemId||quantity<1||allocated.has(itemId))return json({error:"A seleção de itens é inválida."},400);
       allocated.set(itemId,quantity);
     }
     const [itemRows,splitRows,previousPayments]=await Promise.all([
       env.DB.prepare(`SELECT id,product_name,quantity,unit_price_cents FROM order_items WHERE order_id=?`).bind(order.id).all(),
-      env.DB.prepare(`SELECT items_json,total_cents FROM order_bill_splits WHERE order_id=?`).bind(order.id).all(),
+      env.DB.prepare(`SELECT id,items_json,total_cents FROM order_bill_splits WHERE order_id=?`).bind(order.id).all(),
       env.DB.prepare(`SELECT method,amount_cents FROM order_payments WHERE order_id=?`).bind(order.id).all()
     ]);
     const itemsTotal=(itemRows.results||[]).reduce((sum,item)=>sum+int(item.quantity)*int(item.unit_price_cents),0);
-    if(itemsTotal!==int(order.total_cents))return json({error:"Esta conta tem desconto ou taxas e nÃ£o pode ser dividida por itens."},400);
+    if(itemsTotal!==int(order.total_cents))return json({error:"Esta conta tem desconto ou taxas e não pode ser dividida por itens."},400);
     const itemById=new Map((itemRows.results||[]).map(item=>[int(item.id),item])),used=new Map();
     for(const split of splitRows.results||[]){let values=[];try{values=JSON.parse(split.items_json||"[]")}catch{}for(const value of values)used.set(int(value.order_item_id),(used.get(int(value.order_item_id))||0)+int(value.quantity))}
     const safeItems=[];
     for(const [itemId,quantity] of allocated){
       const item=itemById.get(itemId);
-      if(!item)return json({error:"Um dos itens nÃ£o pertence mais a esta comanda."},400);
-      if(quantity>int(item.quantity)-int(used.get(itemId)))return json({error:`A quantidade disponÃ­vel de ${item.product_name} mudou. Atualize a divisÃ£o.`},409);
+      if(!item)return json({error:"Um dos itens não pertence mais a esta comanda."},400);
+      if(quantity>int(item.quantity)-int(used.get(itemId)))return json({error:`A quantidade disponível de ${item.product_name} mudou. Atualize a divisão.`},409);
       safeItems.push({order_item_id:itemId,quantity,product_name:item.product_name,unit_price_cents:int(item.unit_price_cents)});
     }
     const amountCents=safeItems.reduce((sum,item)=>sum+item.quantity*item.unit_price_cents,0),payments=Array.isArray(body?.payments)?body.payments.slice(0,4).map(payment=>({method:paymentMethod(payment?.method),amount_cents:Math.max(0,int(payment?.amount_cents))})).filter(payment=>payment.amount_cents>0):[];
@@ -1359,13 +1433,37 @@ async function api(request, env, url) {
     const cashDue=payments.filter(payment=>payment.method==="dinheiro").reduce((sum,payment)=>sum+payment.amount_cents,0),cashReceived=cashDue?Math.max(0,int(body?.cash_received_cents,cashDue)):0;
     if(cashDue&&cashReceived<cashDue)return json({error:"O valor recebido deve cobrir a parte paga em dinheiro."},400);
     const splitId=crypto.randomUUID(),customerName=clean(body?.customer_name,80),paidAfter=paidBefore+amountCents,fullyPaid=paidAfter>=int(order.total_cents),allPayments=[...(previousPayments.results||[]),...payments],cashPaid=allPayments.filter(payment=>payment.method==="dinheiro").reduce((sum,payment)=>sum+int(payment.amount_cents),0),method="misto",cashReceivedTotal=int(order.cash_received_cents)+(cashDue?cashReceived:0),changeTotal=int(order.change_for_cents)+(cashDue?Math.max(0,cashReceived-cashDue):0);
+    const itemSnapshot=JSON.stringify(itemRows.results||[]),splitSnapshot=JSON.stringify(splitRows.results||[]);
+    const previousCash=(previousPayments.results||[]).filter(payment=>payment.method==="dinheiro").reduce((sum,payment)=>sum+int(payment.amount_cents),0);
     const statements=[
+      env.DB.prepare(`INSERT INTO table_item_mutation_guard(valid) SELECT CASE WHEN EXISTS (
+        SELECT 1 FROM orders o WHERE o.id=? AND o.total_cents=? AND o.status=?
+        AND o.channel='counter' AND o.table_number=? AND o.payment_status='aberto'
+        AND o.cash_received_cents IS ? AND o.change_for_cents IS ?
+        AND (SELECT COUNT(*) FROM order_items WHERE order_id=o.id)=(SELECT COUNT(*) FROM json_each(?))
+        AND NOT EXISTS (SELECT 1 FROM json_each(?) j WHERE NOT EXISTS (
+          SELECT 1 FROM order_items i WHERE i.order_id=o.id AND i.id=json_extract(j.value,'$.id')
+          AND i.quantity=json_extract(j.value,'$.quantity') AND i.unit_price_cents=json_extract(j.value,'$.unit_price_cents')
+          AND i.product_name=json_extract(j.value,'$.product_name')
+        ))
+        AND (SELECT COUNT(*) FROM order_bill_splits WHERE order_id=o.id)=(SELECT COUNT(*) FROM json_each(?))
+        AND NOT EXISTS (SELECT 1 FROM json_each(?) j WHERE NOT EXISTS (
+          SELECT 1 FROM order_bill_splits s WHERE s.order_id=o.id AND s.id=json_extract(j.value,'$.id')
+          AND s.items_json=json_extract(j.value,'$.items_json') AND s.total_cents=json_extract(j.value,'$.total_cents')
+        ))
+        AND (SELECT COALESCE(SUM(amount_cents),0) FROM order_payments WHERE order_id=o.id AND method='dinheiro')=?
+      ) THEN 1 ELSE 0 END`).bind(order.id,order.total_cents,order.status,order.table_number,order.cash_received_cents??null,order.change_for_cents??null,itemSnapshot,itemSnapshot,splitSnapshot,splitSnapshot,previousCash),
+      env.DB.prepare(`DELETE FROM table_item_mutation_guard`),
       env.DB.prepare(`INSERT INTO order_bill_splits (id,order_id,customer_name,items_json,total_cents) VALUES (?,?,?,?,?)`).bind(splitId,order.id,customerName,JSON.stringify(safeItems),amountCents),
       env.DB.prepare(`UPDATE orders SET payment_status=?,payment_method=?,cash_received_cents=?,change_for_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(fullyPaid?"pago": "aberto",method,cashPaid?cashReceivedTotal:order.cash_received_cents,cashPaid?changeTotal:order.change_for_cents,order.id),
-      auditStatement(env.DB,"table_bill_split_paid","order",order.id,`DivisÃ£o de conta paga na comanda ${order.id}`,{split_id:splitId,customer_name:customerName,items:safeItems,total_cents:amountCents,payments,cash_received_cents:cashReceived||null})
+      auditStatement(env.DB,"table_bill_split_paid","order",order.id,`Divisão de conta paga na comanda ${order.id}`,{split_id:splitId,customer_name:customerName,items:safeItems,total_cents:amountCents,payments,cash_received_cents:cashReceived||null})
     ];
     for(const payment of payments)statements.push(env.DB.prepare(`INSERT INTO order_payments (order_id,method,amount_cents) VALUES (?,?,?)`).bind(order.id,payment.method,payment.amount_cents));
-    await env.DB.batch(statements);
+    try { await env.DB.batch(statements); }
+    catch(error) {
+      if(String(error.message).includes("CHECK constraint failed"))return json({error:"A comanda foi alterada. Atualize e tente novamente."},409);
+      throw error;
+    }
     return json({ok:true,split_id:splitId,paid_cents:paidAfter,due_cents:Math.max(0,int(order.total_cents)-paidAfter),payment_status:fullyPaid?"pago":"aberto"},201);
   }
   const orderCancel = url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/cancel$/);

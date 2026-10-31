@@ -34,6 +34,16 @@
 .owner-rv-order-items{display:grid;gap:7px;padding:11px;border:1px solid #e8ebef;border-radius:12px;background:#fff}
 .owner-rv-order-items h3{margin:0 0 3px;font-size:14px}
 .owner-rv-order-items>div{display:flex;justify-content:space-between;gap:10px;padding-top:7px;border-top:1px solid #edf0f3;font-size:13px}
+.owner-rv-order-items>.owner-table-item{align-items:center}
+.owner-table-item>span{flex:1;min-width:0;overflow-wrap:anywhere}
+.owner-table-item-label{display:block;color:#6d1590;font-weight:700}
+.owner-table-item-menu{position:relative;flex:0 0 auto}
+.owner-table-item-menu summary{display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--line);border-radius:8px;cursor:pointer;list-style:none;font-size:20px;line-height:1}
+.owner-table-item-menu summary::-webkit-details-marker{display:none}
+.owner-table-item-menu>div{position:absolute;z-index:5;right:0;top:100%;width:180px;padding:4px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:0 8px 24px #0002}
+.owner-table-item-menu button{display:block;width:100%;padding:9px;border:0;border-radius:6px;background:#fff;text-align:left;cursor:pointer}
+.owner-table-item-menu button:hover,.owner-table-item-menu button:focus-visible{background:#f5f1f8}
+.owner-table-item-entry .field{margin:0}
 .owner-rv-account{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .owner-rv-account>.owner-rv-total-card{min-height:76px}
 .owner-rv-discount-card .owner-rv-discount-controls{grid-template-columns:70px minmax(0,1fr)}
@@ -89,6 +99,7 @@
 .table-bill-split-row>input[type=number]{width:76px;min-height:38px;border:1px solid var(--line);border-radius:8px;padding:6px;text-align:center}
 .table-bill-split-row small{grid-column:2/-1;color:var(--muted)}
 .table-bill-split-row.selected{border-color:var(--purple);background:#f7f2fc}
+.table-bill-name-item{grid-column:2/-1;justify-self:start}
 .table-bill-split-paid{color:var(--green)!important;font-weight:700}
 .table-bill-split-paid-list,.table-bill-split-controls{display:grid;gap:8px;padding:12px 16px;border-top:1px solid var(--line);background:#fff}
 .table-bill-split-paid-list>div{display:grid;gap:3px;font-size:13px}
