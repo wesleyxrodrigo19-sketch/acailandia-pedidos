@@ -129,3 +129,4 @@
 .table-detail-item-with-menu .owner-table-item-menu summary{width:30px;height:30px}
 .table-detail-item-with-menu .owner-table-item-menu>div{position:fixed;right:auto}
 .order-whatsapp-btn{display:inline-flex;align-items:center;justify-content:center;min-width:44px}
+.owner-print-receipt-btn{margin-left:auto;white-space:nowrap;flex:0 0 auto}

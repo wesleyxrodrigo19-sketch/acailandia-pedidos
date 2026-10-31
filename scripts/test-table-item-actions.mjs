@@ -37,7 +37,8 @@ sql.exec(`
     VALUES ('TEST',100,'Produto original',2,600);
 `);
 sql.exec(await readFile(new URL("drizzle-acailandia/0003_table_item_labels.sql", root), "utf8"));
-sql.exec("CREATE TABLE settings (id INTEGER PRIMARY KEY, updated_at TEXT); INSERT INTO settings (id) VALUES (1);");
+sql.exec("CREATE TABLE settings (id INTEGER PRIMARY KEY, updated_at TEXT, reception_printer TEXT DEFAULT '', print_bridge_key TEXT DEFAULT ''); INSERT INTO settings (id) VALUES (1);");
+sql.exec("CREATE TABLE print_jobs (id INTEGER PRIMARY KEY AUTOINCREMENT, order_id TEXT NOT NULL, target TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending');");
 sql.exec(await readFile(new URL("drizzle-acailandia/0004_whatsapp_message.sql", root), "utf8"));
 
 class Statement {
@@ -157,6 +158,27 @@ assert.equal(await asCashier("/api/admin/whatsapp-message", "PATCH", { whatsapp_
 const waSaved = await request("/api/admin/whatsapp-message", "PATCH", { whatsapp_message: "  Olá {nome}\r\nPedido {pedido}  " });
 assert.equal(waSaved.status, 200, JSON.stringify(waSaved.body));
 assert.equal(sql.prepare("SELECT whatsapp_message AS m FROM settings WHERE id=1").get().m, "Olá {nome}\nPedido {pedido}");
+
+assert.equal((await request("/api/admin/orders/TEST/print-receipt", "POST")).status, 400);
+sql.exec("UPDATE settings SET reception_printer='MP-100S TH' WHERE id=1");
+assert.equal((await request("/api/admin/orders/TEST/print-receipt", "POST")).status, 200);
+assert.equal(sql.prepare("SELECT count(*) AS n FROM print_jobs WHERE order_id='TEST' AND target='customer'").get().n, 1);
+assert.equal(await asCashier("/api/admin/orders/TEST/print-receipt", "POST"), 404);
+const ticketOrder = { id: "T1", channel: "counter", order_type: "dine_in", table_number: 6, created_at: "2026-10-31 22:14:00", notes: "Pessoas: 1 • Atendente: ACAILANDIA PE", subtotal_cents: 4800, total_cents: 4800, waiter_fee_cents: 0 };
+const ticketItems = [
+  { product_id: 8, product_name: "Milk 330ml casa", quantity: 1, unit_price_cents: 1400, complements_json: '[{"name":"Amendoim","quantity":1}]', notes: "" },
+  { product_id: 20, product_name: "Água mineral", quantity: 2, unit_price_cents: 1000, complements_json: "[]", notes: "" }
+];
+const prepTicket = context.ticketText(ticketOrder, ticketItems, "prep", { store_name: "Açailandia PE" });
+assert.match(prepTicket, /MILK 330ML CASA \(Cód\.: 8\)/);
+assert.match(prepTicket, /- AMENDOIM/);
+assert.doesNotMatch(prepTicket, /R\$|Água|ÁGUA/i);
+const customerTicket = context.ticketText(ticketOrder, ticketItems, "customer", { store_name: "Açailandia PE" });
+assert.match(customerTicket, /MESA 06/);
+assert.match(customerTicket, /R\$ 14,00/);
+assert.match(customerTicket, /ÁGUA MINERAL/);
+assert.match(customerTicket, /Quantidade de itens\s+3/);
+assert.match(customerTicket, /TOTAL: R\$ 48,00/);
 assert.equal(await asCashier("/api/admin/orders/TEST/reprint", "GET"), 401);
 sql.exec("UPDATE orders SET branch_id='acailandia' WHERE id='TEST'");
 assert.equal(await asCashier("/api/admin/orders/TEST/table-items/1", "PATCH", { action: "identify", label: "Ana" }), 200);

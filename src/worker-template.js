@@ -615,8 +615,12 @@ async function createOrder(env, body, channel) {
   statements.push(auditStatement(env.DB,"order_created","order",id,`Pedido ${id} criado`,{ channel,customer_name:customerName,order_type:orderType,payment_status:initialPaymentStatus,payment_method:selectedPaymentMethod,total_cents:total,table_number:tableNumber||null,self_service:(counterItems?.selfServiceEntries||[]).map(entry=>({grams:int(entry?.grams),manual:bool(entry?.manual)})) }));
   if (settings.auto_print_enabled && items.length) {
     const copies=Math.max(1,Math.min(5,int(settings.print_copies,1)));
+    if (channel === "counter") {
+      if ((clean(settings.kitchen_printer,120)||clean(settings.reception_printer,120)) && items.some(item=>isMilkshakeName(item.product_name))) for (let copy=0;copy<copies;copy++) statements.push(env.DB.prepare(`INSERT INTO print_jobs (order_id,target,status) VALUES (?,'prep','pending')`).bind(id));
+    } else {
     if (clean(settings.reception_printer,120)) for (let copy=0;copy<copies;copy++) statements.push(env.DB.prepare(`INSERT INTO print_jobs (order_id,target,status) VALUES (?,'reception','pending')`).bind(id));
     if (clean(settings.kitchen_printer,120) && settings.kitchen_printer !== settings.reception_printer) for (let copy=0;copy<copies;copy++) statements.push(env.DB.prepare(`INSERT INTO print_jobs (order_id,target,status) VALUES (?,'kitchen','pending')`).bind(id));
+    }
   }
   await env.DB.batch(statements);
   await clearCatalogCache();
@@ -878,22 +882,40 @@ async function revenueReport(env, url, branchId = "") {
   return { from, to, total_cents:total, waiter_fee_cents:waiterFees, order_count:rows.length, average_cents:rows.length?Math.round(total/rows.length):0, visit_count:visits.period,visits_by_day:visits.by_day,by_payment:byPayment, by_channel:byChannel };
 }
 
+function isMilkshakeName(name) { return /milk\s?-?shake|^milk\b/i.test(String(name || "")); }
+
 function ticketText(order, items, target, settings) {
   const typeLabel=order.order_type === "delivery" ? "Entrega/Delivery" : order.order_type === "dine_in" ? "Consumir no local" : "Retirada";
-  if(target==="reception"&&order.order_type==="dine_in"&&order.table_number){
-    const createdAt=new Date(`${String(order.created_at).replace(" ","T")}Z`),elapsedMinutes=Number.isNaN(createdAt.getTime())?0:Math.max(0,Math.floor((Date.now()-createdAt.getTime())/60000)),people=Math.max(1,int(order.notes?.match(/Pessoas:\s*(\d+)/)?.[1],1)),attendant=order.notes?.match(/Atendente:\s*([^•]+)/)?.[1]?.trim(),amount=cents=>`R$ ${(Math.max(0,int(cents))/100).toFixed(2).replace(".",",")}`,itemLines=[];
-    for(const item of items){
-      const weight=item.notes?.match(/Peso:\s*([\d.,]+)\s*g/i),name=weight?`${(Number(weight[1].replace(",","."))/1000).toFixed(3).replace(".",",")} ACAI NO KG`:`${item.quantity>1?`${item.quantity}x `:""}${item.product_name}`;
-      itemLines.push(name.padEnd(22)+amount(item.quantity*item.unit_price_cents).padStart(10));
-      for(const option of parseJson(item.complements_json,[]))itemLines.push(`  + ${option.quantity||1}x ${option.name}`);
-      if(item.notes&&!weight)itemLines.push(`  OBS: ${item.notes}`);
-    }
-    const lines=[settings.store_name||"Açailandia PE",`*** MESA ${String(order.table_number).padStart(2,"0")} ***`,`Pedido Nº: ${order.id}`,new Date(`${order.created_at}Z`).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"}),`Cód. interno: #${order.id}`];
+  const isCustomerReceipt=target==="customer",isPrep=target==="prep"||(target==="reception"&&order.channel==="counter"&&Boolean(order.table_number));
+  if(isCustomerReceipt||isPrep){
+    const createdAt=new Date(`${String(order.created_at).replace(" ","T")}Z`),elapsedMinutes=Number.isNaN(createdAt.getTime())?0:Math.max(0,Math.floor((Date.now()-createdAt.getTime())/60000)),people=Math.max(1,int(order.notes?.match(/Pessoas:\s*(\d+)/)?.[1],1)),attendant=order.notes?.match(/Atendente:\s*([^•]+)/)?.[1]?.trim(),amount=cents=>`R$ ${(Math.max(0,int(cents))/100).toFixed(2).replace(".",",")}`,line="--------------------------------",sao={timeZone:"America/Sao_Paulo"},title=order.table_number?`*** MESA ${String(order.table_number).padStart(2,"0")} ***`:"*** BALCÃO ***",orderDate=Number.isNaN(createdAt.getTime())?"":createdAt.toLocaleString("pt-BR",sao),shownItems=target==="prep"?items.filter(item=>isMilkshakeName(item.product_name)):items,lines=[];
+    const itemName=item=>{const weight=item.notes?.match(/Peso:\s*([\d.,]+)\s*g/i);return weight?`${(Number(weight[1].replace(",","."))/1000).toFixed(3).replace(".",",")} ACAI NO KG`:`${item.quantity} ${String(item.product_name||"").toUpperCase()}${item.product_id?` (Cód.: ${item.product_id})`:""}`};
+    const detailLines=item=>{const rows=[];for(const option of parseJson(item.complements_json,[]))rows.push(`  - ${String(option.name||"").toUpperCase()}${(option.quantity||1)>1?` x${option.quantity}`:""}`);if(item.notes&&!/Peso:/i.test(item.notes))rows.push(`  OBS: ${item.notes}`);return rows};
+    lines.push(settings.store_name||"Açailandia PE",title,`Pedido Nº: ${order.id}`,orderDate);
+    if(isCustomerReceipt)lines.push(`Cód. interno: #${order.id}`);
+    lines.push("");
     if(attendant)lines.push(`Atendente: ${attendant}`);
-    lines.push("","*** ITENS DO PEDIDO ***","--------------------------------",...itemLines,"--------------------------------",`Subtotal: ${amount(order.subtotal_cents||order.total_cents-order.waiter_fee_cents)}`);
-    if(order.delivery_fee_cents)lines.push(`Taxa entrega: ${amount(order.delivery_fee_cents)}`);
-    if(order.waiter_fee_cents)lines.push(`Serviço: ${amount(order.waiter_fee_cents)}`);
-    lines.push(`*** TOTAL: ${amount(order.total_cents)} ***`,`Tempo de permanência: ${Math.floor(elapsedMinutes/60)}h ${elapsedMinutes%60}min`,`Qtd de pessoas: ${people}`,`Valor por pessoa: ${amount(Math.round(order.total_cents/people))}`,`Pagamento: ${paymentLabel(order.payment_method)}`,"",`Fornecido por ${settings.store_name||"Açailandia PE"}`,"*** NÃO É DOCUMENTO FISCAL ***","","");
+    if(isPrep)lines.push(`Qtd de pessoas: ${people}`);
+    lines.push("","*** ITENS DO PEDIDO ***",line);
+    shownItems.forEach(item=>{
+      const name=itemName(item);
+      if(isCustomerReceipt){
+        const price=amount(item.quantity*item.unit_price_cents);
+        if(name.length<=21)lines.push(name.padEnd(22)+price.padStart(10));else lines.push(name,price.padStart(32));
+        lines.push(...detailLines(item),line);
+      }else{
+        lines.push(name,...detailLines(item),"",line);
+      }
+    });
+    if(isCustomerReceipt){
+      lines.push("Quantidade de itens".padEnd(22)+String(items.reduce((sum,item)=>sum+int(item.quantity),0)).padStart(10),`Subtotal: ${amount(order.subtotal_cents||order.total_cents-order.waiter_fee_cents)}`);
+      if(order.delivery_fee_cents)lines.push(`Taxa entrega: ${amount(order.delivery_fee_cents)}`);
+      if(order.waiter_fee_cents)lines.push(`Serviço: ${amount(order.waiter_fee_cents)}`);
+      lines.push(`*** TOTAL: ${amount(order.total_cents)} ***`,`Tempo de permanência: ${Math.floor(elapsedMinutes/60)}h ${elapsedMinutes%60}min`,`Qtd de pessoas: ${people}`,`Valor por pessoa: ${amount(Math.round(order.total_cents/people))}`,"",`Fornecido por ${settings.store_name||"Açailandia PE"}`,"*** NÃO É DOCUMENTO FISCAL ***","","");
+    }else{
+      const now=new Date();
+      lines.push(`Impresso em ${now.toLocaleDateString("pt-BR",{...sao,day:"2-digit",month:"2-digit"})} às ${now.toLocaleTimeString("pt-BR",{...sao,hour12:false})}`,"","");
+    }
     return lines.join("\r\n");
   }
   const lines = [settings.store_name || "Açailandia PE", target === "kitchen" ? "*** COZINHA ***" : "*** CAIXA / RECEPÇÃO ***", `Pedido: ${order.id}`, `Origem: ${order.channel === "online" ? "SITE" : "BALCÃO"}`, `Cliente: ${order.customer_name || "Cliente"}`, `Tipo do pedido: ${typeLabel}`];
@@ -935,7 +957,7 @@ async function listPrintJobs(env) {
   for (const job of jobs) {
     const order = await env.DB.prepare(`SELECT * FROM orders WHERE id=?`).bind(job.order_id).first();
     const items = (await env.DB.prepare(`SELECT * FROM order_items WHERE order_id=? ORDER BY id`).bind(job.order_id).all()).results;
-    if (order) result.push({ id:job.id, order_id:job.order_id, target:job.target, printer_name:job.target === "kitchen" ? settings.kitchen_printer : settings.reception_printer, ticket:ticketText(order,items,job.target,settings) });
+    if (order) result.push({ id:job.id, order_id:job.order_id, target:job.target, printer_name:job.target === "kitchen" ? settings.kitchen_printer : job.target === "prep" ? (settings.kitchen_printer||settings.reception_printer) : settings.reception_printer, ticket:ticketText(order,items,job.target,settings) });
   }
   if (jobs.length) await env.DB.batch(jobs.map(job=>env.DB.prepare(`UPDATE print_jobs SET status='processing',updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(job.id)));
   return result;
@@ -1245,15 +1267,15 @@ async function api(request, env, url) {
   }
   if (url.pathname.startsWith("/api/admin/") && !(await isAdmin(request, env))) {
     const branch=await cashierBranch(request,env),method=request.method,path=url.pathname;
-    const orderRoute=path.match(/^\/api\/admin\/orders\/([^/]+)(?:\/(details|items|table-items\/\d+|bill-splits|payment|cancel|reprint))?$/);
+    const orderRoute=path.match(/^\/api\/admin\/orders\/([^/]+)(?:\/(details|items|table-items\/\d+|bill-splits|payment|cancel|reprint|print-receipt))?$/);
     const sub=orderRoute?.[2]||"";
     const allowed=Boolean(branch)&&(
       (method==="GET"&&new Set(["/api/admin/orders","/api/admin/tables","/api/admin/products"]).has(path))||
       (method==="POST"&&path==="/api/admin/orders")||
       (Boolean(orderRoute)&&(
         (method==="GET"&&sub==="bill-splits")||
-        (method==="POST"&&(sub==="bill-splits"||sub==="reprint"))||
-        (method==="PATCH"&&sub!=="bill-splits"&&sub!=="reprint")
+        (method==="POST"&&(sub==="bill-splits"||sub==="reprint"||sub==="print-receipt"))||
+        (method==="PATCH"&&sub!=="bill-splits"&&sub!=="reprint"&&sub!=="print-receipt")
       ))
     );
     if(!allowed)return json({error:"Acesso não autorizado."},401);
@@ -1538,6 +1560,18 @@ async function api(request, env, url) {
       auditStatement(env.DB,"order_status_changed","order",orderStatus[1],`Pedido ${orderStatus[1]} alterado para ${statusLabelForAudit(status)}`,{ from:previous.status,to:status })
     ]);
     return json({ ok:true, status });
+  }
+  const orderReceipt = url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/print-receipt$/);
+  if (orderReceipt && request.method === "POST") {
+    const order = await env.DB.prepare(`SELECT id FROM orders WHERE id=?`).bind(orderReceipt[1]).first();
+    if (!order) return json({ error:"Pedido não encontrado." },404);
+    const settings = await env.DB.prepare(`SELECT reception_printer,print_bridge_key FROM settings WHERE id=1`).first();
+    if (!clean(settings?.reception_printer,120)) return json({ error:"Informe a impressora do caixa nas configurações." },400);
+    await env.DB.batch([
+      env.DB.prepare(`INSERT INTO print_jobs (order_id,target,status) VALUES (?,'customer','pending')`).bind(order.id),
+      auditStatement(env.DB,"receipt_printed","order",order.id,`Cupom do cliente do pedido ${order.id} enviado para impressão`,{})
+    ]);
+    return json({ ok:true });
   }
   const orderReprint = url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/reprint$/);
   if (orderReprint && request.method === "POST") {
