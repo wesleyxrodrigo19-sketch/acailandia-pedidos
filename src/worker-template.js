@@ -1227,7 +1227,25 @@ async function api(request, env, url) {
     await env.DB.prepare(`UPDATE print_jobs SET status=?,attempts=attempts+1,printed_at=CASE WHEN ?='printed' THEN CURRENT_TIMESTAMP ELSE printed_at END,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(status,status,printJob[1]).run();
     return json({ ok:true });
   }
-  if (url.pathname.startsWith("/api/admin/") && !(await isAdmin(request, env))) return json({ error: "Acesso não autorizado." }, 401);
+  if (url.pathname.startsWith("/api/admin/") && !(await isAdmin(request, env))) {
+    const branch=await cashierBranch(request,env),method=request.method,path=url.pathname;
+    const orderRoute=path.match(/^\/api\/admin\/orders\/([^/]+)(?:\/(details|items|table-items\/\d+|bill-splits|payment|cancel|reprint))?$/);
+    const sub=orderRoute?.[2]||"";
+    const allowed=Boolean(branch)&&(
+      (method==="GET"&&new Set(["/api/admin/orders","/api/admin/tables","/api/admin/products"]).has(path))||
+      (method==="POST"&&path==="/api/admin/orders")||
+      (Boolean(orderRoute)&&(
+        (method==="GET"&&sub==="bill-splits")||
+        (method==="POST"&&(sub==="bill-splits"||sub==="reprint"))||
+        (method==="PATCH"&&sub!=="bill-splits"&&sub!=="reprint")
+      ))
+    );
+    if(!allowed)return json({error:"Acesso não autorizado."},401);
+    if(orderRoute){
+      const order=await env.DB.prepare(`SELECT id FROM orders WHERE id=? AND branch_id=?`).bind(orderRoute[1],branch).first();
+      if(!order)return json({error:"Pedido não encontrado nesta unidade."},404);
+    }
+  }
   if(url.pathname==="/api/admin/cashier-access"&&request.method==="GET"){await ensureCashierAccessTable(env.DB);const access=await env.DB.prepare(`SELECT pin_hash,updated_at FROM cashier_access WHERE id=1`).first();return json({configured:Boolean(access?.pin_hash),updated_at:access?.updated_at||""})}
   if(url.pathname==="/api/admin/cashier-access"&&request.method==="PATCH"){const body=await readJson(request),pin=clean(body?.pin,12);if(!/^\d{4,12}$/.test(pin))return json({error:"Use um PIN numérico de 4 a 12 dígitos."},400);await ensureCashierAccessTable(env.DB);await env.DB.batch([env.DB.prepare(`UPDATE cashier_access SET pin_hash=?,updated_at=CURRENT_TIMESTAMP WHERE id=1`).bind(await sha256(pin)),auditStatement(env.DB,"cashier_pin_updated","cashier_access","1","PIN do caixa atualizado pelo proprietário")]);return json({ok:true})}
   if (url.pathname === "/api/admin/employees" && request.method === "GET") return json({employees:(await env.DB.prepare(`SELECT * FROM employees ORDER BY is_active DESC,name`).all()).results||[]});
@@ -1313,7 +1331,7 @@ async function api(request, env, url) {
   }
   if (url.pathname === "/api/admin/tables" && request.method === "GET") return json(await tableBoard(env));
   if (url.pathname === "/api/admin/orders" && request.method === "POST") {
-    try { return json(await createOrder(env, await readJson(request), "counter"), 201); }
+    try { const body=await readJson(request);if(!(await isAdmin(request,env)))body.branch_id=await cashierBranch(request,env);return json(await createOrder(env,body,"counter"), 201); }
     catch (error) { return json({ error: error.message || "Não foi possível criar o pedido." }, 400); }
   }
   const orderDetails = url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/details$/);

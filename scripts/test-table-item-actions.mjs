@@ -141,6 +141,21 @@ assert.equal((await action(1, { action: "delete" })).status, 409);
 assert.equal((await action(2, { action: "identify", label: "Outra pessoa" })).status, 409);
 assert.equal((await action(1, { action: "identify", label: "Ana" })).status, 200);
 assert.equal((await request("/api/admin/orders/TEST/table-items/1", "PATCH", { action: "delete" }, false)).status, 401);
+const cashierExpires = String(Date.now() + 60000);
+const cashierCookie = `loja_cashier=acailandia.${cashierExpires}.${createHmac("sha256", secret).update(`acailandia.${cashierExpires}.cashier`).digest("hex")}`;
+const asCashier = async (path, method = "GET", body) => (await context.worker.fetch(new Request(`https://test.local${path}`, {
+  method, headers: { "content-type": "application/json", cookie: cashierCookie }, ...(body ? { body: JSON.stringify(body) } : {})
+}), { DB, SESSION_SECRET: secret })).status;
+assert.equal(await asCashier("/api/admin/orders/TEST/table-items/1", "PATCH", { action: "identify", label: "Ana" }), 404);
+assert.equal(await asCashier("/api/admin/orders/TEST/bill-splits"), 404);
+assert.equal(await asCashier("/api/admin/products/1", "PATCH", { name: "x" }), 401);
+assert.equal(await asCashier("/api/admin/orders/TEST", "DELETE"), 401);
+assert.equal(await asCashier("/api/admin/settings", "GET"), 401);
+assert.equal(await asCashier("/api/admin/orders/TEST/reprint", "GET"), 401);
+sql.exec("UPDATE orders SET branch_id='acailandia' WHERE id='TEST'");
+assert.equal(await asCashier("/api/admin/orders/TEST/table-items/1", "PATCH", { action: "identify", label: "Ana" }), 200);
+assert.equal(await asCashier("/api/admin/orders/TEST/bill-splits"), 200);
+sql.exec("UPDATE orders SET branch_id='sao-goncalo' WHERE id='TEST'");
 const finalPayment = await pay(1);
 assert.equal(finalPayment.status, 201, JSON.stringify(finalPayment.body));
 assert.equal(finalPayment.body.due_cents, 0);
