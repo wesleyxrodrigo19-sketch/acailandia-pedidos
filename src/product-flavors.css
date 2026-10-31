@@ -64,3 +64,39 @@
   .owner-rv-payment-footer{grid-template-columns:.8fr 1fr 1.2fr;gap:5px;padding:7px 9px}
   .owner-rv-payment-footer button{min-height:40px;padding:6px 5px;font-size:11px}
 }
+
+.table-bill-split{width:min(680px,100%);height:100dvh;max-height:100dvh;overflow:hidden}
+.table-bill-split-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:#fff;border-bottom:1px solid var(--line)}
+.table-bill-split-head h2{margin:3px 0;font-size:20px}
+.table-bill-split-list{display:grid;align-content:start;gap:7px;min-height:0;flex:1;overflow:auto;padding:12px 16px}
+.table-bill-split-row{display:grid;grid-template-columns:22px minmax(0,1fr) auto 76px;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:11px;background:#fff}
+.table-bill-split-row input[type=checkbox]{width:18px;height:18px;margin:0}
+.table-bill-split-row>strong{min-width:0;overflow-wrap:anywhere}
+.table-bill-split-row>input[type=number]{width:76px;min-height:38px;border:1px solid var(--line);border-radius:8px;padding:6px;text-align:center}
+.table-bill-split-row small{grid-column:2/-1;color:var(--muted)}
+.table-bill-split-row.selected{border-color:var(--purple);background:#f7f2fc}
+.table-bill-split-paid{color:var(--green)!important;font-weight:700}
+.table-bill-split-paid-list,.table-bill-split-controls{display:grid;gap:8px;padding:12px 16px;border-top:1px solid var(--line);background:#fff}
+.table-bill-split-paid-list>div{display:grid;gap:3px;font-size:13px}
+.table-bill-split-paid-list span{color:var(--muted)}
+.table-bill-split-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px 16px;background:#fff;border-top:1px solid var(--line)}
+.table-bill-split-summary>div{display:grid;gap:4px;padding:10px;border-radius:10px;background:#f3f4f6}
+.table-bill-split-summary span{color:var(--muted);font-size:12px}
+.table-bill-split-summary strong{font-size:16px}
+.table-bill-split-summary .due strong{color:#b4232b}
+.table-bill-split-summary .paid strong{color:#147a52}
+.table-bill-split-methods{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.table-bill-split-method{display:grid;justify-items:center;gap:3px;min-width:0;padding:9px 5px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.table-bill-split-method.selected{border-color:var(--purple);background:#f7f2fc;color:var(--purple)}
+.table-bill-split-method small{font-size:10px;color:var(--muted)}
+.table-bill-split-footer{padding:10px 16px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#fff}
+.table-bill-split-footer button{width:100%}
+@media(max-width:560px){
+  .table-bill-split-head,.table-bill-split-list,.table-bill-split-paid-list,.table-bill-split-controls,.table-bill-split-summary{padding-left:10px;padding-right:10px}
+  .table-bill-split-row{grid-template-columns:20px minmax(0,1fr) auto 60px;gap:6px;padding:8px}
+  .table-bill-split-row>input[type=number]{width:60px}
+  .table-bill-split-summary{gap:5px}
+  .table-bill-split-summary>div{padding:8px 6px}
+  .table-bill-split-summary strong{font-size:14px}
+  .table-bill-split-methods{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

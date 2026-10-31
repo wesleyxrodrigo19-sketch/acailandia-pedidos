@@ -159,13 +159,23 @@ function primeOpsOpenTablePayment(orderId){
   document.querySelectorAll('[data-owner-table-method]').forEach(button=>button.onclick=()=>openEntry(button.dataset.ownerTableMethod));
   discountMode.onchange=()=>refresh();discountValue.oninput=()=>refresh();if(employee)employee.onchange=()=>refresh();
   document.querySelectorAll('[data-owner-table-division]').forEach(button=>button.onclick=()=>{divisions=Math.max(1,Math.min(50,divisions+Number(button.dataset.ownerTableDivision)));refresh()});
-  $('#owner-table-divide').onclick=()=>{divisions=Math.max(2,divisions);refresh();$('#owner-table-division').scrollIntoView({block:'nearest',behavior:'smooth'})};
+  $('#owner-table-divide').onclick=()=>{
+    if(payments.length||discount()>0||employee?.checked)return toast('Remova os pagamentos e descontos registrados antes de dividir a conta.');
+    closeLayer();
+    openTableBillSplit(orderId).catch(error=>toast(error.message));
+  };
   refresh();
   $('#owner-table-confirm').onclick=async()=>{const button=$('#owner-table-confirm'),total=Math.max(0,baseTotal-discount());if(paid()!==total)return toast('Registre os pagamentos até completar o total.');button.disabled=true;try{const selectedDiscount=discount(),mode=employee?.checked?'':discountMode.value,result=await api(`/api/admin/orders/${encodeURIComponent(orderId)}/payment`,{method:'PATCH',body:JSON.stringify({payment_status:'pago',payment_method:payments.length>1?'misto':payments[0].method,apply_waiter_fee:false,employee_discount:Boolean(employee?.checked),discount_mode:mode,discount_percent:mode==='percent'?parseCents(discountValue.value)/100:0,discount_amount_cents:mode==='amount'?parseCents(discountValue.value):0,cash_received_cents:payments.some(payment=>payment.method==='dinheiro')?payments.filter(payment=>payment.method==='dinheiro').reduce((sum,payment)=>sum+payment.received_cents,0):null,payments:payments.map(({method,amount_cents})=>({method,amount_cents}))})});await loadAdminOrders();if(state.admin.tables)state.admin.tables=await api('/api/admin/tables');closeLayer();renderAdmin();toast(result.change_for_cents?`Pagamento confirmado · troco ${money(result.change_for_cents)}`:'Pagamento confirmado')}catch(error){toast(error.message);button.disabled=false}};
 }
 const primeOpsBaseTablePayment=openPaymentSettlement;
-openPaymentSettlement=function(orderId){
+openPaymentSettlement=async function(orderId){
   const order=state.admin.orders.find(item=>String(item.id)===String(orderId));
   if(location.pathname.startsWith('/caixa')||!order?.table_number)return primeOpsBaseTablePayment(orderId);
+  if(order.payment_status==='aberto'){
+    try{
+      const bill=await api(`/api/admin/orders/${encodeURIComponent(orderId)}/bill-splits`);
+      if(Number(bill.paid_cents)>0)return openTableBillSplit(orderId,bill);
+    }catch(error){toast(error.message);return}
+  }
   return primeOpsOpenTablePayment(orderId);
 };

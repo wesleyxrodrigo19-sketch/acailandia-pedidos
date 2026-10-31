@@ -508,8 +508,8 @@ async function cashRegisterSummary(db,branchId){
   const sessions=(await db.prepare(`SELECT * FROM cash_register_sessions WHERE branch_id=? ORDER BY opened_at DESC LIMIT 7`).bind(branchId).all()).results||[];
   if(!active)return {active:null,history:sessions};
   const [sales,changes,entries]=await Promise.all([
-    db.prepare(`SELECT COALESCE(SUM(CASE WHEN payment_method='dinheiro' THEN total_cents WHEN payment_method='misto' THEN COALESCE((SELECT SUM(amount_cents) FROM order_payments WHERE order_id=orders.id AND method='dinheiro'),0) ELSE 0 END),0) AS value FROM orders WHERE branch_id=? AND payment_status='pago' AND status!='cancelado' AND updated_at>=?`).bind(branchId,active.opened_at).first(),
-    db.prepare(`SELECT COALESCE(SUM(change_for_cents),0) AS value FROM orders WHERE branch_id=? AND payment_status='pago' AND status!='cancelado' AND updated_at>=?`).bind(branchId,active.opened_at).first(),
+    db.prepare(`SELECT COALESCE(SUM(CASE WHEN payment_method='misto' THEN COALESCE((SELECT SUM(amount_cents) FROM order_payments WHERE order_id=orders.id AND method='dinheiro'),0) WHEN payment_status='pago' AND payment_method='dinheiro' THEN total_cents ELSE 0 END),0) AS value FROM orders WHERE branch_id=? AND status!='cancelado' AND updated_at>=?`).bind(branchId,active.opened_at).first(),
+    db.prepare(`SELECT COALESCE(SUM(change_for_cents),0) AS value FROM orders WHERE branch_id=? AND (payment_status='pago' OR payment_method='misto') AND status!='cancelado' AND updated_at>=?`).bind(branchId,active.opened_at).first(),
     db.prepare(`SELECT COALESCE(SUM(CASE WHEN entry_type='in' THEN amount_cents ELSE 0 END),0) AS cash_in,COALESCE(SUM(CASE WHEN entry_type='out' THEN amount_cents ELSE 0 END),0) AS cash_out FROM cash_register_entries WHERE session_id=?`).bind(active.id).first()
   ]);
   const current={...active,cash_sales_cents:int(sales?.value),change_cents:int(changes?.value),cash_in_cents:int(entries?.cash_in),cash_out_cents:int(entries?.cash_out)};
@@ -743,6 +743,7 @@ async function updateOrderItems(env, orderId, body) {
   const order = await env.DB.prepare(`SELECT * FROM orders WHERE id=?`).bind(orderId).first();
   if (!order) throw new Error("Pedido não encontrado.");
   if (order.status === "cancelado") throw new Error("Não é possível editar um pedido cancelado.");
+  if(await env.DB.prepare(`SELECT id FROM order_bill_splits WHERE order_id=? LIMIT 1`).bind(orderId).first())throw new Error("NÃ£o Ã© possÃ­vel alterar os itens depois que a conta comeÃ§ou a ser dividida.");
   let items = await normalizeOrderItems(env.DB, body?.items);
   if (Array.isArray(body?.self_service_items)) {
     const settings = await env.DB.prepare(`SELECT self_service_price_per_kg_cents FROM settings WHERE id=1`).first();
@@ -1160,6 +1161,7 @@ async function api(request, env, url) {
     if(!branch)return json({error:"Acesso não autorizado."},401);
     const order=await env.DB.prepare(`SELECT * FROM orders WHERE id=? AND branch_id=?`).bind(cashierPayment[1],branch).first();
     if(!order)return json({error:"Pedido não encontrado nesta unidade."},404);
+    if(await env.DB.prepare(`SELECT id FROM order_bill_splits WHERE order_id=? LIMIT 1`).bind(order.id).first())return json({error:"Esta comanda jÃ¡ possui pagamentos divididos por item. Continue pelo botÃ£o Dividir conta."},409);
     const requestedPayments=Array.isArray(body?.payments)?body.payments.slice(0,4).map(payment=>({method:paymentMethod(payment?.method),amount_cents:Math.max(0,int(payment?.amount_cents))})).filter(payment=>payment.amount_cents>0):[];
     const settings=await env.DB.prepare(`SELECT employee_discount_percent FROM settings WHERE id=1`).first();
     const grossTotal=Math.max(0,int(order.subtotal_cents)+int(order.delivery_fee_cents)+int(order.waiter_fee_cents));
@@ -1304,6 +1306,68 @@ async function api(request, env, url) {
     try { return json(await updateOrderItems(env,orderItems[1],await readJson(request))); }
     catch (error) { return json({ error:error.message || "Não foi possível editar o pedido." },400); }
   }
+  const orderBillSplits=url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/bill-splits$/);
+  if(orderBillSplits&&request.method==="GET"){
+    const order=await env.DB.prepare(`SELECT id,total_cents,status,channel,table_number FROM orders WHERE id=?`).bind(orderBillSplits[1]).first();
+    if(!order)return json({error:"Pedido nÃ£o encontrado."},404);
+    const [itemRows,splitRows]=await Promise.all([
+      env.DB.prepare(`SELECT id,product_name,quantity,unit_price_cents FROM order_items WHERE order_id=? ORDER BY id`).bind(order.id).all(),
+      env.DB.prepare(`SELECT id,customer_name,items_json,total_cents,created_at FROM order_bill_splits WHERE order_id=? ORDER BY created_at,id`).bind(order.id).all()
+    ]);
+    const allocated=new Map();
+    const splits=(splitRows.results||[]).map(split=>{
+      let items=[];try{items=JSON.parse(split.items_json||"[]")}catch{}
+      for(const allocation of items)allocated.set(int(allocation.order_item_id),(allocated.get(int(allocation.order_item_id))||0)+int(allocation.quantity));
+      return {...split,items};
+    });
+    const items=(itemRows.results||[]).map(item=>({...item,available_quantity:Math.max(0,int(item.quantity)-int(allocated.get(int(item.id))))}));
+    const paidCents=splits.reduce((sum,split)=>sum+int(split.total_cents),0);
+    return json({items,splits,total_cents:int(order.total_cents),paid_cents:paidCents,due_cents:Math.max(0,int(order.total_cents)-paidCents)});
+  }
+  if(orderBillSplits&&request.method==="POST"){
+    const body=await readJson(request),order=await env.DB.prepare(`SELECT * FROM orders WHERE id=?`).bind(orderBillSplits[1]).first();
+    if(!order)return json({error:"Pedido nÃ£o encontrado."},404);
+    if(order.status==="cancelado"||order.channel!=="counter"||!order.table_number)return json({error:"A divisÃ£o por itens estÃ¡ disponÃ­vel apenas para comandas ativas de mesa."},400);
+    if(order.payment_status==="pago")return json({error:"Esta comanda jÃ¡ foi paga."},400);
+    const requestedItems=Array.isArray(body?.items)?body.items:[],allocated=new Map();
+    if(!requestedItems.length)return json({error:"Selecione ao menos um item."},400);
+    for(const allocation of requestedItems){
+      const itemId=int(allocation?.order_item_id),quantity=int(allocation?.quantity);
+      if(!itemId||quantity<1||allocated.has(itemId))return json({error:"A seleÃ§Ã£o de itens Ã© invÃ¡lida."},400);
+      allocated.set(itemId,quantity);
+    }
+    const [itemRows,splitRows,previousPayments]=await Promise.all([
+      env.DB.prepare(`SELECT id,product_name,quantity,unit_price_cents FROM order_items WHERE order_id=?`).bind(order.id).all(),
+      env.DB.prepare(`SELECT items_json,total_cents FROM order_bill_splits WHERE order_id=?`).bind(order.id).all(),
+      env.DB.prepare(`SELECT method,amount_cents FROM order_payments WHERE order_id=?`).bind(order.id).all()
+    ]);
+    const itemsTotal=(itemRows.results||[]).reduce((sum,item)=>sum+int(item.quantity)*int(item.unit_price_cents),0);
+    if(itemsTotal!==int(order.total_cents))return json({error:"Esta conta tem desconto ou taxas e nÃ£o pode ser dividida por itens."},400);
+    const itemById=new Map((itemRows.results||[]).map(item=>[int(item.id),item])),used=new Map();
+    for(const split of splitRows.results||[]){let values=[];try{values=JSON.parse(split.items_json||"[]")}catch{}for(const value of values)used.set(int(value.order_item_id),(used.get(int(value.order_item_id))||0)+int(value.quantity))}
+    const safeItems=[];
+    for(const [itemId,quantity] of allocated){
+      const item=itemById.get(itemId);
+      if(!item)return json({error:"Um dos itens nÃ£o pertence mais a esta comanda."},400);
+      if(quantity>int(item.quantity)-int(used.get(itemId)))return json({error:`A quantidade disponÃ­vel de ${item.product_name} mudou. Atualize a divisÃ£o.`},409);
+      safeItems.push({order_item_id:itemId,quantity,product_name:item.product_name,unit_price_cents:int(item.unit_price_cents)});
+    }
+    const amountCents=safeItems.reduce((sum,item)=>sum+item.quantity*item.unit_price_cents,0),payments=Array.isArray(body?.payments)?body.payments.slice(0,4).map(payment=>({method:paymentMethod(payment?.method),amount_cents:Math.max(0,int(payment?.amount_cents))})).filter(payment=>payment.amount_cents>0):[];
+    if(!payments.length||payments.some(payment=>!["dinheiro","pix","credito","debito"].includes(payment.method))||payments.reduce((sum,payment)=>sum+payment.amount_cents,0)!==amountCents)return json({error:"As formas de pagamento devem somar exatamente o valor dos itens selecionados."},400);
+    const paidBefore=(splitRows.results||[]).reduce((sum,split)=>sum+int(split.total_cents),0),due=Math.max(0,int(order.total_cents)-paidBefore);
+    if(amountCents>due)return json({error:"O valor selecionado ultrapassa o saldo da comanda."},400);
+    const cashDue=payments.filter(payment=>payment.method==="dinheiro").reduce((sum,payment)=>sum+payment.amount_cents,0),cashReceived=cashDue?Math.max(0,int(body?.cash_received_cents,cashDue)):0;
+    if(cashDue&&cashReceived<cashDue)return json({error:"O valor recebido deve cobrir a parte paga em dinheiro."},400);
+    const splitId=crypto.randomUUID(),customerName=clean(body?.customer_name,80),paidAfter=paidBefore+amountCents,fullyPaid=paidAfter>=int(order.total_cents),allPayments=[...(previousPayments.results||[]),...payments],cashPaid=allPayments.filter(payment=>payment.method==="dinheiro").reduce((sum,payment)=>sum+int(payment.amount_cents),0),method="misto",cashReceivedTotal=int(order.cash_received_cents)+(cashDue?cashReceived:0),changeTotal=int(order.change_for_cents)+(cashDue?Math.max(0,cashReceived-cashDue):0);
+    const statements=[
+      env.DB.prepare(`INSERT INTO order_bill_splits (id,order_id,customer_name,items_json,total_cents) VALUES (?,?,?,?,?)`).bind(splitId,order.id,customerName,JSON.stringify(safeItems),amountCents),
+      env.DB.prepare(`UPDATE orders SET payment_status=?,payment_method=?,cash_received_cents=?,change_for_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(fullyPaid?"pago": "aberto",method,cashPaid?cashReceivedTotal:order.cash_received_cents,cashPaid?changeTotal:order.change_for_cents,order.id),
+      auditStatement(env.DB,"table_bill_split_paid","order",order.id,`DivisÃ£o de conta paga na comanda ${order.id}`,{split_id:splitId,customer_name:customerName,items:safeItems,total_cents:amountCents,payments,cash_received_cents:cashReceived||null})
+    ];
+    for(const payment of payments)statements.push(env.DB.prepare(`INSERT INTO order_payments (order_id,method,amount_cents) VALUES (?,?,?)`).bind(order.id,payment.method,payment.amount_cents));
+    await env.DB.batch(statements);
+    return json({ok:true,split_id:splitId,paid_cents:paidAfter,due_cents:Math.max(0,int(order.total_cents)-paidAfter),payment_status:fullyPaid?"pago":"aberto"},201);
+  }
   const orderCancel = url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/cancel$/);
   if (orderCancel && request.method === "PATCH") {
     const body = await readJson(request); const reason = clean(body?.reason,500);
@@ -1361,6 +1425,7 @@ async function api(request, env, url) {
   if (orderPayment && request.method === "PATCH") {
     const body = await readJson(request); const order = await env.DB.prepare(`SELECT * FROM orders WHERE id=?`).bind(orderPayment[1]).first();
     if (!order) return json({ error:"Pedido não encontrado." },404);
+    if(await env.DB.prepare(`SELECT id FROM order_bill_splits WHERE order_id=? LIMIT 1`).bind(orderPayment[1]).first())return json({error:"Esta comanda jÃ¡ possui pagamentos divididos por item. Continue pelo botÃ£o Dividir conta."},409);
     const paymentStatus = clean(body?.payment_status,20) === "aberto" ? "aberto" : "pago";
     const settings = await env.DB.prepare(`SELECT waiter_fee_enabled,waiter_fee_percent,employee_discount_percent FROM settings WHERE id=1`).first();
     const applyWaiterFee = paymentStatus === "pago" && order.channel === "counter" && bool(body?.apply_waiter_fee) && settings.waiter_fee_enabled;

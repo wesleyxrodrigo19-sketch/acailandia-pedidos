@@ -119,3 +119,42 @@ function openPaymentSettlement(id){
   $("#confirm-payment").onclick=async()=>{const button=$("#confirm-payment"),{total}=totals(),sum=paid(),cashDue=recordedPayments.filter(payment=>payment.method==="dinheiro").reduce((amount,payment)=>amount+payment.amount_cents,0),cashReceived=recordedPayments.filter(payment=>payment.method==="dinheiro").reduce((amount,payment)=>amount+payment.received_cents,0);if(sum!==total)return toast("Registre as formas de pagamento até completar o total.");button.disabled=true;try{const payments=recordedPayments.map(({method,amount_cents})=>({method,amount_cents})),result=await api(`/api/admin/orders/${encodeURIComponent(id)}/payment`,{method:"PATCH",body:JSON.stringify({payment_status:"pago",payment_method:payments.length>1?"misto":payments[0].method,apply_waiter_fee:Boolean(serviceCheck?.checked),employee_discount:Boolean(employeeCheck?.checked),discount_mode:employeeCheck?.checked?"":discountMode.value,discount_percent:discountMode.value==="percent"?parseMoney(discountInput.value)/100:0,discount_amount_cents:discountMode.value==="amount"?parseMoney(discountInput.value):0,cash_received_cents:cashDue>0?cashReceived:null,payments})});await loadAdminOrders();closeLayer();renderAdmin();toast(result.change_for_cents?`Pagamento confirmado · troco ${money(result.change_for_cents)}`:"Pagamento confirmado")}catch(error){toast(error.message);button.disabled=false}};
   refresh();
 }
+
+async function openTableBillSplit(orderId,previouslyLoaded=null){
+  const bill=previouslyLoaded||await api(`/api/admin/orders/${encodeURIComponent(orderId)}/bill-splits`),order=state.admin.orders.find(item=>String(item.id)===String(orderId));
+  if(!order)return toast('Comanda nÃ£o encontrada. Atualize as mesas.');
+  const itemsTotal=(bill.items||[]).reduce((sum,item)=>sum+Number(item.quantity||0)*Number(item.unit_price_cents||0),0);
+  if(itemsTotal!==Number(bill.total_cents||0))return toast('Esta conta tem desconto ou taxas e nÃ£o pode ser dividida por itens.');
+  const quantities=new Map((bill.items||[]).map(item=>[Number(item.id),0]));
+  let method='dinheiro';
+  const methods=[['dinheiro','â–£','Dinheiro','Ctrl + 1'],['credito','â–°','CrÃ©dito','Ctrl + 2'],['debito','â–°','DÃ©bito','Ctrl + 3'],['pix','â˜‘','Pix','Ctrl + 4'],['pix-auto','âœ¥','Pix auto','Ctrl + 5']];
+  const paidSplits=(bill.splits||[]).map(split=>`<div><strong>${esc(split.customer_name||'Cliente')}</strong><span>${(split.items||[]).map(item=>`${Number(item.quantity)}Ã— ${esc(item.product_name)}`).join(', ')} Â· ${money(split.total_cents)}</span></div>`).join('');
+  const rows=(bill.items||[]).map(item=>`<label class="table-bill-split-row" data-table-bill-row="${Number(item.id)}"><input type="checkbox" data-table-bill-check="${Number(item.id)}" ${Number(item.available_quantity)>0?'':'disabled'}><strong>${esc(item.product_name)}</strong><span>${money(item.unit_price_cents)}</span><input type="number" min="0" max="${Number(item.available_quantity)}" value="0" aria-label="Quantidade de ${esc(item.product_name)}" data-table-bill-quantity="${Number(item.id)}" ${Number(item.available_quantity)>0?'':'disabled'}>${Number(item.available_quantity)<Number(item.quantity)?`<small class="table-bill-split-paid">JÃ¡ dividido: ${Number(item.quantity)-Number(item.available_quantity)} de ${Number(item.quantity)}</small>`:''}</label>`).join('');
+  layer(`<div class="table-bill-split-head"><div><span class="eyebrow">MESA ${String(order.table_number).padStart(2,'0')}</span><h2>Dividir Conta</h2><span class="muted">Pedido #${esc(order.id)}</span></div><button type="button" class="icon-btn" data-table-bill-close aria-label="Fechar">Ã—</button></div><div class="table-bill-split-list">${rows||'<p class="empty">Esta comanda nÃ£o tem itens para dividir.</p>'}</div>${paidSplits?`<div class="table-bill-split-paid-list"><strong>Pagamentos registrados</strong>${paidSplits}</div>`:''}<div class="table-bill-split-summary"><div><span>Selecionado</span><strong id="table-bill-selected">${money(0)}</strong></div><div class="due"><span>Falta pagar</span><strong id="table-bill-due">${money(bill.due_cents)}</strong></div><div class="paid"><span>Pago</span><strong id="table-bill-paid">${money(bill.paid_cents)}</strong></div></div><div class="table-bill-split-controls"><label class="field"><span>Nome do cliente <small>(opcional)</small></span><input id="table-bill-customer" maxlength="80" placeholder="Ex.: JoÃ£o"></label><div class="table-bill-split-methods" role="group" aria-label="Forma de pagamento">${methods.map(([value,icon,label,shortcut])=>`<button type="button" class="table-bill-split-method ${method===value?'selected':''}" data-table-bill-method="${value}" ${value==='pix-auto'?'disabled':''}><b>${icon}</b><span>${label}</span><small>${shortcut}</small></button>`).join('')}</div><label class="field hidden" id="table-bill-cash-wrap"><span>Valor recebido em dinheiro</span><input id="table-bill-cash" inputmode="decimal" placeholder="Deixe em branco para valor exato"><small id="table-bill-change"></small></label></div><div class="table-bill-split-footer"><button type="button" class="primary-btn" id="table-bill-confirm" disabled>Confirmar pagamento selecionado</button></div>`,'drawer table-bill-split');
+  document.querySelector('[data-table-bill-close]').onclick=closeLayer;
+  const update=()=>{
+    for(const item of bill.items||[]){
+      const id=Number(item.id),input=document.querySelector(`[data-table-bill-quantity="${id}"]`),check=document.querySelector(`[data-table-bill-check="${id}"]`),row=document.querySelector(`[data-table-bill-row="${id}"]`);
+      const quantity=Math.floor(Math.max(0,Math.min(Number(item.available_quantity),Number(input.value)||0)));
+      input.value=String(quantity);quantities.set(id,quantity);check.checked=quantity>0;row.classList.toggle('selected',quantity>0);
+    }
+    const selectedCents=(bill.items||[]).reduce((sum,item)=>sum+(quantities.get(Number(item.id))||0)*Number(item.unit_price_cents||0),0),cashWrap=$('#table-bill-cash-wrap'),cashInput=$('#table-bill-cash'),cashDue=method==='dinheiro'?selectedCents:0,received=String(cashInput.value||'').trim()?cashierCents(cashInput.value):cashDue;
+    $('#table-bill-selected').textContent=money(selectedCents);$('#table-bill-confirm').disabled=selectedCents<=0||selectedCents>Number(bill.due_cents||0);
+    cashWrap.classList.toggle('hidden',method!=='dinheiro');$('#table-bill-change').textContent=`Troco: ${money(Math.max(0,received-cashDue))}`;
+  };
+  document.querySelectorAll('[data-table-bill-check]').forEach(check=>check.onchange=()=>{const input=document.querySelector(`[data-table-bill-quantity="${check.dataset.tableBillCheck}"]`);input.value=check.checked?'1':'0';update()});
+  document.querySelectorAll('[data-table-bill-quantity]').forEach(input=>input.oninput=update);
+  document.querySelectorAll('[data-table-bill-method]').forEach(button=>button.onclick=()=>{if(button.disabled)return;method=button.dataset.tableBillMethod;document.querySelectorAll('[data-table-bill-method]').forEach(item=>item.classList.toggle('selected',item===button));update()});
+  $('#table-bill-cash').oninput=update;
+  update();
+  $('#table-bill-confirm').onclick=async()=>{
+    const button=$('#table-bill-confirm'),items=(bill.items||[]).map(item=>({order_item_id:Number(item.id),quantity:quantities.get(Number(item.id))||0})).filter(item=>item.quantity>0),amount=items.reduce((sum,item)=>{const source=bill.items.find(entry=>Number(entry.id)===item.order_item_id);return sum+item.quantity*Number(source.unit_price_cents||0)},0),typed=String($('#table-bill-cash').value||'').trim(),cash=typed?cashierCents(typed):amount;
+    button.disabled=true;
+    try{
+      const result=await api(`/api/admin/orders/${encodeURIComponent(orderId)}/bill-splits`,{method:'POST',body:JSON.stringify({customer_name:$('#table-bill-customer').value.trim(),items,payments:[{method,amount_cents:amount}],cash_received_cents:method==='dinheiro'?cash:null})});
+      await Promise.all([loadAdminOrders(),api('/api/admin/tables').then(data=>state.admin.tables=data)]);
+      toast(result.payment_status==='pago'?'Conta totalmente paga':'Pagamento da parte selecionada registrado');
+      if(result.payment_status==='pago'){closeLayer();renderAdmin()}else await openTableBillSplit(orderId);
+    }catch(error){toast(error.message);button.disabled=false}
+  };
+}
