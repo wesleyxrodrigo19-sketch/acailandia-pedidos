@@ -130,3 +130,21 @@
 .table-detail-item-with-menu .owner-table-item-menu>div{position:fixed;right:auto}
 .order-whatsapp-btn{display:inline-flex;align-items:center;justify-content:center;min-width:44px}
 .owner-print-receipt-btn{margin-left:auto;white-space:nowrap;flex:0 0 auto}
+
+/* Milk shake: busca e lista rolável de sabores. */
+.milk-flavor-search{width:100%;margin:8px 0;padding:11px 12px;border:1px solid #d9d4e6;border-radius:10px;font:inherit}
+.milk-flavor-list{max-height:34dvh;overflow:auto}
+.milk-flavor-list .hidden{display:none}
+
+/* Mesas: layout mais espaçoso, como na RV. */
+.tables-admin{grid-template-columns:minmax(0,1fr) minmax(290px,330px);gap:22px}
+.tables-admin .tables-main{padding:24px}
+.tables-admin .table-section{margin-top:22px}
+.tables-admin .table-open-grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px}
+.tables-admin .table-tile.occupied{min-height:150px;gap:10px;padding:0 16px 16px}
+.tables-admin .table-tile-title{padding:14px 8px;font-size:15px}
+.tables-admin .table-tile-amount{font-size:22px}
+.tables-admin .table-available-grid{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:14px}
+.tables-admin .table-tile.available{min-height:96px;background:#eceaf2;border-color:#dcd8e6}
+.tables-admin .table-summary-tabs{gap:14px;margin:20px 0 6px}
+@media(max-width:850px){.tables-admin{grid-template-columns:1fr}.tables-admin .table-open-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}}

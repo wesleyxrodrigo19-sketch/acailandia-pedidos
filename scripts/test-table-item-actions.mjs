@@ -44,6 +44,7 @@ sql.exec(`
   CREATE TABLE cash_register_entries (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id INTEGER, branch_id TEXT, entry_type TEXT, amount_cents INTEGER, reason TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 `);
 sql.exec(await readFile(new URL("drizzle-acailandia/0004_whatsapp_message.sql", root), "utf8"));
+sql.exec(await readFile(new URL("drizzle-acailandia/0009_table_name.sql", root), "utf8"));
 
 class Statement {
   constructor(query) { this.query = query; this.values = []; }
@@ -182,8 +183,9 @@ const customerTicket = context.ticketText(ticketOrder, ticketItems, "customer", 
 assert.match(customerTicket, /MESA 06/);
 assert.match(customerTicket, /R\$ 14,00/);
 assert.match(customerTicket, /ÁGUA MINERAL/);
-assert.match(customerTicket, /Quantidade de itens\s+3/);
-assert.match(customerTicket, /TOTAL: R\$ 48,00/);
+assert.doesNotMatch(customerTicket, /Quantidade de itens|Açailandia PE|TOTAL:/);
+assert.match(customerTicket, /Total\s+R\$ 48,00/);
+assert.match(context.ticketText({ ...ticketOrder, table_name: "3 sofá" }, ticketItems, "prep", { store_name: "Açailandia PE" }), /MESA 06 \(3 SOFÁ\)/);
 assert.doesNotMatch(customerTicket, /Atendente|Cód\. interno|Fornecido por|Subtotal/);
 assert.match(customerTicket, /\+\+\+ NÃO É DOCUMENTO FISCAL \+\+\+/);
 assert.equal(await asCashier("/api/admin/orders/TEST/reprint", "GET"), 401);
@@ -250,4 +252,10 @@ assert.equal((await request(`/api/admin/fiado/${fiadoList.body.rows[0].id}/pay`,
 assert.equal(sql.prepare("SELECT fiado_cents FROM cash_register_sessions").get().fiado_cents, 0);
 const unauthorizedFiado = await request("/api/admin/fiado", "GET", undefined, false);
 assert.equal(unauthorizedFiado.status, 401);
+sql.exec("INSERT INTO orders (id,branch_id,channel,table_number,status,payment_status,subtotal_cents,total_cents) VALUES ('MESAX','acailandia','counter',9,'novo','aberto',0,0)");
+assert.equal((await request("/api/admin/orders/MESAX/table-name", "PATCH", { table_name: "  3 sofá  " })).status, 200);
+assert.equal(sql.prepare("SELECT table_name FROM orders WHERE id='MESAX'").get().table_name, "3 sofá");
+assert.equal(await asCashier("/api/admin/orders/MESAX/table-name", "PATCH", { table_name: "Varanda" }), 200);
+sql.exec("UPDATE orders SET status='concluido' WHERE id='MESAX'");
+assert.equal((await request("/api/admin/orders/MESAX/table-name", "PATCH", { table_name: "x" })).status, 400);
 console.log("Table item action tests passed");

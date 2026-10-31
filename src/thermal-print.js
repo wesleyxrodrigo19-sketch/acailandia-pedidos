@@ -63,7 +63,7 @@ function bridgeScript(settings, siteOrigin) {
     "  $Documento.PrinterSettings.PrinterName = $NomeImpressora",
     "  if (-not $Documento.PrinterSettings.IsValid) { throw 'Impressora não encontrada: ' + $NomeImpressora }",
     "  $script:JWPrintLines = @(Get-TicketLines $Conteudo)",
-    "  $AlturaPapel = if ($SemLogo) { [Math]::Max(200,[Math]::Min(3600,($script:JWPrintLines.Count * 23) + 100)) } else { [Math]::Max(450,[Math]::Min(3600,($script:JWPrintLines.Count * 25) + 270)) }",
+    "  $AlturaPapel = if ($SemLogo) { [Math]::Max(200,[Math]::Min(3600,($script:JWPrintLines.Count * 20) + 45)) } else { [Math]::Max(300,[Math]::Min(3600,($script:JWPrintLines.Count * 20) + 215)) }",
     "  $Papel = New-Object System.Drawing.Printing.PaperSize('Bobina 80mm',315,$AlturaPapel)",
     "  $Documento.DefaultPageSettings.PaperSize = $Papel",
     "  $Documento.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(10,10,8,8)",

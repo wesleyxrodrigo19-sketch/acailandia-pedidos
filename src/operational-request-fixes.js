@@ -12,17 +12,6 @@ bindAdmin=function(){
   if(button)button.onclick=async()=>{const settings=state.catalog.settings||{},closing=Boolean(settings.is_open);button.disabled=true;try{await api("/api/admin/store-availability",{method:"PATCH",body:JSON.stringify({manual_closed:closing,manual_closed_reason:closing?"Fechado pelo atalho do painel":""})});state.catalog=await api("/api/admin/products");toast(closing?"Loja fechada para novos pedidos":"Loja aberta para pedidos");renderAdmin()}catch(error){toast(error.message);button.disabled=false}};
 };
 
-const operationalOpenCheckout=openCheckout;
-openCheckout=function(){
-  operationalOpenCheckout();
-  const form=$("#checkout-form"),payment=form?.elements.payment_method;
-  if(!form||!payment)return;
-  payment.closest(".field").insertAdjacentHTML("afterend",`<label class="check-row" id="customer-change-toggle"><input type="checkbox" name="needs_change"><span><strong>Precisa de troco?</strong><small>Marque e informe com quanto vai pagar.</small></span></label><div class="field hidden" id="customer-change-fields"><label>Vai pagar com quanto?</label><input name="cash_received" inputmode="decimal" placeholder="Ex.: 50,00"><small id="customer-change-result">Troco: ${money(0)}</small></div>`);
-  const checkbox=form.elements.needs_change,input=form.elements.cash_received;
-  const refresh=()=>{const cashMode=payment.value==="dinheiro",received=Math.max(0,Math.round(Number(String(input.value||"").replace(",","."))*100)||0),total=checkoutTotal();$("#customer-change-toggle").classList.toggle("hidden",!cashMode);$("#customer-change-fields").classList.toggle("hidden",!cashMode||!checkbox.checked);$("#customer-change-result").textContent=`Troco: ${money(Math.max(0,received-total))}`};
-  payment.addEventListener("change",refresh);checkbox.addEventListener("change",refresh);input.addEventListener("input",refresh);refresh();
-};
-
 submitOrder=async function(){
   const form=$("#checkout-form"),phone=form.elements.phone;
   const activeType=form.querySelector('[data-type].active')?.dataset.type;

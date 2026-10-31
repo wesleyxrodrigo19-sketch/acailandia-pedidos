@@ -393,6 +393,7 @@ async function ensureOperationalColumns(db) {
   if(operationalColumnsReady)return;
   const columns=(await db.prepare(`PRAGMA table_info(orders)`).all()).results||[];
   if(!columns.some(column=>column.name==="table_number"))await db.prepare(`ALTER TABLE orders ADD COLUMN table_number INTEGER`).run();
+  if(!columns.some(column=>column.name==="table_name"))await db.prepare(`ALTER TABLE orders ADD COLUMN table_name TEXT`).run();
   try { await db.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_one_active_table ON orders(table_number) WHERE table_number IS NOT NULL AND status NOT IN ('concluido','cancelado')`).run(); } catch (_) {}
   operationalColumnsReady=true;
 }
@@ -443,6 +444,7 @@ async function normalizeOrderItems(db, requestedItems) {
     for(const option of centralComplements){if(selectedCatalogIds.length&&!selectedCatalogIds.includes(Number(option.id)))continue;if(selectedCatalogIds.length||allowed.has(String(option.name).toLocaleLowerCase("pt-BR")))addAllowed({name:option.name,group_id:option.group_id,price_cents:option.group_id==="extra"?int(option.price_cents):0,max_quantity:1})}
     const flavors=cleanFlavors(product.flavors_json),selectedFlavorIds=new Set(centralComplements.filter(option=>String(option.group_id).startsWith("flavor")&&(!selectedCatalogIds.length||selectedCatalogIds.includes(Number(option.id)))).map(option=>String(option.name).toLocaleLowerCase("pt-BR")));
     if(bool(product.enable_flavors))for(const flavor of flavors){const key=flavor.toLocaleLowerCase("pt-BR");if(!selectedCatalogIds.length||selectedFlavorIds.has(key))addAllowed({name:flavor,group_id:"flavor",price_cents:0,max_quantity:1})}
+    if([12,13,14,15].includes(int(product.id)))for(const option of [...allowed.values()].filter(option=>option.group_id==="flavor"))addAllowed({...option,group_id:"flavor_extra",price_cents:200,max_quantity:1});
     const selected = [];
     for (const raw of item.complements.slice(0, 20)) {
       const name=clean(raw?.name,80).toLocaleLowerCase("pt-BR"),group=clean(raw?.group_id,20),option=allowed.get(group?`${group}|${name}`:name);
@@ -450,8 +452,8 @@ async function normalizeOrderItems(db, requestedItems) {
       const quantity = Math.max(1, Math.min(option.max_quantity, int(raw?.quantity, 1)));
       selected.push({ name:option.name, group_id:option.group_id, price_cents:option.price_cents, quantity });
     }
-    const productId=int(product.id),groupCount=group=>selected.filter(option=>option.group_id===group).length,productRules={1:{size:[1,1]},3:{size:[1,1]},4:{size:[1,1]},5:{size:[1,1]},6:{cream:[1,1],rv_topping:[0,3]},7:{cream:[1,1],rv_topping:[0,3]},8:{size:[1,1],cream:[1,1],rv_topping:[0,5]},9:{size:[1,1],cream:[1,1]},10:{size:[1,1],cream:[1,1]},11:{size:[1,1],flavor:[1,3]},12:{flavor:[1,2]},13:{flavor:[1,2]},14:{flavor:[1,2]},15:{flavor:[1,2]},18:{rv_topping:[0,5]},19:{rv_topping:[0,5]}},rules=productRules[productId]||{};
-    for(const [group,[minimum,maximum]] of Object.entries(rules)){const count=groupCount(group);if(count<minimum||count>maximum)throw new Error(`${product.name}: selecione ${minimum===maximum?`exatamente ${minimum}`:`de ${minimum} a ${maximum}`} opção(ões) em ${group==="rv_topping"?"Acompanhamentos grátis":group==="size"?"Tamanho":group==="cream"?"Açaí ou creme":group==="flavor"?"Sabores":group}.`)}
+    const productId=int(product.id),groupCount=group=>selected.filter(option=>option.group_id===group).length,productRules={1:{size:[1,1]},3:{size:[1,1]},4:{size:[1,1]},5:{size:[1,1]},6:{cream:[1,1],rv_topping:[0,3]},7:{cream:[1,1],rv_topping:[0,3]},8:{size:[1,1],cream:[1,1],rv_topping:[0,5]},9:{size:[1,1],cream:[1,1]},10:{size:[1,1],cream:[1,1]},11:{size:[1,1],flavor:[1,3]},12:{flavor:[1,2],flavor_extra:[0,3]},13:{flavor:[1,2],flavor_extra:[0,3]},14:{flavor:[1,2],flavor_extra:[0,3]},15:{flavor:[1,2],flavor_extra:[0,3]},18:{rv_topping:[0,5]},19:{rv_topping:[0,5]}},rules=productRules[productId]||{};
+    for(const [group,[minimum,maximum]] of Object.entries(rules)){const count=groupCount(group);if(count<minimum||count>maximum)throw new Error(`${product.name}: selecione ${minimum===maximum?`exatamente ${minimum}`:`de ${minimum} a ${maximum}`} opção(ões) em ${group==="rv_topping"?"Acompanhamentos grátis":group==="size"?"Tamanho":group==="cream"?"Açaí ou creme":group==="flavor"?"Sabores":group==="flavor_extra"?"Sabores extras":group}.`)}
     const extraLimit=[6,7,10,11,18,19].includes(productId)?10:20;if(bool(product.enable_acai_extras)&&selected.filter(option=>option.group_id==="extra").length>extraLimit)throw new Error(`${product.name}: escolha no máximo ${extraLimit} extras.`);
     const requiresFlavor=bool(product.enable_flavors),selectedFlavor=selected.find(option=>option.group_id==="flavor");
     if(requiresFlavor&&(!flavors.length||!selectedFlavor))throw new Error(`Escolha um sabor válido para ${product.name}.`);
@@ -744,13 +746,13 @@ async function orderManagementReport(env,url) {
 
 async function tableBoard(env) {
   const settings = await env.DB.prepare(`SELECT table_count FROM settings WHERE id=1`).first();
-  const occupied = (await env.DB.prepare(`SELECT table_number,id,status,customer_name,created_at FROM orders WHERE table_number IS NOT NULL AND status NOT IN ('concluido','cancelado') ORDER BY table_number`).all()).results;
+  const occupied = (await env.DB.prepare(`SELECT table_number,id,status,customer_name,created_at,table_name FROM orders WHERE table_number IS NOT NULL AND status NOT IN ('concluido','cancelado') ORDER BY table_number`).all()).results;
   const maxActive = occupied.reduce((max, order) => Math.max(max, int(order.table_number)), 0);
   const count = Math.max(0, Math.min(200, Math.max(int(settings?.table_count), maxActive)));
   const byNumber = new Map(occupied.map(order => [int(order.table_number), order]));
   return { table_count: count, occupied_count: occupied.length, available_count: Math.max(0, count - occupied.length), tables: Array.from({ length: count }, (_, index) => {
     const number = index + 1, order = byNumber.get(number);
-    return order ? { number, occupied: true, order_id: order.id, status: order.status, customer_name: order.customer_name, created_at: order.created_at } : { number, occupied: false };
+    return order ? { number, occupied: true, order_id: order.id, status: order.status, customer_name: order.customer_name, created_at: order.created_at, table_name: order.table_name || "" } : { number, occupied: false };
   }) };
 }
 
@@ -899,10 +901,10 @@ function ticketText(order, items, target, settings) {
   const typeLabel=order.order_type === "delivery" ? "Entrega/Delivery" : order.order_type === "dine_in" ? "Consumir no local" : "Retirada";
   const isCustomerReceipt=target==="customer",isPrep=target==="prep"||(target==="reception"&&order.channel==="counter"&&Boolean(order.table_number));
   if(isCustomerReceipt||isPrep){
-    const createdAt=new Date(`${String(order.created_at).replace(" ","T")}Z`),elapsedMinutes=Number.isNaN(createdAt.getTime())?0:Math.max(0,Math.floor((Date.now()-createdAt.getTime())/60000)),people=Math.max(1,int(order.notes?.match(/Pessoas:\s*(\d+)/)?.[1],1)),attendant=order.notes?.match(/Atendente:\s*([^•]+)/)?.[1]?.trim(),amount=cents=>`R$ ${(Math.max(0,int(cents))/100).toFixed(2).replace(".",",")}`,line="--------------------------------",sao={timeZone:"America/Sao_Paulo"},title=order.table_number?`*** MESA ${String(order.table_number).padStart(2,"0")} ***`:"*** BALCÃO ***",orderDate=Number.isNaN(createdAt.getTime())?"":createdAt.toLocaleString("pt-BR",sao),shownItems=target==="prep"?items.filter(item=>isMilkshakeName(item.product_name)):items,lines=[];
+    const createdAt=new Date(`${String(order.created_at).replace(" ","T")}Z`),elapsedMinutes=Number.isNaN(createdAt.getTime())?0:Math.max(0,Math.floor((Date.now()-createdAt.getTime())/60000)),people=Math.max(1,int(order.notes?.match(/Pessoas:\s*(\d+)/)?.[1],1)),attendant=order.notes?.match(/Atendente:\s*([^•]+)/)?.[1]?.trim(),amount=cents=>`R$ ${(Math.max(0,int(cents))/100).toFixed(2).replace(".",",")}`,line="--------------------------------",sao={timeZone:"America/Sao_Paulo"},title=order.table_number?`*** MESA ${String(order.table_number).padStart(2,"0")}${order.table_name?` (${String(order.table_name).toUpperCase()})`:""} ***`:"*** BALCÃO ***",orderDate=Number.isNaN(createdAt.getTime())?"":createdAt.toLocaleString("pt-BR",sao),shownItems=target==="prep"?items.filter(item=>isMilkshakeName(item.product_name)):items,lines=[];
     const itemName=item=>{const weight=item.notes?.match(/Peso:\s*([\d.,]+)\s*g/i);return weight?`${(Number(weight[1].replace(",","."))/1000).toFixed(3).replace(".",",")} ACAI NO KG`:`${item.quantity} ${String(item.product_name||"").toUpperCase()}${item.product_id?` (Cód.: ${item.product_id})`:""}`};
-    const detailLines=item=>{const rows=[];for(const option of parseJson(item.complements_json,[]))rows.push(`  - ${String(option.name||"").toUpperCase()}${(option.quantity||1)>1?` x${option.quantity}`:""}`);if(item.notes&&!/Peso:/i.test(item.notes))rows.push(`  OBS: ${item.notes}`);return rows};
-    lines.push(settings.store_name||"Açailandia PE",title,isCustomerReceipt?`+++ Pedido Nº: ${order.id} +++`:`Pedido Nº: ${order.id}`,isCustomerReceipt?`+++ ${orderDate} +++`:orderDate);
+    const detailLines=item=>{const rows=[];for(const option of parseJson(item.complements_json,[]))rows.push(`  - ${option.group_id==="flavor_extra"?"EXTRA ":""}${String(option.name||"").toUpperCase()}${(option.quantity||1)>1?` x${option.quantity}`:""}`);if(item.notes&&!/Peso:/i.test(item.notes))rows.push(`  OBS: ${item.notes}`);return rows};
+    lines.push(...(isCustomerReceipt?[]:[settings.store_name||"Açailandia PE"]),title,isCustomerReceipt?`+++ Pedido Nº: ${order.id} +++`:`Pedido Nº: ${order.id}`,isCustomerReceipt?`+++ ${orderDate} +++`:orderDate);
     lines.push("");
     
     
@@ -918,11 +920,10 @@ function ticketText(order, items, target, settings) {
       }
     });
     if(isCustomerReceipt){
-      lines.push("Quantidade de itens".padEnd(22)+String(items.reduce((sum,item)=>sum+int(item.quantity),0)).padStart(10));
       if(order.delivery_fee_cents||order.waiter_fee_cents)lines.push(`Subtotal: ${amount(order.subtotal_cents||order.total_cents-order.waiter_fee_cents)}`);
       if(order.delivery_fee_cents)lines.push(`Taxa entrega: ${amount(order.delivery_fee_cents)}`);
       if(order.waiter_fee_cents)lines.push(`Serviço: ${amount(order.waiter_fee_cents)}`);
-      lines.push(`*** TOTAL: ${amount(order.total_cents)} ***`,`+++ Tempo de permanência: ${Math.floor(elapsedMinutes/60)}h ${elapsedMinutes%60}min +++`,`+++ Qtd de pessoas: ${people} +++`,`+++ Valor por pessoa: ${amount(Math.round(order.total_cents/people))} +++`,"","+++ NÃO É DOCUMENTO FISCAL +++");
+      lines.push("Total".padEnd(22)+amount(order.total_cents).padStart(10),`+++ Tempo de permanência: ${Math.floor(elapsedMinutes/60)}h ${elapsedMinutes%60}min +++`,`+++ Qtd de pessoas: ${people} +++`,`+++ Valor por pessoa: ${amount(Math.round(order.total_cents/people))} +++`,"","+++ NÃO É DOCUMENTO FISCAL +++");
     }else{
       const now=new Date();
       
@@ -1278,7 +1279,7 @@ async function api(request, env, url) {
   }
   if (url.pathname.startsWith("/api/admin/") && !(await isAdmin(request, env))) {
     const branch=await cashierBranch(request,env),method=request.method,path=url.pathname;
-    const orderRoute=path.match(/^\/api\/admin\/orders\/([^/]+)(?:\/(details|items|table-items\/\d+|bill-splits|payment|cancel|reprint|print-receipt|fiado))?$/);
+    const orderRoute=path.match(/^\/api\/admin\/orders\/([^/]+)(?:\/(details|items|table-items\/\d+|bill-splits|payment|cancel|reprint|print-receipt|fiado|table-name))?$/);
     const sub=orderRoute?.[2]||"";
     const allowed=Boolean(branch)&&(
       (method==="GET"&&new Set(["/api/admin/orders","/api/admin/tables","/api/admin/products"]).has(path))||
@@ -1383,6 +1384,16 @@ async function api(request, env, url) {
     return json({ ok:true,...storeAvailability({...current,manual_closed:manualClosed?1:0,manual_closed_reason:reason,business_hours_json:serializedHours}) });
   }
   if (url.pathname === "/api/admin/tables" && request.method === "GET") return json(await tableBoard(env));
+  const tableNameRoute=url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/table-name$/);
+  if (tableNameRoute && request.method === "PATCH") {
+    try {
+      const body=await readJson(request),order=await env.DB.prepare(`SELECT id,table_number,status FROM orders WHERE id=?`).bind(tableNameRoute[1]).first();
+      if(!order||!order.table_number||order.status==="concluido"||order.status==="cancelado")return json({error:"A mesa precisa estar aberta para ser renomeada."},400);
+      const name=clean(body.table_name,20);
+      await env.DB.prepare(`UPDATE orders SET table_name=? WHERE id=?`).bind(name||null,order.id).run();
+      return json({ ok:true,table_name:name });
+    } catch (error) { return json({ error: error.message || "Não foi possível renomear a mesa." }, 400); }
+  }
   if (url.pathname === "/api/admin/orders" && request.method === "POST") {
     try { const body=await readJson(request);if(!(await isAdmin(request,env)))body.branch_id=await cashierBranch(request,env);return json(await createOrder(env,body,"counter"), 201); }
     catch (error) { return json({ error: error.message || "Não foi possível criar o pedido." }, 400); }

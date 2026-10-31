@@ -428,3 +428,70 @@ function openOrderFiado(orderId){
   };
 }
 document.addEventListener('click',event=>{const button=event.target.closest('[data-order-fiado]');if(!button)return;event.preventDefault();event.stopPropagation();openOrderFiado(button.dataset.orderFiado)},true);
+
+// Abre sempre o cardápio público no domínio oficial, em nova aba.
+document.addEventListener("click",event=>{
+  const link=event.target.closest?.('[data-admin-action="open-store"],.admin-side-footer a');
+  if(!link||(link.tagName==="A"&&!/card[áa]pio/i.test(link.textContent)))return;
+  event.preventDefault();event.stopImmediatePropagation();
+  const base=location.hostname.startsWith("xn--")?"https://acailandia.wpnz.com.br":location.origin;
+  window.open(`${base}/`,"_blank","noopener");
+},true);
+// Milk shake: busca de sabores e até 3 sabores extras (+R$ 2,00 cada).
+const MILKSHAKE_EXTRA_CENTS=200,MILKSHAKE_EXTRA_LIMIT=3;
+const milkshakeBuilderOpenProduct=openProduct;
+openProduct=function(id,cart=state.cart,onAdded=null){
+  const product=state.catalog?.products?.find(item=>item.id===id);
+  if(product?.is_available&&/milk\s?-?shake|^milk\b/i.test(String(product.name||""))&&productFlavorOptions(product).length)return openMilkshakeBuilder(product,cart,onAdded);
+  return milkshakeBuilderOpenProduct(id,cart,onAdded);
+};
+function openMilkshakeBuilder(product,cart,onAdded){
+  const flavors=productFlavorOptions(product),fold=value=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR");
+  let main="",extras=[];
+  const list=(kind,attr)=>flavors.map(flavor=>`<button type="button" class="rv-choice-row" data-${attr}="${esc(flavor)}" data-search="${esc(fold(flavor))}"><span>${esc(flavor)}</span><i>＋</i></button>`).join("");
+  layer(`<div class="drawer-header rv-builder-header"><h2>${esc(product.name)}</h2><button class="icon-btn" data-milk-close aria-label="Fechar">×</button></div><div class="rv-builder-price">${money(product.price_cents)}</div><div class="drawer-content rv-builder"><section class="rv-choice-section"><header><strong>Sabor</strong><div><span>Escolha 1 opção</span><b id="milk-main-count">0/1</b><em>OBRIGATÓRIO</em></div></header><input type="search" class="milk-flavor-search" data-milk-search="main" placeholder="Pesquisar sabor..." autocomplete="off"><div class="milk-flavor-list">${list("main","milk-main")}</div></section><section class="rv-choice-section"><header><strong>Sabores extras</strong><div><span>+${money(MILKSHAKE_EXTRA_CENTS)} cada · até ${MILKSHAKE_EXTRA_LIMIT}</span><b id="milk-extra-count">0/${MILKSHAKE_EXTRA_LIMIT}</b></div></header><input type="search" class="milk-flavor-search" data-milk-search="extra" placeholder="Pesquisar sabor extra..." autocomplete="off"><div class="milk-flavor-list">${list("extra","milk-extra")}</div></section><div class="note-box"><label for="milkshake-note">Observações</label><textarea id="milkshake-note" maxlength="300" placeholder="Alguma observação?"></textarea></div></div><div class="detail-action rv-builder-action"><div class="acai-builder-selection" id="milk-summary">Escolha o sabor</div><button class="primary-btn" id="milkshake-add">Adicionar <strong id="milk-total">${money(product.price_cents)}</strong></button></div>`,"drawer acai-builder-drawer");
+  document.querySelector("[data-milk-close]").onclick=closeLayer;
+  const refresh=()=>{
+    document.querySelectorAll("[data-milk-main]").forEach(row=>{const on=row.dataset.milkMain===main;row.classList.toggle("selected",on);row.querySelector("i").textContent=on?"✓":"＋"});
+    document.querySelectorAll("[data-milk-extra]").forEach(row=>{const on=extras.includes(row.dataset.milkExtra);row.classList.toggle("selected",on);row.querySelector("i").textContent=on?"✓":"＋"});
+    $("#milk-main-count").textContent=`${main?1:0}/1`;$("#milk-extra-count").textContent=`${extras.length}/${MILKSHAKE_EXTRA_LIMIT}`;
+    $("#milk-summary").textContent=main?`Sabor: ${main}${extras.length?` + ${extras.join(", ")}`:""}`:"Escolha o sabor";
+    $("#milk-total").textContent=money(product.price_cents+extras.length*MILKSHAKE_EXTRA_CENTS);
+  };
+  document.querySelectorAll("[data-milk-main]").forEach(row=>row.onclick=()=>{main=row.dataset.milkMain;extras=extras.filter(name=>name!==main);refresh()});
+  document.querySelectorAll("[data-milk-extra]").forEach(row=>row.onclick=()=>{const name=row.dataset.milkExtra;if(extras.includes(name))extras=extras.filter(item=>item!==name);else if(extras.length>=MILKSHAKE_EXTRA_LIMIT)return toast(`Limite de ${MILKSHAKE_EXTRA_LIMIT} extras.`);else extras.push(name);refresh()});
+  document.querySelectorAll("[data-milk-search]").forEach(input=>input.oninput=()=>{const term=fold(input.value.trim()),attr=input.dataset.milkSearch==="main"?"[data-milk-main]":"[data-milk-extra]";document.querySelectorAll(attr).forEach(row=>row.classList.toggle("hidden",Boolean(term)&&!row.dataset.search.includes(term)))});
+  $("#milkshake-add").onclick=()=>{if(!main)return toast("Escolha o sabor.");addItem(product,1,cart,[{name:main,price_cents:0,quantity:1,group_id:"flavor"},...extras.map(name=>({name,price_cents:MILKSHAKE_EXTRA_CENTS,quantity:1,group_id:"flavor_extra"}))],$("#milkshake-note").value.trim());updateCartBadges();closeLayer();if(onAdded)onAdded();toast("Produto adicionado")};
+}
+/* Mesas no padrão da RV: mais espaço, sem total em aberto e com nome editável. */
+function primeOpsTableName(number){return String((state.admin.tables?.tables||[]).find(table=>String(table.number)===String(number))?.table_name||'').trim()}
+function primeOpsDecorateTables(){
+  if(!document.querySelector('.tables-admin'))return;
+  document.querySelector('.table-open-total')?.remove();
+  document.querySelectorAll('.table-tile-store').forEach(node=>node.remove());
+  document.querySelectorAll('.table-tile[data-table-select]').forEach(tile=>{
+    const name=primeOpsTableName(tile.dataset.tableSelect),title=tile.querySelector('.table-tile-title');
+    if(name&&title&&!title.dataset.named){title.textContent=`${title.textContent} (${name.toUpperCase()})`;title.dataset.named='1'}
+  });
+  const pay=document.querySelector('.table-detail-content [data-table-pay]'),stack=document.querySelector('.table-detail-actions-stack');
+  if(!pay||!stack||stack.querySelector('[data-table-rename]'))return;
+  const orderId=pay.dataset.tablePay,number=document.querySelector('.table-tile.selected')?.dataset.tableSelect||state.admin.selectedTableNumber,name=primeOpsTableName(number),heading=document.querySelector('.table-detail-panel .panel-head h2');
+  if(name&&heading&&!heading.dataset.named){heading.textContent=`${heading.textContent} (${name.toUpperCase()})`;heading.dataset.named='1'}
+  stack.insertAdjacentHTML('afterbegin',`<button type="button" class="secondary-btn" data-table-rename="${esc(orderId)}">✎ ${name?'Alterar nome da mesa':'Nomear mesa'}</button>`);
+}
+const primeOpsTablesRenderAdmin=renderAdmin;
+renderAdmin=function(){const result=primeOpsTablesRenderAdmin.apply(this,arguments);primeOpsDecorateTables();return result};
+const primeOpsTablesRenderCashier=renderCashierPanel;
+renderCashierPanel=function(){const result=primeOpsTablesRenderCashier.apply(this,arguments);primeOpsDecorateTables();return result};
+document.addEventListener('click',async event=>{
+  const button=event.target.closest('[data-table-rename]');
+  if(!button)return;
+  event.preventDefault();event.stopPropagation();
+  const current=primeOpsTableName(document.querySelector('.table-tile.selected')?.dataset.tableSelect||state.admin.selectedTableNumber),value=prompt('Nome da mesa (ex.: 3 SOFÁ). Deixe vazio para voltar ao nome padrão.',current);
+  if(value===null)return;
+  button.disabled=true;
+  try{
+    await api(`/api/admin/orders/${encodeURIComponent(button.dataset.tableRename)}/table-name`,{method:'PATCH',body:JSON.stringify({table_name:value.trim()})});
+    state.admin.tables=await api('/api/admin/tables');await loadAdminOrders();renderAdmin();toast('Nome da mesa atualizado');
+  }catch(error){toast(error.message);button.disabled=false}
+},true);
