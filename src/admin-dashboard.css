@@ -305,25 +305,3 @@ body.customer-page{--red:#7e319e;--green:#70208c;background:#f7f3fa}
   .cashier-management-layout .admin-topbar{height:64px;padding:0 12px}
   .cashier-management-layout .admin-content{padding:14px 12px calc(88px + env(safe-area-inset-bottom))}
 }
-
-/* Restaura a moldura do painel do proprietário sem afetar o caixa. */
-.admin-shell:not(.cashier-management-layout){grid-template-columns:250px 1fr;background:#f1f2f4}
-.admin-shell:not(.cashier-management-layout) .admin-side{background:#121315;color:#fff;padding:22px 16px;border-right:0}
-.admin-shell:not(.cashier-management-layout) .admin-brand{padding:0;margin-bottom:28px;border-bottom:0}
-.admin-shell:not(.cashier-management-layout) .admin-brand img{width:48px;height:48px;border-radius:12px}
-.admin-shell:not(.cashier-management-layout) .admin-brand strong{font-size:18px;color:#fff}
-.admin-shell:not(.cashier-management-layout) .admin-brand span{font-size:13px;color:#a8adb4}
-.admin-shell:not(.cashier-management-layout) .admin-nav{gap:7px;padding-bottom:88px}
-.admin-shell:not(.cashier-management-layout) .admin-nav button{color:#bfc3c9;border-radius:11px;padding:12px 13px;font-size:13px}
-.admin-shell:not(.cashier-management-layout) .admin-nav button:hover{background:#282a2e;color:#fff}
-.admin-shell:not(.cashier-management-layout) .admin-nav button.active{background:#282a2e;color:#fff;box-shadow:none}
-.admin-shell:not(.cashier-management-layout) .admin-topbar{height:76px;padding:0 28px}
-.admin-shell:not(.cashier-management-layout) .admin-content{padding:24px 28px 40px;max-width:1500px}
-@media(max-width:1300px) and (min-width:851px){
-  .admin-shell:not(.cashier-management-layout) .vivid-board{grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible}
-}
-@media(max-width:850px){
-  .admin-shell:not(.cashier-management-layout){grid-template-columns:1fr}
-  .admin-shell:not(.cashier-management-layout) .admin-topbar{height:64px;padding:0 12px}
-  .admin-shell:not(.cashier-management-layout) .admin-content{padding:14px 12px calc(88px + env(safe-area-inset-bottom))}
-}
