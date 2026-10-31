@@ -138,7 +138,7 @@ adminNavButtons=function(){
   const management=`<button class="${state.admin.view==="management"?"active":""}" data-admin-view="management"><span class="admin-nav-icon">▦</span><span class="nav-full">Gestão de pedidos</span><span class="nav-short">Gestão</span></button>`;
   const counterOrders=`<button class="${state.admin.view==="counter-orders"?"active":""}" data-admin-view="counter-orders"><span class="admin-nav-icon">◫</span><span class="nav-full">Self-service/Balcão</span><span class="nav-short">Self/Balcão</span></button>`;
   const neighborhoods=`<button class="${state.admin.view==="neighborhoods"?"active":""}" data-admin-view="neighborhoods"><span class="admin-nav-icon">⌖</span><span class="nav-full">Bairros e taxas</span><span class="nav-short">Bairros</span></button>`;
-  return dashboardAdminNavButtons().replace(/(<button[^>]+data-admin-view="orders"[\s\S]*?<\/button>)/,"$1"+management).replace(/(<button[^>]+data-admin-view="settings")/,neighborhoods+"$1");
+  return dashboardAdminNavButtons().replace(/<button[^>]+data-admin-view="pos"[\s\S]*?<\/button>/,"").replace(/(<button[^>]+data-admin-view="orders"[\s\S]*?<\/button>)/,"$1"+management).replace(/(<button[^>]+data-admin-view="settings")/,neighborhoods+"$1");
 };
 
 const dashboardAdminLayout=adminLayout;
