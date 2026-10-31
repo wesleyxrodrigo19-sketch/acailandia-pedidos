@@ -44,6 +44,7 @@ sql.exec(`
   CREATE TABLE cash_register_entries (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id INTEGER, branch_id TEXT, entry_type TEXT, amount_cents INTEGER, reason TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 `);
 sql.exec(await readFile(new URL("drizzle-acailandia/0004_whatsapp_message.sql", root), "utf8"));
+sql.exec(await readFile(new URL("drizzle-acailandia/0010_fiado_message.sql", root), "utf8"));
 sql.exec(await readFile(new URL("drizzle-acailandia/0009_table_name.sql", root), "utf8"));
 
 class Statement {
@@ -162,6 +163,9 @@ assert.equal(await asCashier("/api/admin/settings", "GET"), 401);
 assert.equal(await asCashier("/api/admin/whatsapp-message", "PATCH", { whatsapp_message: "x" }), 401);
 const waSaved = await request("/api/admin/whatsapp-message", "PATCH", { whatsapp_message: "  Olá {nome}\r\nPedido {pedido}  " });
 assert.equal(waSaved.status, 200, JSON.stringify(waSaved.body));
+const fSaved = await request("/api/admin/fiado-message", "PATCH", { fiado_message: "  Oi {nome} {valor}  " });
+assert.equal(fSaved.status, 200, JSON.stringify(fSaved.body));
+assert.equal(fSaved.body.fiado_message, "Oi {nome} {valor}");
 assert.equal(sql.prepare("SELECT whatsapp_message AS m FROM settings WHERE id=1").get().m, "Olá {nome}\nPedido {pedido}");
 
 assert.equal((await request("/api/admin/orders/TEST/print-receipt", "POST")).status, 400);

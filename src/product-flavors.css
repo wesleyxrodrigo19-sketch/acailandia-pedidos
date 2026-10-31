@@ -157,3 +157,6 @@
 .tables-admin .table-tile-amount{font-size:18px}
 .tables-admin .table-summary-tabs{margin:8px 0 2px}
 .milk-flavor-list .rv-choice-row[hidden]{display:none!important}
+.tables-admin .table-available-grid{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px}
+.tables-admin .table-tile.available{min-height:54px;gap:2px;padding:0 6px 6px}
+.tables-admin .table-available-grid .table-tile-title{padding:5px 4px;font-size:12px}

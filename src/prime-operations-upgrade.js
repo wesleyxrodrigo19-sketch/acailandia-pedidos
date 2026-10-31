@@ -278,7 +278,7 @@ renderCashierPanel=function(){const result=primeOpsWhatsAppRenderCashier.apply(t
 const primeOpsWhatsAppSettingsView=settingsView;
 settingsView=function(){
   const message=String(state.catalog?.settings?.whatsapp_message||'');
-  const section=`<section class="panel"><div class="panel-head"><div><h2>Mensagem do WhatsApp</h2><p>Texto enviado ao cliente quando você clica no botão do WhatsApp no pedido.</p></div></div><div class="field"><label for="whatsapp-message">Mensagem personalizada</label><textarea id="whatsapp-message" rows="4" maxlength="1000" placeholder="Olá, {nome}! Seu pedido {pedido} está a caminho.">${esc(message)}</textarea><small>Use {nome}, {pedido}, {total} e {loja} para preencher automaticamente.</small></div><button type="button" class="primary-btn" id="whatsapp-message-save">Salvar mensagem</button></section>`;
+  const section=`<section class="panel"><div class="panel-head"><div><h2>Mensagem do WhatsApp</h2><p>Texto enviado ao cliente quando você clica no botão do WhatsApp no pedido.</p></div></div><div class="field"><label for="whatsapp-message">Mensagem personalizada</label><textarea id="whatsapp-message" rows="4" maxlength="1000" placeholder="Olá, {nome}! Seu pedido {pedido} está a caminho.">${esc(message)}</textarea><small>Use {nome}, {pedido}, {total} e {loja} para preencher automaticamente.</small></div><button type="button" class="primary-btn" id="whatsapp-message-save">Salvar mensagem</button></section><section class="panel"><div class="panel-head"><div><h2>Mensagem do Fiado</h2><p>Texto enviado ao cliente quando você clica no botão do WhatsApp na tela de Fiado.</p></div></div><div class="field"><label for="fiado-message">Mensagem personalizada do fiado</label><textarea id="fiado-message" rows="4" maxlength="1000" placeholder="Olá, {nome}! Você tem {valor} pendente do pedido {pedido}.">${esc(String(state.catalog?.settings?.fiado_message||''))}</textarea><small>Use {nome}, {pedido}, {valor} e {loja} para preencher automaticamente.</small></div><button type="button" class="primary-btn" id="fiado-message-save">Salvar mensagem do fiado</button></section>`;
   return primeOpsWhatsAppSettingsView().replace('<div class="settings-save">',section+'<div class="settings-save">');
 };
 document.addEventListener('click',async event=>{
@@ -291,6 +291,16 @@ document.addEventListener('click',async event=>{
       toast('Mensagem do WhatsApp salva');
     }catch(error){toast(error.message)}
     save.disabled=false;return;
+  }
+  const saveFiado=event.target.closest('#fiado-message-save');
+  if(saveFiado){
+    event.preventDefault();saveFiado.disabled=true;
+    try{
+      const result=await api('/api/admin/fiado-message',{method:'PATCH',body:JSON.stringify({fiado_message:document.querySelector('#fiado-message').value})});
+      if(state.catalog?.settings)state.catalog.settings.fiado_message=result.fiado_message;
+      toast('Mensagem do fiado salva');
+    }catch(error){toast(error.message)}
+    saveFiado.disabled=false;return;
   }
   const button=event.target.closest('[data-order-whatsapp]');
   if(!button)return;
@@ -345,8 +355,9 @@ function fiadoDate(value){return value?new Date(String(value).replace(' ','T')+'
 function fiadoRemaining(row){return Math.max(0,Number(row.amount_cents||0)-Number(row.paid_cents||0))}
 async function loadFiado(){state.fiado=await api('/api/admin/fiado')}
 function fiadoMessage(row){
-  const settings=primeOpsWhatsAppSettings(),store=settings.store_name||'Açailandia PE';
-  return `Olá, ${row.customer_name||'cliente'}! Aqui é da ${store}. Identificamos uma pendência de ${money(fiadoRemaining(row))} referente ao pedido ${row.order_id}. Podemos combinar o pagamento? Obrigado!`;
+  const settings=primeOpsWhatsAppSettings(),store=settings.store_name||'Açailandia PE',template=String(settings.fiado_message||'').trim()||'Olá, {nome}! Aqui é da {loja}. Identificamos uma pendência de {valor} referente ao pedido {pedido}. Podemos combinar o pagamento? Obrigado!';
+  const values={nome:row.customer_name||'cliente',pedido:row.order_id,valor:money(fiadoRemaining(row)),loja:store};
+  return template.replace(/\{(nome|pedido|valor|total|loja)\}/gi,(_,key)=>values[key.toLowerCase()==='total'?'valor':key.toLowerCase()]);
 }
 function fiadoView(){
   const rows=state.fiado?.rows||[],open=rows.filter(row=>row.status==='aberto'),total=open.reduce((sum,row)=>sum+fiadoRemaining(row),0);

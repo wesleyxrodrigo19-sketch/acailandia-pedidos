@@ -1,0 +1,1 @@
+ALTER TABLE settings ADD COLUMN fiado_message TEXT NOT NULL DEFAULT '';
