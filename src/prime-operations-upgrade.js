@@ -213,7 +213,7 @@ function primeOpsOpenTablePayment(orderId){
 const primeOpsBaseTablePayment=openPaymentSettlement;
 openPaymentSettlement=async function(orderId){
   const order=state.admin.orders.find(item=>String(item.id)===String(orderId));
-  if(location.pathname.startsWith('/caixa')||!order?.table_number)return primeOpsBaseTablePayment(orderId);
+  if(!order?.table_number)return primeOpsBaseTablePayment(orderId);
   if(order.payment_status==='aberto'){
     try{
       const bill=await api(`/api/admin/orders/${encodeURIComponent(orderId)}/bill-splits`);
