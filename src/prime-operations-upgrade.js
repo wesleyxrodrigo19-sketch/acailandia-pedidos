@@ -509,3 +509,31 @@ document.addEventListener('click',async event=>{
     state.admin.tables=await api('/api/admin/tables');await loadAdminOrders();renderAdmin();toast('Nome da mesa atualizado');
   }catch(error){toast(error.message);button.disabled=false}
 },true);
+
+/* Tela de itens da mesa: campos para nome do cliente e nome da mesa. */
+function primeOpsDecoratePickerMeta(){
+  const cart=document.querySelector('.table-picker-cart');
+  if(!cart||cart.querySelector('#picker-meta'))return;
+  const draft=document.querySelector('.table-picker-head h2')?.textContent.trim()==='Novo pedido'?state.admin.pendingTableOpen:null;
+  const order=draft||(state.admin.orders||[]).find(item=>String(item.table_number)===String(state.admin.selectedTableNumber)&&!['concluido','cancelado'].includes(item.status));
+  if(!order)return;
+  const customer=/^Mesa \d+$/i.test(String(order.customer_name||'').trim())?'':String(order.customer_name||''),tableName=String(order.table_name||'');
+  cart.querySelector('h3')?.insertAdjacentHTML('afterend','<div id="picker-meta" class="picker-meta"><label>Nome do cliente<input id="picker-customer" maxlength="100" placeholder="Ex.: João" value="'+esc(customer)+'"></label><label>Nome da mesa<input id="picker-table-name" maxlength="20" placeholder="Ex.: 3 SOFÁ" value="'+esc(tableName)+'"></label></div>');
+  const customerInput=cart.querySelector('#picker-customer'),nameInput=cart.querySelector('#picker-table-name');
+  const sync=()=>{
+    const customerValue=customerInput.value.trim(),nameValue=nameInput.value.trim();
+    if(draft){if(customerValue)draft.customer_name=customerValue;draft.table_name=nameValue;return}
+    order.table_name=nameValue||null;if(customerValue)order.customer_name=customerValue;
+  };
+  customerInput.oninput=sync;nameInput.oninput=sync;
+  if(!draft){
+    const save=async()=>{
+      try{await api('/api/admin/orders/'+encodeURIComponent(order.id)+'/table-name',{method:'PATCH',body:JSON.stringify({table_name:nameInput.value.trim(),customer_name:customerInput.value.trim()})});state.admin.tables=await api('/api/admin/tables')}catch(error){toast(error.message)}
+    };
+    customerInput.onchange=save;nameInput.onchange=save;
+  }
+}
+{
+  let pickerScheduled=false;
+  new MutationObserver(()=>{if(pickerScheduled)return;pickerScheduled=true;requestAnimationFrame(()=>{pickerScheduled=false;primeOpsDecoratePickerMeta()})}).observe(document.body,{childList:true,subtree:true});
+}

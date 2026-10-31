@@ -1401,11 +1401,13 @@ async function api(request, env, url) {
       if(!order||!order.table_number||order.status==="concluido"||order.status==="cancelado")return json({error:"A mesa precisa estar aberta para ser renomeada."},400);
       const name=clean(body.table_name,20);
       await env.DB.prepare(`UPDATE orders SET table_name=? WHERE id=?`).bind(name||null,order.id).run();
-      return json({ ok:true,table_name:name });
+      let customer=null;
+      if(typeof body.customer_name==='string'&&clean(body.customer_name,100)){customer=clean(body.customer_name,100);await env.DB.prepare(`UPDATE orders SET customer_name=? WHERE id=?`).bind(customer,order.id).run()}
+      return json({ ok:true,table_name:name,customer_name:customer });
     } catch (error) { return json({ error: error.message || "Não foi possível renomear a mesa." }, 400); }
   }
   if (url.pathname === "/api/admin/orders" && request.method === "POST") {
-    try { const body=await readJson(request);if(!(await isAdmin(request,env)))body.branch_id=await cashierBranch(request,env);return json(await createOrder(env,body,"counter"), 201); }
+    try { const body=await readJson(request);if(!(await isAdmin(request,env)))body.branch_id=await cashierBranch(request,env);const created=await createOrder(env,body,"counter");const tableName=clean(body.table_name,20);if(tableName&&created?.id)await env.DB.prepare(`UPDATE orders SET table_name=? WHERE id=? AND table_number IS NOT NULL`).bind(tableName,created.id).run();return json(created, 201); }
     catch (error) { return json({ error: error.message || "Não foi possível criar o pedido." }, 400); }
   }
   const orderDetails = url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/details$/);

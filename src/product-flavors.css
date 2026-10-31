@@ -160,3 +160,4 @@
 .tables-admin .table-available-grid{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px}
 .tables-admin .table-tile.available{min-height:54px;gap:2px;padding:0 6px 6px}
 .tables-admin .table-available-grid .table-tile-title{padding:5px 4px;font-size:12px}
+.picker-meta{display:grid;gap:8px;margin:8px 0 12px}.picker-meta label{display:grid;gap:4px;font-size:12px;font-weight:800;color:#555}.picker-meta input{padding:9px 10px;border:1px solid #d9d4e6;border-radius:10px;font:inherit;font-weight:500}
