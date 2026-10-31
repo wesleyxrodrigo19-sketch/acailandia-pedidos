@@ -1,7 +1,6 @@
 /* Controle diário de caixa por unidade. */
 const cashRegisterNavBase=cashierNav;
-cashierNav=()=>cashRegisterNavBase().replace('</button>', '</button>');
-cashierNav=()=>cashRegisterNavBase()+`<button class="${state.cashier.view==='cash-register'?'active':''}" data-cashier-view="cash-register"><span class="admin-nav-icon">▣</span><span class="nav-full">Abrir / fechar caixa</span><span class="nav-short">Caixa</span></button>`;
+cashierNav=()=>cashRegisterNavBase().replace(/<button[^>]+data-cashier-view="counter-orders"[\s\S]*?<\/button>/,'')+`<button class="${state.cashier.view==='cash-register'?'active':''}" data-cashier-view="cash-register"><span class="admin-nav-icon">▣</span><span class="nav-full">Abrir / fechar caixa</span><span class="nav-short">Caixa</span></button>`;
 
 const cashRegisterAdminNav=adminNavButtons;
 adminNavButtons=()=>cashRegisterAdminNav().replace(/(<button[^>]+data-admin-view="settings")/,`<button class="${state.admin.view==='cash-register'?'active':''}" data-admin-view="cash-register"><span class="admin-nav-icon">▣</span><span class="nav-full">Abrir / fechar caixa</span><span class="nav-short">Caixa</span></button>$1`);
