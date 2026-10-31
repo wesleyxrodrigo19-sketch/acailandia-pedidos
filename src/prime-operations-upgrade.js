@@ -463,7 +463,7 @@ function openMilkshakeBuilder(product,cart,onAdded){
   };
   document.querySelectorAll("[data-milk-main]").forEach(row=>row.onclick=()=>{main=row.dataset.milkMain;extras=extras.filter(name=>name!==main);refresh()});
   document.querySelectorAll("[data-milk-extra]").forEach(row=>row.onclick=()=>{const name=row.dataset.milkExtra;if(extras.includes(name))extras=extras.filter(item=>item!==name);else if(extras.length>=MILKSHAKE_EXTRA_LIMIT)return toast(`Limite de ${MILKSHAKE_EXTRA_LIMIT} extras.`);else extras.push(name);refresh()});
-  document.querySelectorAll("[data-milk-search]").forEach(input=>input.oninput=()=>{const term=fold(input.value.trim()),attr=input.dataset.milkSearch==="main"?"[data-milk-main]":"[data-milk-extra]";document.querySelectorAll(attr).forEach(row=>row.classList.toggle("hidden",Boolean(term)&&!row.dataset.search.includes(term)))});
+  document.querySelectorAll("[data-milk-search]").forEach(input=>input.oninput=()=>{const term=fold(input.value.trim()),attr=input.dataset.milkSearch==="main"?"[data-milk-main]":"[data-milk-extra]";document.querySelectorAll(attr).forEach(row=>row.hidden=Boolean(term)&&!row.dataset.search.includes(term))});
   $("#milkshake-add").onclick=()=>{if(!main)return toast("Escolha o sabor.");addItem(product,1,cart,[{name:main,price_cents:0,quantity:1,group_id:"flavor"},...extras.map(name=>({name,price_cents:MILKSHAKE_EXTRA_CENTS,quantity:1,group_id:"flavor_extra"}))],$("#milkshake-note").value.trim());updateCartBadges();closeLayer();if(onAdded)onAdded();toast("Produto adicionado")};
 }
 /* Mesas no padrão da RV: mais espaço, sem total em aberto e com nome editável. */

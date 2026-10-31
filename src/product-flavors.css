@@ -147,4 +147,13 @@
 .tables-admin .table-available-grid{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:14px}
 .tables-admin .table-tile.available{min-height:96px;background:#eceaf2;border-color:#dcd8e6}
 .tables-admin .table-summary-tabs{gap:14px;margin:20px 0 6px}
-@media(max-width:850px){.tables-admin{grid-template-columns:1fr}.tables-admin .table-open-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}}
+@media(max-width:850px){.tables-admin{grid-template-columns:1fr}.tables-admin .table-open-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}}.boot-logo{display:block;width:120px;height:120px;margin:0 auto 14px;border-radius:50%;object-fit:cover;background:#fff;box-shadow:0 6px 22px rgba(0,0,0,.18)}
+.tables-admin .tables-main-heading{display:none}
+.tables-admin .tables-main{padding:14px}
+.tables-admin .table-section{margin-top:12px}
+.tables-admin .table-open-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tables-admin .table-tile.occupied{min-height:0;gap:4px;padding:0 10px 8px}
+.tables-admin .table-tile-title{padding:6px 6px;font-size:13px}
+.tables-admin .table-tile-amount{font-size:18px}
+.tables-admin .table-summary-tabs{margin:8px 0 2px}
+.milk-flavor-list .rv-choice-row[hidden]{display:none!important}
