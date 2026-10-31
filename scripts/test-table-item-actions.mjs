@@ -39,6 +39,10 @@ sql.exec(`
 sql.exec(await readFile(new URL("drizzle-acailandia/0003_table_item_labels.sql", root), "utf8"));
 sql.exec("CREATE TABLE settings (id INTEGER PRIMARY KEY, updated_at TEXT, reception_printer TEXT DEFAULT '', print_bridge_key TEXT DEFAULT ''); INSERT INTO settings (id) VALUES (1);");
 sql.exec("CREATE TABLE print_jobs (id INTEGER PRIMARY KEY AUTOINCREMENT, order_id TEXT NOT NULL, target TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending');");
+sql.exec(`
+  CREATE TABLE cash_register_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, branch_id TEXT, status TEXT DEFAULT 'open', opened_at TEXT DEFAULT CURRENT_TIMESTAMP, closed_at TEXT, opening_cash_cents INTEGER DEFAULT 0, expected_cash_cents INTEGER DEFAULT 0, reported_closing_cents INTEGER, cash_sales_cents INTEGER DEFAULT 0, change_cents INTEGER DEFAULT 0, cash_in_cents INTEGER DEFAULT 0, cash_out_cents INTEGER DEFAULT 0, difference_cents INTEGER, closing_notes TEXT);
+  CREATE TABLE cash_register_entries (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id INTEGER, branch_id TEXT, entry_type TEXT, amount_cents INTEGER, reason TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+`);
 sql.exec(await readFile(new URL("drizzle-acailandia/0004_whatsapp_message.sql", root), "utf8"));
 
 class Statement {
@@ -224,4 +228,26 @@ sql.exec("DELETE FROM order_bill_splits; DELETE FROM order_payments; UPDATE orde
 sql.exec("UPDATE orders SET status='concluido' WHERE id='TEST'");
 assert.equal(sql.prepare("SELECT count(*) AS n FROM table_item_labels").get().n, 0);
 assert(sql.prepare("SELECT product_name FROM order_items").all().every(row => row.product_name === "Produto original"));
+sql.exec(`INSERT INTO orders (id,branch_id,channel,status,payment_status,subtotal_cents,total_cents,payment_method) VALUES ('FIA1','acailandia','counter','novo','aberto',5000,5000,'dinheiro')`);
+sql.exec("INSERT INTO cash_register_sessions (branch_id,opening_cash_cents) VALUES ('acailandia',1000)");
+assert.equal((await request("/api/admin/orders/FIA1/fiado", "POST", { payment_method: "dinheiro", received_cents: 5000 })).status, 400);
+const fiado = await request("/api/admin/orders/FIA1/fiado", "POST", { payment_method: "dinheiro", received_cents: 3000, customer_name: "Ana", phone: "87999990000" });
+assert.equal(fiado.status, 200, JSON.stringify(fiado.body));
+assert.equal(fiado.body.fiado_cents, 2000);
+assert.deepEqual({ ...sql.prepare("SELECT payment_status,total_cents FROM orders WHERE id='FIA1'").get() }, { payment_status: "pago", total_cents: 3000 });
+assert.equal((await request("/api/admin/orders/FIA1/fiado", "POST", { received_cents: 0 })).status, 409);
+const fiadoList = await request("/api/admin/fiado");
+assert.equal(fiadoList.body.summary.open_cents, 2000);
+const fiadoSummary = await request("/api/admin/cash-register");
+assert.equal(fiadoSummary.body.branches.acailandia.active.fiado_cents, 2000);
+assert.equal(fiadoSummary.body.branches.acailandia.active.cash_sales_cents, 3000);
+const partialPay = await request(`/api/admin/fiado/${fiadoList.body.rows[0].id}/pay`, "POST", { amount_cents: 500, payment_method: "dinheiro" });
+assert.equal(partialPay.body.status, "aberto");
+assert.equal(sql.prepare("SELECT amount_cents FROM cash_register_entries WHERE entry_type='in'").get().amount_cents, 500);
+const finalPay = await request(`/api/admin/fiado/${fiadoList.body.rows[0].id}/pay`, "POST", { payment_method: "pix" });
+assert.equal(finalPay.body.status, "pago");
+assert.equal((await request(`/api/admin/fiado/${fiadoList.body.rows[0].id}/pay`, "POST", {})).status, 409);
+assert.equal(sql.prepare("SELECT fiado_cents FROM cash_register_sessions").get().fiado_cents, 0);
+const unauthorizedFiado = await request("/api/admin/fiado", "GET", undefined, false);
+assert.equal(unauthorizedFiado.status, 401);
 console.log("Table item action tests passed");

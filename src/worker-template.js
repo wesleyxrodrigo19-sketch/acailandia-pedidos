@@ -503,16 +503,26 @@ async function getCatalog(env, includeAdminSettings = false, branchId = "acailan
   };
 }
 
+let fiadoSchemaReady=false;
+async function ensureFiadoTable(db){
+  if(fiadoSchemaReady)return;
+  await db.prepare(`CREATE TABLE IF NOT EXISTS fiado (id INTEGER PRIMARY KEY AUTOINCREMENT,branch_id TEXT NOT NULL DEFAULT 'acailandia',order_id TEXT NOT NULL,customer_name TEXT NOT NULL DEFAULT '',phone TEXT NOT NULL DEFAULT '',amount_cents INTEGER NOT NULL DEFAULT 0,paid_cents INTEGER NOT NULL DEFAULT 0,original_total_cents INTEGER NOT NULL DEFAULT 0,original_method TEXT NOT NULL DEFAULT 'dinheiro',status TEXT NOT NULL DEFAULT 'aberto',notes TEXT NOT NULL DEFAULT '',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,paid_at TEXT)`).run();
+  try{await db.prepare(`ALTER TABLE cash_register_sessions ADD COLUMN fiado_cents INTEGER NOT NULL DEFAULT 0`).run()}catch(error){if(!/duplicate column/i.test(String(error?.message||error)))throw error}
+  fiadoSchemaReady=true;
+}
+
 async function cashRegisterSummary(db,branchId){
+  await ensureFiadoTable(db);
   const active=await db.prepare(`SELECT * FROM cash_register_sessions WHERE branch_id=? AND status='open' ORDER BY id DESC LIMIT 1`).bind(branchId).first();
   const sessions=(await db.prepare(`SELECT * FROM cash_register_sessions WHERE branch_id=? ORDER BY opened_at DESC LIMIT 7`).bind(branchId).all()).results||[];
   if(!active)return {active:null,history:sessions};
-  const [sales,changes,entries]=await Promise.all([
+  const [sales,changes,entries,fiadoRow]=await Promise.all([
     db.prepare(`SELECT COALESCE(SUM(CASE WHEN payment_method='misto' THEN COALESCE((SELECT SUM(amount_cents) FROM order_payments WHERE order_id=orders.id AND method='dinheiro'),0) WHEN payment_status='pago' AND payment_method='dinheiro' THEN total_cents ELSE 0 END),0) AS value FROM orders WHERE branch_id=? AND status!='cancelado' AND updated_at>=?`).bind(branchId,active.opened_at).first(),
     db.prepare(`SELECT COALESCE(SUM(change_for_cents),0) AS value FROM orders WHERE branch_id=? AND (payment_status='pago' OR payment_method='misto') AND status!='cancelado' AND updated_at>=?`).bind(branchId,active.opened_at).first(),
-    db.prepare(`SELECT COALESCE(SUM(CASE WHEN entry_type='in' THEN amount_cents ELSE 0 END),0) AS cash_in,COALESCE(SUM(CASE WHEN entry_type='out' THEN amount_cents ELSE 0 END),0) AS cash_out FROM cash_register_entries WHERE session_id=?`).bind(active.id).first()
+    db.prepare(`SELECT COALESCE(SUM(CASE WHEN entry_type='in' THEN amount_cents ELSE 0 END),0) AS cash_in,COALESCE(SUM(CASE WHEN entry_type='out' THEN amount_cents ELSE 0 END),0) AS cash_out FROM cash_register_entries WHERE session_id=?`).bind(active.id).first(),
+    db.prepare(`SELECT COALESCE(SUM(amount_cents),0) AS value FROM fiado WHERE branch_id=? AND original_method='dinheiro' AND created_at>=?`).bind(branchId,active.opened_at).first()
   ]);
-  const current={...active,cash_sales_cents:int(sales?.value),change_cents:int(changes?.value),cash_in_cents:int(entries?.cash_in),cash_out_cents:int(entries?.cash_out)};
+  const current={...active,cash_sales_cents:int(sales?.value),change_cents:int(changes?.value),cash_in_cents:int(entries?.cash_in),cash_out_cents:int(entries?.cash_out),fiado_cents:int(fiadoRow?.value)};
   current.expected_cash_cents=Math.max(0,int(current.opening_cash_cents)+current.cash_sales_cents-current.change_cents+current.cash_in_cents-current.cash_out_cents);
   return {active:current,history:sessions};
 }
@@ -530,7 +540,7 @@ async function cashRegisterAction(env,branchId,body){
   }else if(action==='close'){
     if(!active)throw new Error('Não há caixa aberto nesta unidade.');
     const expected=active.expected_cash_cents,reported=Math.max(0,int(body?.reported_closing_cents));
-    await env.DB.prepare(`UPDATE cash_register_sessions SET closed_at=CURRENT_TIMESTAMP,reported_closing_cents=?,cash_sales_cents=?,change_cents=?,cash_in_cents=?,cash_out_cents=?,expected_cash_cents=?,difference_cents=?,closing_notes=?,status='closed' WHERE id=?`).bind(reported,active.cash_sales_cents,active.change_cents,active.cash_in_cents,active.cash_out_cents,expected,reported-expected,clean(body?.closing_notes,500),active.id).run();
+    await env.DB.prepare(`UPDATE cash_register_sessions SET closed_at=CURRENT_TIMESTAMP,fiado_cents=?,reported_closing_cents=?,cash_sales_cents=?,change_cents=?,cash_in_cents=?,cash_out_cents=?,expected_cash_cents=?,difference_cents=?,closing_notes=?,status='closed' WHERE id=?`).bind(active.fiado_cents,reported,active.cash_sales_cents,active.change_cents,active.cash_in_cents,active.cash_out_cents,expected,reported-expected,clean(body?.closing_notes,500),active.id).run();
   }else throw new Error('Ação de caixa inválida.');
   return cashRegisterSummary(env.DB,branchId);
 }
@@ -584,6 +594,7 @@ async function createOrder(env, body, channel) {
   const deliveryFee = orderType === "delivery" ? (branchFee?int(branchFee.fee_cents):deliveryFeeFor(settings, city, neighborhood)) : 0;
   const total = subtotal + waiterFee + deliveryFee;
   const selectedPaymentMethod = paymentMethod(body.payment_method);
+  const initialStatus = orderType === "delivery" && channel === "online" ? "confirmado" : "novo";
   const initialPaymentStatus = channel === "counter"
     ? (clean(body.payment_status,20) === "aberto" ? "aberto" : "pago")
     : (selectedPaymentMethod === "pix" ? "aberto" : "pago");
@@ -608,7 +619,7 @@ async function createOrder(env, body, channel) {
   const address = orderType === "delivery" ? `${street}, ${houseNumber}${block?` - Bloco ${block}`:""} - ${neighborhood}, ${city}${referencePoint?`. Referência: ${referencePoint}`:""}${complement?`. Complemento: ${complement}`:""}` : "";
   const statements = [env.DB.prepare(`INSERT INTO orders
     (id,branch_id,channel,customer_name,phone,order_type,address,city,neighborhood,street,house_number,block,reference_point,complement,maps_url,payment_method,payment_status,change_for_cents,notes,status,subtotal_cents,delivery_fee_cents,waiter_fee_cents,total_cents,table_number)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'novo',?,?,?,?,?)`).bind(id,branchId,channel,customerName,phone,orderType,address,city,neighborhood,street,houseNumber,block,referencePoint,complement,mapsUrl,selectedPaymentMethod,initialPaymentStatus,body.change_for_cents == null ? null : int(body.change_for_cents),clean(body.notes,500),subtotal,deliveryFee,waiterFee,total,tableNumber||null)];
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(id,branchId,channel,customerName,phone,orderType,address,city,neighborhood,street,houseNumber,block,referencePoint,complement,mapsUrl,selectedPaymentMethod,initialPaymentStatus,body.change_for_cents == null ? null : int(body.change_for_cents),clean(body.notes,500),initialStatus,subtotal,deliveryFee,waiterFee,total,tableNumber||null)];
   for (const item of items) statements.push(env.DB.prepare(`INSERT INTO order_items (order_id,product_id,product_name,quantity,unit_price_cents,complements_json,notes) VALUES (?,?,?,?,?,?,?)`).bind(id,item.product_id,item.product_name,item.quantity,item.unit_price_cents,JSON.stringify(item.complements),item.notes));
   const abandonedCartId = clean(body?.abandoned_cart_id, 64);
   if (channel === "online" && /^[0-9a-f-]{20,64}$/i.test(abandonedCartId)) statements.push(env.DB.prepare(`UPDATE abandoned_carts SET status='converted',updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(abandonedCartId));
@@ -624,7 +635,7 @@ async function createOrder(env, body, channel) {
   }
   await env.DB.batch(statements);
   await clearCatalogCache();
-  return { id, branch_id:branchId, subtotal_cents:subtotal, delivery_fee_cents:deliveryFee, waiter_fee_cents:waiterFee, total_cents:total, status:"novo", channel, table_number:tableNumber||null, customer_name:customerName, phone, order_type:orderType, city, neighborhood, street, house_number:houseNumber, block, reference_point:referencePoint, complement, maps_url:mapsUrl, payment_method:selectedPaymentMethod, payment_status:initialPaymentStatus, notes:clean(body.notes,500), items };
+  return { id, branch_id:branchId, subtotal_cents:subtotal, delivery_fee_cents:deliveryFee, waiter_fee_cents:waiterFee, total_cents:total, status:initialStatus, channel, table_number:tableNumber||null, customer_name:customerName, phone, order_type:orderType, city, neighborhood, street, house_number:houseNumber, block, reference_point:referencePoint, complement, maps_url:mapsUrl, payment_method:selectedPaymentMethod, payment_status:initialPaymentStatus, notes:clean(body.notes,500), items };
 }
 
 async function appendCounterOrderItems(env, orderId, body, branchId) {
@@ -1267,15 +1278,19 @@ async function api(request, env, url) {
   }
   if (url.pathname.startsWith("/api/admin/") && !(await isAdmin(request, env))) {
     const branch=await cashierBranch(request,env),method=request.method,path=url.pathname;
-    const orderRoute=path.match(/^\/api\/admin\/orders\/([^/]+)(?:\/(details|items|table-items\/\d+|bill-splits|payment|cancel|reprint|print-receipt))?$/);
+    const orderRoute=path.match(/^\/api\/admin\/orders\/([^/]+)(?:\/(details|items|table-items\/\d+|bill-splits|payment|cancel|reprint|print-receipt|fiado))?$/);
     const sub=orderRoute?.[2]||"";
     const allowed=Boolean(branch)&&(
       (method==="GET"&&new Set(["/api/admin/orders","/api/admin/tables","/api/admin/products"]).has(path))||
       (method==="POST"&&path==="/api/admin/orders")||
+      (method==="GET"&&path==="/api/admin/fiado")||
+      (method==="POST"&&(/^\/api\/admin\/fiado\/\d+\/pay$/.test(path)||path==="/api/admin/acai-complements"))||
+      (method==="PATCH"&&/^\/api\/admin\/acai-complements\/\d+$/.test(path))||
+      (method==="DELETE"&&/^\/api\/admin\/acai-complements\/\d+$/.test(path))||
       (Boolean(orderRoute)&&(
         (method==="GET"&&sub==="bill-splits")||
-        (method==="POST"&&(sub==="bill-splits"||sub==="reprint"||sub==="print-receipt"))||
-        (method==="PATCH"&&sub!=="bill-splits"&&sub!=="reprint"&&sub!=="print-receipt")
+        (method==="POST"&&(sub==="bill-splits"||sub==="reprint"||sub==="print-receipt"||sub==="fiado"))||
+        (method==="PATCH"&&sub!=="bill-splits"&&sub!=="reprint"&&sub!=="print-receipt"&&sub!=="fiado")
       ))
     );
     if(!allowed)return json({error:"Acesso não autorizado."},401);
@@ -1613,6 +1628,48 @@ async function api(request, env, url) {
     await env.DB.batch(statements);
     await auditStatement(env.DB,paymentStatus==="pago"?"payment_received":"payment_reopened","order",order.id,paymentStatus==="pago"?`Pagamento do pedido ${order.id} recebido`:`Pagamento do pedido ${order.id} deixado em aberto`,{ payment_method:method,total_cents:total,waiter_fee_cents:waiterFee,discount_cents:discountCents,discount_type:discountType,employee_discount:isEmployee,payments:requestedPayments }).run();
     return json({ ok:true,payment_status:paymentStatus,payment_method:method,waiter_fee_cents:waiterFee,total_cents:total,discount_cents:discountCents,discount_type:discountType,cash_received_cents:cashReceived,change_for_cents:change,payments:requestedPayments });
+  }
+  if (url.pathname === "/api/admin/fiado" && request.method === "GET") {
+    await ensureFiadoTable(env.DB);
+    const rows=(await env.DB.prepare(`SELECT * FROM fiado ORDER BY CASE status WHEN 'aberto' THEN 0 ELSE 1 END,datetime(created_at) DESC,id DESC LIMIT 500`).all()).results||[];
+    const open=rows.filter(row=>row.status==="aberto");
+    return json({ rows, summary:{ open_count:open.length, open_cents:open.reduce((sum,row)=>sum+Math.max(0,int(row.amount_cents)-int(row.paid_cents)),0) } });
+  }
+  const fiadoOrder=url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/fiado$/);
+  if (fiadoOrder && request.method === "POST") {
+    const body=await readJson(request),order=await env.DB.prepare(`SELECT * FROM orders WHERE id=?`).bind(fiadoOrder[1]).first();
+    if(!order)return json({error:"Pedido não encontrado."},404);
+    if(order.status==="cancelado")return json({error:"Pedido cancelado não pode virar fiado."},409);
+    if(order.payment_status==="pago")return json({error:"Este pedido já está pago."},409);
+    if(await env.DB.prepare(`SELECT id FROM order_bill_splits WHERE order_id=? LIMIT 1`).bind(order.id).first())return json({error:"Esta comanda já possui pagamentos divididos por item. Continue pelo botão Dividir conta."},409);
+    await ensureFiadoTable(env.DB);
+    const total=Math.max(0,int(order.total_cents)),received=Math.max(0,int(body?.received_cents));
+    if(received>=total)return json({error:"O valor recebido deve ser menor que o total do pedido."},400);
+    const method=paymentMethod(body?.payment_method||order.payment_method),name=clean(body?.customer_name,100)||clean(order.customer_name,100)||"Cliente",phone=clean(body?.phone,30)||clean(order.phone,30);
+    const statements=[
+      env.DB.prepare(`UPDATE orders SET payment_status='pago',payment_method=?,total_cents=?,cash_received_cents=?,change_for_cents=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(method,received,method==="dinheiro"&&received>0?received:null,order.id),
+      env.DB.prepare(`DELETE FROM order_payments WHERE order_id=?`).bind(order.id)
+    ];
+    if(received>0)statements.push(env.DB.prepare(`INSERT INTO order_payments (order_id,method,amount_cents) VALUES (?,?,?)`).bind(order.id,method,received));
+    statements.push(env.DB.prepare(`INSERT INTO fiado (branch_id,order_id,customer_name,phone,amount_cents,original_total_cents,original_method,notes) VALUES (?,?,?,?,?,?,?,?)`).bind(order.branch_id||"acailandia",order.id,name,phone,total-received,total,method,clean(body?.notes,300)));
+    statements.push(auditStatement(env.DB,"fiado_created","order",order.id,`Pedido ${order.id} fechado com fiado de ${total-received} centavos`,{total_cents:total,received_cents:received,fiado_cents:total-received,payment_method:method}));
+    await env.DB.batch(statements);
+    return json({ok:true,fiado_cents:total-received,received_cents:received});
+  }
+  const fiadoPay=url.pathname.match(/^\/api\/admin\/fiado\/(\d+)\/pay$/);
+  if (fiadoPay && request.method === "POST") {
+    await ensureFiadoTable(env.DB);
+    const body=await readJson(request),row=await env.DB.prepare(`SELECT * FROM fiado WHERE id=?`).bind(fiadoPay[1]).first();
+    if(!row)return json({error:"Fiado não encontrado."},404);
+    const remaining=Math.max(0,int(row.amount_cents)-int(row.paid_cents));
+    if(row.status!=="aberto"||!remaining)return json({error:"Este fiado já foi quitado."},409);
+    const requested=Math.max(0,int(body?.amount_cents)),amount=Math.min(remaining,requested||remaining),method=paymentMethod(body?.payment_method),paid=int(row.paid_cents)+amount,settled=paid>=int(row.amount_cents);
+    const statements=[env.DB.prepare(`UPDATE fiado SET paid_cents=?,status=?,paid_at=CASE WHEN ?=1 THEN CURRENT_TIMESTAMP ELSE paid_at END WHERE id=?`).bind(paid,settled?"pago":"aberto",settled?1:0,row.id)];
+    const session=method==="dinheiro"?await env.DB.prepare(`SELECT id FROM cash_register_sessions WHERE branch_id=? AND status='open' ORDER BY id DESC LIMIT 1`).bind(row.branch_id).first():null;
+    if(session)statements.push(env.DB.prepare(`INSERT INTO cash_register_entries (session_id,branch_id,entry_type,amount_cents,reason) VALUES (?,?,'in',?,?)`).bind(session.id,row.branch_id,amount,`Fiado recebido - pedido ${row.order_id}`));
+    statements.push(auditStatement(env.DB,"fiado_paid","fiado",String(row.id),`Recebimento de fiado do pedido ${row.order_id}`,{amount_cents:amount,payment_method:method,settled}));
+    await env.DB.batch(statements);
+    return json({ok:true,paid_cents:paid,status:settled?"pago":"aberto"});
   }
   if (url.pathname === "/api/admin/products" && request.method === "GET") return json(await getCatalog(env,true));
   if(url.pathname==="/api/admin/fiscal/setup"&&request.method==="GET")return json(await fiscalSetup(env.DB));

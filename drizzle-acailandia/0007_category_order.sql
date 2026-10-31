@@ -1,0 +1,1 @@
+UPDATE settings SET category_order_json='["Copos promocionais","Monte seu açaí no copo","Copos trufados","Monte seu combo pote","Monte seu pote","Potes individuais","Milk shake","Açaí na garrafa","Bebidas"]' WHERE id=1;
