@@ -83,6 +83,16 @@ function openCashierOrderDetails(id){
 }
 document.addEventListener('click',event=>{const button=event.target.closest('[data-order-item-details]');if(!button||!(state.cashier?.orders||[]).some(order=>String(order.id)===String(button.dataset.orderItemDetails)))return;event.preventDefault();event.stopPropagation();openCashierOrderDetails(button.dataset.orderItemDetails)},true);
 
+/* Mesas no caixa: reaproveita a tela de mesas do proprietario. */
+const cashierTablesNavBase=cashierNav;
+cashierNav=()=>cashierTablesNavBase().replace(/(<button[^>]+data-cashier-view="orders"[\s\S]*?<\/button>)/,`$1<button class="${state.cashier.view==='tables'?'active':''}" data-cashier-view="tables"><span class="admin-nav-icon">▦</span><span class="nav-full">Mesas</span><span class="nav-short">Mesas</span></button>`);
+function cashierTablesActive(){return state.cashier.view==='tables'&&/^\/caixa(?:\/|$)/.test(location.pathname)}
+const cashierTablesRenderBase=renderCashierPanel;
+renderCashierPanel=function(){if(!cashierTablesActive())return cashierTablesRenderBase();state.admin.view='tables';state.admin.logged=true;$('#app').innerHTML=cashierLayout(tablesView(),'Mesas');applyBlissBrand();bindCashierV2();bindAdmin()};
+const cashierTablesRenderAdminBase=renderAdmin;
+renderAdmin=function(){return cashierTablesActive()?renderCashierPanel():cashierTablesRenderAdminBase()};
+const cashierTablesBindBase=bindCashierV2;
+bindCashierV2=function(){cashierTablesBindBase();document.querySelectorAll('[data-cashier-view="tables"]').forEach(button=>button.onclick=async()=>{try{const [catalog,tables]=await Promise.all([api('/api/admin/products'),api('/api/admin/tables'),loadAdminOrders()]);state.catalog=catalog;state.admin.tables=tables;state.cashier.view='tables';renderCashierPanel()}catch(error){toast(error.message)}})};
 state.cashier.sidebarCollapsed=localStorage.getItem('jw_cashier_sidebar_collapsed')==='1';
 state.cashier.sidebarOpen=false;
 const cashierLayoutBeforeSidebar=cashierLayout;
