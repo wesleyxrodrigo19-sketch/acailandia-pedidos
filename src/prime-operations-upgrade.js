@@ -223,6 +223,56 @@ openPaymentSettlement=async function(orderId){
   return primeOpsOpenTablePayment(orderId);
 };
 
+/* Botao WhatsApp nos cards de pedido e mensagem personalizada nas configuracoes. */
+const PRIME_OPS_WHATSAPP_ICON='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#25D366" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>';
+function primeOpsWhatsAppSettings(){return state.cashier?.catalog?.settings||state.catalog?.settings||{}}
+function primeOpsWhatsAppMessage(order){
+  const settings=primeOpsWhatsAppSettings(),template=String(settings.whatsapp_message||'').trim()||'Olá, {nome}! Aqui é da {loja}. Sobre o seu pedido {pedido}:';
+  const values={nome:order.customer_name||'cliente',pedido:order.id,total:money(order.total_cents),loja:settings.store_name||'Açailandia PE'};
+  return template.replace(/\{(nome|pedido|total|loja)\}/gi,(_,key)=>values[key.toLowerCase()]);
+}
+function primeOpsDecorateWhatsApp(){
+  document.querySelectorAll('.order-card .order-actions').forEach(actions=>{
+    if(actions.querySelector('[data-order-whatsapp]'))return;
+    const card=actions.closest('.order-card'),id=card.dataset.orderDetails||card.querySelector('.order-id')?.textContent.trim();
+    if(!id)return;
+    actions.insertAdjacentHTML('afterbegin',`<button type="button" class="secondary-btn compact order-whatsapp-btn" data-order-whatsapp="${esc(id)}" title="Enviar mensagem no WhatsApp" aria-label="Enviar mensagem no WhatsApp">${PRIME_OPS_WHATSAPP_ICON}</button>`);
+  });
+}
+const primeOpsWhatsAppRenderAdmin=renderAdmin;
+renderAdmin=function(){const result=primeOpsWhatsAppRenderAdmin.apply(this,arguments);primeOpsDecorateWhatsApp();return result};
+const primeOpsWhatsAppRenderCashier=renderCashierPanel;
+renderCashierPanel=function(){const result=primeOpsWhatsAppRenderCashier.apply(this,arguments);primeOpsDecorateWhatsApp();return result};
+{
+  let scheduled=false;
+  new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;primeOpsDecorateWhatsApp()})}).observe(document.body,{childList:true,subtree:true});
+}
+const primeOpsWhatsAppSettingsView=settingsView;
+settingsView=function(){
+  const message=String(state.catalog?.settings?.whatsapp_message||'');
+  const section=`<section class="panel"><div class="panel-head"><div><h2>Mensagem do WhatsApp</h2><p>Texto enviado ao cliente quando você clica no botão do WhatsApp no pedido.</p></div></div><div class="field"><label for="whatsapp-message">Mensagem personalizada</label><textarea id="whatsapp-message" rows="4" maxlength="1000" placeholder="Olá, {nome}! Seu pedido {pedido} está a caminho.">${esc(message)}</textarea><small>Use {nome}, {pedido}, {total} e {loja} para preencher automaticamente.</small></div><button type="button" class="primary-btn" id="whatsapp-message-save">Salvar mensagem</button></section>`;
+  return primeOpsWhatsAppSettingsView().replace('<div class="settings-save">',section+'<div class="settings-save">');
+};
+document.addEventListener('click',async event=>{
+  const save=event.target.closest('#whatsapp-message-save');
+  if(save){
+    event.preventDefault();save.disabled=true;
+    try{
+      const result=await api('/api/admin/whatsapp-message',{method:'PATCH',body:JSON.stringify({whatsapp_message:document.querySelector('#whatsapp-message').value})});
+      if(state.catalog?.settings)state.catalog.settings.whatsapp_message=result.whatsapp_message;
+      toast('Mensagem do WhatsApp salva');
+    }catch(error){toast(error.message)}
+    save.disabled=false;return;
+  }
+  const button=event.target.closest('[data-order-whatsapp]');
+  if(!button)return;
+  event.preventDefault();event.stopPropagation();
+  const order=[...(state.admin?.orders||[]),...(state.cashier?.orders||[])].find(entry=>String(entry.id)===String(button.dataset.orderWhatsapp));
+  const digits=String(order?.phone||'').replace(/\D/g,'');
+  if(digits.length<10)return toast('Este pedido não tem WhatsApp do cliente.');
+  window.open(`https://wa.me/${phoneForWhatsApp(order.phone)}?text=${encodeURIComponent(primeOpsWhatsAppMessage(order))}`,'_blank','noopener');
+},true);
+
 /* Menu de tres pontos nos itens do painel "Detalhes da comanda" (proprietario e caixa). */
 function primeOpsDecorateTableDetail(){
   const content=document.querySelector('.table-detail-content'),pay=content?.querySelector('[data-table-pay]');

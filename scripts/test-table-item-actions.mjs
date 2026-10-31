@@ -37,6 +37,8 @@ sql.exec(`
     VALUES ('TEST',100,'Produto original',2,600);
 `);
 sql.exec(await readFile(new URL("drizzle-acailandia/0003_table_item_labels.sql", root), "utf8"));
+sql.exec("CREATE TABLE settings (id INTEGER PRIMARY KEY, updated_at TEXT); INSERT INTO settings (id) VALUES (1);");
+sql.exec(await readFile(new URL("drizzle-acailandia/0004_whatsapp_message.sql", root), "utf8"));
 
 class Statement {
   constructor(query) { this.query = query; this.values = []; }
@@ -151,6 +153,10 @@ assert.equal(await asCashier("/api/admin/orders/TEST/bill-splits"), 404);
 assert.equal(await asCashier("/api/admin/products/1", "PATCH", { name: "x" }), 401);
 assert.equal(await asCashier("/api/admin/orders/TEST", "DELETE"), 401);
 assert.equal(await asCashier("/api/admin/settings", "GET"), 401);
+assert.equal(await asCashier("/api/admin/whatsapp-message", "PATCH", { whatsapp_message: "x" }), 401);
+const waSaved = await request("/api/admin/whatsapp-message", "PATCH", { whatsapp_message: "  Olá {nome}\r\nPedido {pedido}  " });
+assert.equal(waSaved.status, 200, JSON.stringify(waSaved.body));
+assert.equal(sql.prepare("SELECT whatsapp_message AS m FROM settings WHERE id=1").get().m, "Olá {nome}\nPedido {pedido}");
 assert.equal(await asCashier("/api/admin/orders/TEST/reprint", "GET"), 401);
 sql.exec("UPDATE orders SET branch_id='acailandia' WHERE id='TEST'");
 assert.equal(await asCashier("/api/admin/orders/TEST/table-items/1", "PATCH", { action: "identify", label: "Ana" }), 200);
