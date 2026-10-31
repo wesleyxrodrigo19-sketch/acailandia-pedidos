@@ -252,6 +252,17 @@ assert.equal((await request(`/api/admin/fiado/${fiadoList.body.rows[0].id}/pay`,
 assert.equal(sql.prepare("SELECT fiado_cents FROM cash_register_sessions").get().fiado_cents, 0);
 const unauthorizedFiado = await request("/api/admin/fiado", "GET", undefined, false);
 assert.equal(unauthorizedFiado.status, 401);
+sql.exec(`INSERT INTO orders (id,branch_id,channel,status,payment_status,subtotal_cents,total_cents,payment_method) VALUES ('FIA2','acailandia','counter','novo','aberto',5000,5000,'dinheiro')`);
+const splitFiado = await request("/api/admin/orders/FIA2/fiado", "POST", { payment_method: "dinheiro", payments: [{ method: "dinheiro", amount_cents: 2000 }, { method: "pix", amount_cents: 1000 }], customer_name: "Bia" });
+assert.equal(splitFiado.status, 200, JSON.stringify(splitFiado.body));
+assert.equal(splitFiado.body.fiado_cents, 2000);
+assert.deepEqual(sql.prepare("SELECT method,amount_cents FROM order_payments WHERE order_id='FIA2' ORDER BY rowid").all().map(row => ({ ...row })), [{ method: "dinheiro", amount_cents: 2000 }, { method: "pix", amount_cents: 1000 }]);
+assert.equal(sql.prepare("SELECT payment_method FROM orders WHERE id='FIA2'").get().payment_method, "misto");
+const onlineTicket = context.ticketText({ id: "O1", channel: "online", order_type: "delivery", customer_name: "Ana", phone: "87999", street: "Rua A", house_number: "10", neighborhood: "Centro", city: "Petrolina", reference_point: "Perto", maps_url: "https://maps.example/x", created_at: "2026-10-31 22:14:00", subtotal_cents: 2000, delivery_fee_cents: 500, total_cents: 2500, payment_method: "pix", payment_status: "pago" }, [{ quantity: 1, product_name: "Açaí", unit_price_cents: 2000, complements_json: "[]" }], "reception", { store_name: "Açailandia PE" });
+assert.match(onlineTicket, /^\*\*\* Pedido Nº O1 \*\*\*/);
+assert.match(onlineTicket, /ENDEREÇO PARA ENTREGA:/);
+assert.match(onlineTicket, /FORMAS DE PAGAMENTO/);
+assert.doesNotMatch(onlineTicket, /Google Maps|maps\.example|CAIXA \/ RECEPÇÃO|Origem/);
 sql.exec("INSERT INTO orders (id,branch_id,channel,table_number,status,payment_status,subtotal_cents,total_cents) VALUES ('MESAX','acailandia','counter',9,'novo','aberto',0,0)");
 assert.equal((await request("/api/admin/orders/MESAX/table-name", "PATCH", { table_name: "  3 sofá  " })).status, 200);
 assert.equal(sql.prepare("SELECT table_name FROM orders WHERE id='MESAX'").get().table_name, "3 sofá");

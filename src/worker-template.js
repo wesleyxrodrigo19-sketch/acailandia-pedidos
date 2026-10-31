@@ -930,29 +930,39 @@ function ticketText(order, items, target, settings) {
     }
     return lines.join("\r\n");
   }
-  const lines = [settings.store_name || "Açailandia PE", target === "kitchen" ? "*** COZINHA ***" : "*** CAIXA / RECEPÇÃO ***", `Pedido: ${order.id}`, `Origem: ${order.channel === "online" ? "SITE" : "BALCÃO"}`, `Cliente: ${order.customer_name || "Cliente"}`, `Tipo do pedido: ${typeLabel}`];
-  if (order.order_type === "dine_in" && order.table_number) lines.push(`Mesa: ${order.table_number}`);
+  const amount=cents=>`R$ ${(Math.max(0,int(cents))/100).toFixed(2).replace(".",",")}`,line="--------------------------------",row=(label,value)=>label.length<=21?label.padEnd(22)+value.padStart(10):`${label}\r\n${value.padStart(32)}`;
+  const createdAt=new Date(`${String(order.created_at).replace(" ","T")}Z`),orderDate=Number.isNaN(createdAt.getTime())?"":createdAt.toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"});
+  const lines=[`*** Pedido Nº ${order.id} ***`,orderDate?`+++ ${orderDate} +++`:"",""];
+  lines.push(`Cliente: ${order.customer_name || "Cliente"}`);
   if (order.phone) lines.push(`Telefone: ${order.phone}`);
-  if (order.city) {
-    lines.push(`Endereço: ${order.street}, ${order.house_number}`, `Bairro: ${order.neighborhood}`, `Cidade: ${order.city}`, `Referência: ${order.reference_point}`);
-    if (order.block) lines.splice(lines.length-3, 0, `Bloco: ${order.block}`);
-    if (order.complement) lines.push(`Complemento: ${order.complement}`);
-    if (order.maps_url) lines.push(`Google Maps: ${order.maps_url}`);
-  } else if (order.address) lines.push(`Endereço: ${order.address}`);
-  lines.push("--------------------------------");
+  if (order.order_type === "dine_in" && order.table_number) lines.push(`Mesa: ${order.table_number}`);
+  if (order.order_type === "delivery") {
+    lines.push("","ENDEREÇO PARA ENTREGA:");
+    if (order.city) {
+      lines.push(`${order.street||""}, ${order.house_number||""}`);
+      const comp=[order.block?`Bloco ${order.block}`:"",order.complement||""].filter(Boolean).join(" ");
+      if (comp) lines.push(`Comp: ${comp}`);
+      if (order.reference_point) lines.push(`Ref: ${order.reference_point}`);
+      lines.push(`${order.neighborhood||""} - ${order.city}`);
+    } else if (order.address) lines.push(order.address);
+  } else lines.push(`Tipo: ${typeLabel}`);
+  lines.push("","*** ITENS DO PEDIDO ***",line);
   for (const item of items) {
-    lines.push(target === "kitchen" ? `${item.quantity}x ${item.product_name}` : `${item.quantity}x ${item.product_name}  ${(item.quantity*item.unit_price_cents/100).toFixed(2).replace(".",",")}`);
-    for (const option of parseJson(item.complements_json, [])) lines.push(`  + ${option.quantity || 1}x ${option.name}`);
-    if (item.notes) lines.push(`  OBS: ${item.notes}`);
+    const weight=item.notes?.match(/Peso:\s*([\d.,]+)\s*g/i),name=weight?`${(Number(weight[1].replace(",","."))/1000).toFixed(3).replace(".",",")} ACAI NO KG`:`${item.quantity} ${String(item.product_name||"").toUpperCase()}`;
+    lines.push(target==="kitchen"?name:row(name,amount(item.quantity*item.unit_price_cents)));
+    for (const option of parseJson(item.complements_json, [])) lines.push(`  - ${option.group_id==="flavor_extra"?"EXTRA ":""}${String(option.name||"").toUpperCase()}${(option.quantity||1)>1?` x${option.quantity}`:""}`);
+    if (item.notes&&!/Peso:/i.test(item.notes)) lines.push(`  OBS: ${item.notes}`);
+    lines.push(line);
   }
-  if (order.notes) lines.push("--------------------------------", `OBS. COZINHA: ${order.notes}`);
+  if (order.notes) lines.push(`OBS: ${order.notes}`,line);
   if (target === "reception") {
-    lines.push("--------------------------------", `Subtotal: R$ ${((order.subtotal_cents || order.total_cents-order.waiter_fee_cents)/100).toFixed(2).replace(".",",")}`);
-    if (order.delivery_fee_cents) lines.push(`Taxa entrega: R$ ${(order.delivery_fee_cents/100).toFixed(2).replace(".",",")}`);
-    if (order.waiter_fee_cents) lines.push(`Taxa garçom: R$ ${(order.waiter_fee_cents/100).toFixed(2).replace(".",",")}`);
-    lines.push(`TOTAL: R$ ${(order.total_cents/100).toFixed(2).replace(".",",")}`, `Pagamento: ${paymentLabel(order.payment_method)}`);
+    lines.push("Quantidade de itens".padEnd(22)+String(items.reduce((sum,item)=>sum+int(item.quantity),0)).padStart(10));
+    lines.push("Subtotal".padEnd(22)+amount(order.subtotal_cents||order.total_cents-order.waiter_fee_cents).padStart(10));
+    if (order.delivery_fee_cents) lines.push("Taxa de entrega".padEnd(22)+amount(order.delivery_fee_cents).padStart(10));
+    if (order.waiter_fee_cents) lines.push("Serviço".padEnd(22)+amount(order.waiter_fee_cents).padStart(10));
+    lines.push("Total".padEnd(22)+amount(order.total_cents).padStart(10),"","====================","FORMAS DE PAGAMENTO",row(`${paymentLabel(order.payment_method)} (${order.payment_status==="pago"?"PAGO":"A RECEBER"})`,amount(order.total_cents)));
   }
-  lines.push("", new Date(`${order.created_at}Z`).toLocaleString("pt-BR", { timeZone:"America/Sao_Paulo" }), "", "");
+  lines.push("","+++ NÃO É DOCUMENTO FISCAL +++","","");
   return lines.join("\r\n");
 }
 
@@ -1654,14 +1664,14 @@ async function api(request, env, url) {
     if(order.payment_status==="pago")return json({error:"Este pedido já está pago."},409);
     if(await env.DB.prepare(`SELECT id FROM order_bill_splits WHERE order_id=? LIMIT 1`).bind(order.id).first())return json({error:"Esta comanda já possui pagamentos divididos por item. Continue pelo botão Dividir conta."},409);
     await ensureFiadoTable(env.DB);
-    const total=Math.max(0,int(order.total_cents)),received=Math.max(0,int(body?.received_cents));
+    const total=Math.max(0,int(order.total_cents)),parts=(Array.isArray(body?.payments)?body.payments:[]).map(part=>({method:paymentMethod(part?.method),amount_cents:Math.max(0,int(part?.amount_cents))})).filter(part=>part.amount_cents>0),received=parts.length?parts.reduce((sum,part)=>sum+part.amount_cents,0):Math.max(0,int(body?.received_cents));
     if(received>=total)return json({error:"O valor recebido deve ser menor que o total do pedido."},400);
     const method=paymentMethod(body?.payment_method||order.payment_method),name=clean(body?.customer_name,100)||clean(order.customer_name,100)||"Cliente",phone=clean(body?.phone,30)||clean(order.phone,30);
     const statements=[
-      env.DB.prepare(`UPDATE orders SET payment_status='pago',payment_method=?,total_cents=?,cash_received_cents=?,change_for_cents=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(method,received,method==="dinheiro"&&received>0?received:null,order.id),
+      env.DB.prepare(`UPDATE orders SET payment_status='pago',payment_method=?,total_cents=?,cash_received_cents=?,change_for_cents=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(parts.length>1?"misto":parts.length?parts[0].method:method,received,(parts.length?parts.filter(part=>part.method==="dinheiro").reduce((sum,part)=>sum+part.amount_cents,0):method==="dinheiro"?received:0)||null,order.id),
       env.DB.prepare(`DELETE FROM order_payments WHERE order_id=?`).bind(order.id)
     ];
-    if(received>0)statements.push(env.DB.prepare(`INSERT INTO order_payments (order_id,method,amount_cents) VALUES (?,?,?)`).bind(order.id,method,received));
+    if(parts.length)for(const part of parts)statements.push(env.DB.prepare(`INSERT INTO order_payments (order_id,method,amount_cents) VALUES (?,?,?)`).bind(order.id,part.method,part.amount_cents));else if(received>0)statements.push(env.DB.prepare(`INSERT INTO order_payments (order_id,method,amount_cents) VALUES (?,?,?)`).bind(order.id,method,received));
     statements.push(env.DB.prepare(`INSERT INTO fiado (branch_id,order_id,customer_name,phone,amount_cents,original_total_cents,original_method,notes) VALUES (?,?,?,?,?,?,?,?)`).bind(order.branch_id||"acailandia",order.id,name,phone,total-received,total,method,clean(body?.notes,300)));
     statements.push(auditStatement(env.DB,"fiado_created","order",order.id,`Pedido ${order.id} fechado com fiado de ${total-received} centavos`,{total_cents:total,received_cents:received,fiado_cents:total-received,payment_method:method}));
     await env.DB.batch(statements);
