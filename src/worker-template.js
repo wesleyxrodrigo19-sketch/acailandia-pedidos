@@ -891,10 +891,9 @@ function ticketText(order, items, target, settings) {
     const createdAt=new Date(`${String(order.created_at).replace(" ","T")}Z`),elapsedMinutes=Number.isNaN(createdAt.getTime())?0:Math.max(0,Math.floor((Date.now()-createdAt.getTime())/60000)),people=Math.max(1,int(order.notes?.match(/Pessoas:\s*(\d+)/)?.[1],1)),attendant=order.notes?.match(/Atendente:\s*([^•]+)/)?.[1]?.trim(),amount=cents=>`R$ ${(Math.max(0,int(cents))/100).toFixed(2).replace(".",",")}`,line="--------------------------------",sao={timeZone:"America/Sao_Paulo"},title=order.table_number?`*** MESA ${String(order.table_number).padStart(2,"0")} ***`:"*** BALCÃO ***",orderDate=Number.isNaN(createdAt.getTime())?"":createdAt.toLocaleString("pt-BR",sao),shownItems=target==="prep"?items.filter(item=>isMilkshakeName(item.product_name)):items,lines=[];
     const itemName=item=>{const weight=item.notes?.match(/Peso:\s*([\d.,]+)\s*g/i);return weight?`${(Number(weight[1].replace(",","."))/1000).toFixed(3).replace(".",",")} ACAI NO KG`:`${item.quantity} ${String(item.product_name||"").toUpperCase()}${item.product_id?` (Cód.: ${item.product_id})`:""}`};
     const detailLines=item=>{const rows=[];for(const option of parseJson(item.complements_json,[]))rows.push(`  - ${String(option.name||"").toUpperCase()}${(option.quantity||1)>1?` x${option.quantity}`:""}`);if(item.notes&&!/Peso:/i.test(item.notes))rows.push(`  OBS: ${item.notes}`);return rows};
-    lines.push(settings.store_name||"Açailandia PE",title,`Pedido Nº: ${order.id}`,orderDate);
-    if(isCustomerReceipt)lines.push(`Cód. interno: #${order.id}`);
+    lines.push(settings.store_name||"Açailandia PE",title,isCustomerReceipt?`+++ Pedido Nº: ${order.id} +++`:`Pedido Nº: ${order.id}`,isCustomerReceipt?`+++ ${orderDate} +++`:orderDate);
     lines.push("");
-    if(attendant&&!isPrep)lines.push(`Atendente: ${attendant}`);
+    
     
     lines.push("","*** ITENS DO PEDIDO ***",line);
     shownItems.forEach(item=>{
@@ -908,10 +907,11 @@ function ticketText(order, items, target, settings) {
       }
     });
     if(isCustomerReceipt){
-      lines.push("Quantidade de itens".padEnd(22)+String(items.reduce((sum,item)=>sum+int(item.quantity),0)).padStart(10),`Subtotal: ${amount(order.subtotal_cents||order.total_cents-order.waiter_fee_cents)}`);
+      lines.push("Quantidade de itens".padEnd(22)+String(items.reduce((sum,item)=>sum+int(item.quantity),0)).padStart(10));
+      if(order.delivery_fee_cents||order.waiter_fee_cents)lines.push(`Subtotal: ${amount(order.subtotal_cents||order.total_cents-order.waiter_fee_cents)}`);
       if(order.delivery_fee_cents)lines.push(`Taxa entrega: ${amount(order.delivery_fee_cents)}`);
       if(order.waiter_fee_cents)lines.push(`Serviço: ${amount(order.waiter_fee_cents)}`);
-      lines.push(`*** TOTAL: ${amount(order.total_cents)} ***`,`Tempo de permanência: ${Math.floor(elapsedMinutes/60)}h ${elapsedMinutes%60}min`,`Qtd de pessoas: ${people}`,`Valor por pessoa: ${amount(Math.round(order.total_cents/people))}`,"",`Fornecido por ${settings.store_name||"Açailandia PE"}`,"*** NÃO É DOCUMENTO FISCAL ***","","");
+      lines.push(`*** TOTAL: ${amount(order.total_cents)} ***`,`+++ Tempo de permanência: ${Math.floor(elapsedMinutes/60)}h ${elapsedMinutes%60}min +++`,`+++ Qtd de pessoas: ${people} +++`,`+++ Valor por pessoa: ${amount(Math.round(order.total_cents/people))} +++`,"","+++ NÃO É DOCUMENTO FISCAL +++");
     }else{
       const now=new Date();
       

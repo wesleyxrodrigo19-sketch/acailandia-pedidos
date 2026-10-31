@@ -180,6 +180,8 @@ assert.match(customerTicket, /R\$ 14,00/);
 assert.match(customerTicket, /ÁGUA MINERAL/);
 assert.match(customerTicket, /Quantidade de itens\s+3/);
 assert.match(customerTicket, /TOTAL: R\$ 48,00/);
+assert.doesNotMatch(customerTicket, /Atendente|Cód\. interno|Fornecido por|Subtotal/);
+assert.match(customerTicket, /\+\+\+ NÃO É DOCUMENTO FISCAL \+\+\+/);
 assert.equal(await asCashier("/api/admin/orders/TEST/reprint", "GET"), 401);
 sql.exec("UPDATE orders SET branch_id='acailandia' WHERE id='TEST'");
 assert.equal(await asCashier("/api/admin/orders/TEST/table-items/1", "PATCH", { action: "identify", label: "Ana" }), 200);
