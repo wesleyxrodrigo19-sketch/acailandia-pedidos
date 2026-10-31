@@ -880,6 +880,22 @@ async function revenueReport(env, url, branchId = "") {
 
 function ticketText(order, items, target, settings) {
   const typeLabel=order.order_type === "delivery" ? "Entrega/Delivery" : order.order_type === "dine_in" ? "Consumir no local" : "Retirada";
+  if(target==="reception"&&order.order_type==="dine_in"&&order.table_number){
+    const createdAt=new Date(`${String(order.created_at).replace(" ","T")}Z`),elapsedMinutes=Number.isNaN(createdAt.getTime())?0:Math.max(0,Math.floor((Date.now()-createdAt.getTime())/60000)),people=Math.max(1,int(order.notes?.match(/Pessoas:\s*(\d+)/)?.[1],1)),attendant=order.notes?.match(/Atendente:\s*([^•]+)/)?.[1]?.trim(),amount=cents=>`R$ ${(Math.max(0,int(cents))/100).toFixed(2).replace(".",",")}`,itemLines=[];
+    for(const item of items){
+      const weight=item.notes?.match(/Peso:\s*([\d.,]+)\s*g/i),name=weight?`${(Number(weight[1].replace(",","."))/1000).toFixed(3).replace(".",",")} ACAI NO KG`:`${item.quantity>1?`${item.quantity}x `:""}${item.product_name}`;
+      itemLines.push(name.padEnd(22)+amount(item.quantity*item.unit_price_cents).padStart(10));
+      for(const option of parseJson(item.complements_json,[]))itemLines.push(`  + ${option.quantity||1}x ${option.name}`);
+      if(item.notes&&!weight)itemLines.push(`  OBS: ${item.notes}`);
+    }
+    const lines=[settings.store_name||"Açailandia PE",`*** MESA ${String(order.table_number).padStart(2,"0")} ***`,`Pedido Nº: ${order.id}`,new Date(`${order.created_at}Z`).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"}),`Cód. interno: #${order.id}`];
+    if(attendant)lines.push(`Atendente: ${attendant}`);
+    lines.push("","*** ITENS DO PEDIDO ***","--------------------------------",...itemLines,"--------------------------------",`Subtotal: ${amount(order.subtotal_cents||order.total_cents-order.waiter_fee_cents)}`);
+    if(order.delivery_fee_cents)lines.push(`Taxa entrega: ${amount(order.delivery_fee_cents)}`);
+    if(order.waiter_fee_cents)lines.push(`Serviço: ${amount(order.waiter_fee_cents)}`);
+    lines.push(`*** TOTAL: ${amount(order.total_cents)} ***`,`Tempo de permanência: ${Math.floor(elapsedMinutes/60)}h ${elapsedMinutes%60}min`,`Qtd de pessoas: ${people}`,`Valor por pessoa: ${amount(Math.round(order.total_cents/people))}`,`Pagamento: ${paymentLabel(order.payment_method)}`,"",`Fornecido por ${settings.store_name||"Açailandia PE"}`,"*** NÃO É DOCUMENTO FISCAL ***","","");
+    return lines.join("\r\n");
+  }
   const lines = [settings.store_name || "Açailandia PE", target === "kitchen" ? "*** COZINHA ***" : "*** CAIXA / RECEPÇÃO ***", `Pedido: ${order.id}`, `Origem: ${order.channel === "online" ? "SITE" : "BALCÃO"}`, `Cliente: ${order.customer_name || "Cliente"}`, `Tipo do pedido: ${typeLabel}`];
   if (order.order_type === "dine_in" && order.table_number) lines.push(`Mesa: ${order.table_number}`);
   if (order.phone) lines.push(`Telefone: ${order.phone}`);
