@@ -173,6 +173,7 @@ const prepTicket = context.ticketText(ticketOrder, ticketItems, "prep", { store_
 assert.match(prepTicket, /MILK 330ML CASA \(Cód\.: 8\)/);
 assert.match(prepTicket, /- AMENDOIM/);
 assert.doesNotMatch(prepTicket, /R\$|Água|ÁGUA/i);
+assert.doesNotMatch(prepTicket, /Atendente|Qtd de pessoas|Impresso em/);
 const customerTicket = context.ticketText(ticketOrder, ticketItems, "customer", { store_name: "Açailandia PE" });
 assert.match(customerTicket, /MESA 06/);
 assert.match(customerTicket, /R\$ 14,00/);

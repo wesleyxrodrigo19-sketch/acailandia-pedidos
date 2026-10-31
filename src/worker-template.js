@@ -894,8 +894,8 @@ function ticketText(order, items, target, settings) {
     lines.push(settings.store_name||"Açailandia PE",title,`Pedido Nº: ${order.id}`,orderDate);
     if(isCustomerReceipt)lines.push(`Cód. interno: #${order.id}`);
     lines.push("");
-    if(attendant)lines.push(`Atendente: ${attendant}`);
-    if(isPrep)lines.push(`Qtd de pessoas: ${people}`);
+    if(attendant&&!isPrep)lines.push(`Atendente: ${attendant}`);
+    
     lines.push("","*** ITENS DO PEDIDO ***",line);
     shownItems.forEach(item=>{
       const name=itemName(item);
@@ -914,7 +914,7 @@ function ticketText(order, items, target, settings) {
       lines.push(`*** TOTAL: ${amount(order.total_cents)} ***`,`Tempo de permanência: ${Math.floor(elapsedMinutes/60)}h ${elapsedMinutes%60}min`,`Qtd de pessoas: ${people}`,`Valor por pessoa: ${amount(Math.round(order.total_cents/people))}`,"",`Fornecido por ${settings.store_name||"Açailandia PE"}`,"*** NÃO É DOCUMENTO FISCAL ***","","");
     }else{
       const now=new Date();
-      lines.push(`Impresso em ${now.toLocaleDateString("pt-BR",{...sao,day:"2-digit",month:"2-digit"})} às ${now.toLocaleTimeString("pt-BR",{...sao,hour12:false})}`,"","");
+      
     }
     return lines.join("\r\n");
   }
