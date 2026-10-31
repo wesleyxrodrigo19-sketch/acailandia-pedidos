@@ -125,3 +125,6 @@
   .table-bill-split-summary strong{font-size:14px}
   .table-bill-split-methods{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+.table-detail-item-with-menu{grid-template-columns:minmax(0,1fr) auto auto;align-items:center}
+.table-detail-item-with-menu .owner-table-item-menu summary{width:30px;height:30px}
+.table-detail-item-with-menu .owner-table-item-menu>div{position:fixed;right:auto}

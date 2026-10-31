@@ -138,7 +138,7 @@ function primeOpsOpenTableItemAction(orderId,item,action,onSaved){
   const content=action==='identify'?`<p>Identifique uma unidade para esta conta. O nome original do produto não será alterado.</p><label class="field"><span>Nome ou identificação</span><input name="label" maxlength="80" value="${esc(item.table_label||'')}" placeholder="Ex.: João ou camisa azul"></label>${Number(item.quantity)>1?'<p class="muted">A identificação será aplicada a uma unidade.</p>':''}`:action==='edit'?`<label class="field"><span>Quantidade</span><input name="quantity" type="number" min="1" max="${item.table_label?'1':'20'}" value="${Number(item.quantity)}" required></label><label class="field"><span>Observação</span><textarea name="notes" maxlength="300" rows="3">${esc(item.notes||'')}</textarea></label>`:`<p><strong>${esc(item.product_name)}</strong>${item.table_label?` · ${esc(item.table_label)}`:''}</p><p>Quantidade: ${Number(item.quantity)} · Valor unitário: ${money(Number(item.unit_price_cents||0))}</p>${choices.length?`<div>${choices.map(choice=>`<p>${esc(choice)}</p>`).join('')}</div>`:'<p class="muted">Nenhum complemento ou observação.</p>'}`;
   const scrim=document.createElement('div');scrim.className='owner-payment-entry-scrim';
   scrim.innerHTML=`<form class="owner-payment-entry owner-table-item-entry" role="dialog" aria-modal="true"><header><h3>${titles[action]}</h3><button type="button" class="icon-btn" data-item-cancel aria-label="Fechar">×</button></header>${content}${isDetails?'<button type="button" class="secondary-btn" data-item-cancel>Voltar</button>':'<button type="submit" class="primary-btn">Salvar</button>'}</form>`;
-  document.querySelector('.owner-rv-payment-drawer, .table-bill-split').append(scrim);
+  (document.querySelector('.owner-rv-payment-drawer, .table-bill-split')||document.body).append(scrim);
   scrim.querySelectorAll('[data-item-cancel]').forEach(button=>button.onclick=()=>scrim.remove());
   if(isDetails)return;
   scrim.querySelector('form').onsubmit=async event=>{
@@ -222,3 +222,40 @@ openPaymentSettlement=async function(orderId){
   }
   return primeOpsOpenTablePayment(orderId);
 };
+
+/* Menu de tres pontos nos itens do painel "Detalhes da comanda" (proprietario e caixa). */
+function primeOpsDecorateTableDetail(){
+  const content=document.querySelector('.table-detail-content'),pay=content?.querySelector('[data-table-pay]');
+  if(!content||!pay)return;
+  const orderId=pay.dataset.tablePay,items=state.admin.orders?.find(entry=>String(entry.id)===String(orderId))?.items||[];
+  content.querySelectorAll('.table-detail-item').forEach((row,index)=>{
+    const item=items[index];
+    if(!item||row.querySelector('.owner-table-item-menu, .table-item-menu'))return;
+    row.classList.add('table-detail-item-with-menu');
+    if(item.table_label)row.querySelector('span')?.insertAdjacentHTML('beforeend',`<small class="owner-table-item-label">${esc(item.table_label)}</small>`);
+    row.insertAdjacentHTML('beforeend',`<details class="owner-table-item-menu"><summary aria-label="Opções de ${esc(item.product_name)}">⋮</summary><div>${[['edit','Editar item'],['identify','Nomear item'],['details','Detalhes do item'],['delete','Excluir item']].map(([action,label])=>`<button type="button" data-detail-item-action="${action}" data-detail-order-id="${esc(orderId)}" data-detail-item-id="${Number(item.id)}">${label}</button>`).join('')}</div></details>`);
+  });
+}
+const primeOpsDetailRenderAdmin=renderAdmin;
+renderAdmin=function(){const result=primeOpsDetailRenderAdmin.apply(this,arguments);primeOpsDecorateTableDetail();return result};
+const primeOpsDetailRenderCashier=renderCashierPanel;
+renderCashierPanel=function(){const result=primeOpsDetailRenderCashier.apply(this,arguments);primeOpsDecorateTableDetail();return result};
+document.addEventListener('toggle',event=>{const menu=event.target;if(!menu.matches?.('.table-detail-item-with-menu .owner-table-item-menu')||!menu.open)return;const box=menu.querySelector('summary').getBoundingClientRect(),list=menu.querySelector('div'),height=list.offsetHeight||150;list.style.left=Math.max(8,box.right-180)+'px';list.style.top=(box.bottom+height+8>innerHeight?Math.max(8,box.top-height-4):box.bottom+4)+'px'},true);
+document.addEventListener('click',async event=>{
+  const button=event.target.closest('[data-detail-item-action]');
+  if(!button){document.querySelectorAll('.table-detail-content details.owner-table-item-menu[open]').forEach(menu=>{if(!menu.contains(event.target))menu.open=false});return}
+  event.preventDefault();event.stopPropagation();
+  const orderId=button.dataset.detailOrderId,action=button.dataset.detailItemAction;
+  button.closest('details').open=false;
+  try{
+    const reload=async()=>{await loadAdminOrders();state.admin.tables=await api('/api/admin/tables');renderAdmin()};
+    const order=state.admin.orders.find(entry=>String(entry.id)===String(orderId)),item=(order?.items||[]).find(entry=>Number(entry.id)===Number(button.dataset.detailItemId));
+    if(!item)return toast('Item não encontrado. Atualize a comanda.');
+    if(action==='delete'){
+      if(!confirm(`Excluir ${item.product_name} da comanda?`))return;
+      await api(`/api/admin/orders/${encodeURIComponent(orderId)}/table-items/${Number(item.id)}`,{method:'PATCH',body:JSON.stringify({action:'delete'})});
+      await reload();toast('Item excluído');return;
+    }
+    primeOpsOpenTableItemAction(orderId,item,action,reload);
+  }catch(error){toast(error.message)}
+},true);
