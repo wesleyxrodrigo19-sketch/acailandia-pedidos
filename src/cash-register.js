@@ -83,3 +83,39 @@ function openCashierOrderDetails(id){
   document.querySelector('[data-close]').onclick=closeLayer;
 }
 document.addEventListener('click',event=>{const button=event.target.closest('[data-order-item-details]');if(!button||!(state.cashier?.orders||[]).some(order=>String(order.id)===String(button.dataset.orderItemDetails)))return;event.preventDefault();event.stopPropagation();openCashierOrderDetails(button.dataset.orderItemDetails)},true);
+
+state.cashier.sidebarCollapsed=localStorage.getItem('jw_cashier_sidebar_collapsed')==='1';
+state.cashier.sidebarOpen=false;
+const cashierLayoutBeforeSidebar=cashierLayout;
+cashierLayout=function(content,title){
+  return cashierLayoutBeforeSidebar(content,title)
+    .replace('<aside class="admin-side">','<aside class="admin-side cashier-side">')
+    .replace('<nav class="admin-nav">','<button class="sidebar-mobile-close" type="button" data-cashier-sidebar-close><span>☰</span> Ocultar menu</button><nav class="admin-nav">')
+    .replace('<header class="admin-topbar"><div><h1>','<header class="admin-topbar"><div class="admin-title-group"><button class="sidebar-toggle" type="button" data-cashier-sidebar-toggle aria-label="Abrir ou ocultar menu"><span></span><span></span><span></span></button><div><h1>')
+    .replace('</span></div><div class="admin-top-actions">','</span></div></div><div class="admin-top-actions">');
+};
+const bindCashierBeforeSidebar=bindCashierV2;
+bindCashierV2=function(){
+  bindCashierBeforeSidebar();
+  const shell=document.querySelector('.cashier-side')?.closest('.admin-shell');
+  if(!shell)return;
+  const toggle=shell.querySelector('[data-cashier-sidebar-toggle]');
+  const sync=()=>{
+    const mobile=matchMedia('(max-width:850px)').matches;
+    shell.classList.toggle('sidebar-collapsed',!mobile&&state.cashier.sidebarCollapsed);
+    shell.classList.toggle('sidebar-open',mobile&&state.cashier.sidebarOpen);
+    toggle.setAttribute('aria-expanded',String(mobile?state.cashier.sidebarOpen:!state.cashier.sidebarCollapsed));
+  };
+  const change=()=>{
+    if(matchMedia('(max-width:850px)').matches)state.cashier.sidebarOpen=!state.cashier.sidebarOpen;
+    else{
+      state.cashier.sidebarCollapsed=!state.cashier.sidebarCollapsed;
+      localStorage.setItem('jw_cashier_sidebar_collapsed',state.cashier.sidebarCollapsed?'1':'0');
+    }
+    sync();
+  };
+  toggle.onclick=change;
+  shell.querySelector('[data-cashier-sidebar-close]').onclick=change;
+  shell.querySelectorAll('[data-cashier-view]').forEach(button=>button.addEventListener('click',()=>{state.cashier.sidebarOpen=false},true));
+  sync();
+};
