@@ -10,6 +10,8 @@ const sidebar = cashRegister.slice(cashRegister.indexOf("state.cashier.sidebarCo
 assert(layout && sidebar.startsWith("state.cashier.sidebarCollapsed="));
 assert.match(css, /\.cashier-side \.admin-nav\{align-content:start\}/);
 assert.match(css, /\.cashier-side \.admin-side-footer \.secondary-btn\{display:flex/);
+assert.match(css, /@media\(min-width:1100px\)\s*\{\s*\.cashier-delivery-orders \.cashier-order-board\{grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
+assert.match(css, /\.cashier-counter-orders \.cashier-order-board\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
 
 let mobile = false;
 const stored = new Map(), classes = new Set(), navHandlers = [];
