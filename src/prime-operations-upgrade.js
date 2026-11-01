@@ -422,10 +422,17 @@ function primeFiadoDecorate(){
   let scheduled=false;
   new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;primeFiadoDecorate()})}).observe(document.body,{childList:true,subtree:true});
 }
-function openOrderFiado(orderId){
+function primeOpsRecordedParts(){
+  const known=['dinheiro','pix','credito','debito'];
+  return [...document.querySelectorAll('.owner-rv-recorded-row')].map(row=>{
+    const method=[...row.querySelectorAll('button')].map(button=>Object.values(button.dataset).find(value=>known.includes(value))).find(Boolean),amount=fiadoCents(row.querySelector('strong')?.textContent);
+    return method&&amount>0?{method,amount_cents:amount}:null;
+  }).filter(Boolean);
+}
+function openOrderFiado(orderId,parts=[]){
   const order=primeOpsFindOrder(orderId);if(!order)return toast('Pedido não encontrado.');
-  const total=Math.max(0,Number(order.total_cents||0));
-  layer(`<div class="drawer-header"><button class="icon-btn" data-close aria-label="Fechar">×</button><div><h2>Fechar com fiado</h2><span class="muted">Pedido ${esc(order.id)} — total ${money(total)}</span></div></div><div class="drawer-content"><div class="field"><label>Forma de pagamento do pedido</label><select id="fiado-method"><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="credito">Cartão de crédito</option><option value="debito">Cartão de débito</option></select></div><div class="field"><label>Valor recebido agora (R$)</label><input id="fiado-received" inputmode="decimal" value="0,00"><small id="fiado-owed"></small></div><div class="field"><label>Cliente</label><input id="fiado-name" maxlength="100" value="${esc(order.customer_name||'')}"></div><div class="field"><label>WhatsApp do cliente</label><input id="fiado-phone" inputmode="tel" maxlength="30" value="${esc(order.phone||'')}"></div><div class="field"><label>Observação</label><input id="fiado-notes" maxlength="300"></div></div><div class="drawer-footer"><button class="primary-btn full" id="fiado-confirm">Fechar pedido e registrar fiado</button></div>`,'drawer');
+  const total=Math.max(0,Number(order.total_cents||0)),alreadyPaid=parts.reduce((sum,part)=>sum+part.amount_cents,0);
+  layer(`<div class="drawer-header"><button class="icon-btn" data-close aria-label="Fechar">×</button><div><h2>Fechar com fiado</h2><span class="muted">Pedido ${esc(order.id)} — total ${money(total)}</span></div></div><div class="drawer-content">${alreadyPaid?`<div class="field"><label>Já pago</label><input id="fiado-received" value="${(alreadyPaid/100).toFixed(2).replace('.',',')}" readonly><small id="fiado-owed"></small></div>`:`<div class="field"><label>Forma de pagamento do pedido</label><select id="fiado-method"><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="credito">Cartão de crédito</option><option value="debito">Cartão de débito</option></select></div><div class="field"><label>Valor recebido agora (R$)</label><input id="fiado-received" inputmode="decimal" value="0,00"><small id="fiado-owed"></small></div>`}<div class="field"><label>Cliente</label><input id="fiado-name" maxlength="100" value="${esc(order.customer_name||'')}"></div><div class="field"><label>WhatsApp do cliente</label><input id="fiado-phone" inputmode="tel" maxlength="30" value="${esc(order.phone||'')}"></div><div class="field"><label>Observação</label><input id="fiado-notes" maxlength="300"></div></div><div class="drawer-footer"><button class="primary-btn full" id="fiado-confirm">Fechar pedido e registrar fiado</button></div>`,'drawer');
   document.querySelector('[data-close]').onclick=closeLayer;
   const owed=()=>Math.max(0,total-fiadoCents($('#fiado-received').value)),sync=()=>{$('#fiado-owed').textContent=`Cliente fica devendo: ${money(owed())}`};
   $('#fiado-received').oninput=sync;sync();
@@ -434,14 +441,15 @@ function openOrderFiado(orderId){
     if(received>=total)return toast('O valor recebido deve ser menor que o total do pedido.');
     button.disabled=true;
     try{
-      await api(`/api/admin/orders/${encodeURIComponent(order.id)}/fiado`,{method:'POST',body:JSON.stringify({payment_method:$('#fiado-method').value,received_cents:received,customer_name:$('#fiado-name').value.trim(),phone:$('#fiado-phone').value.trim(),notes:$('#fiado-notes').value.trim()})});
+      const payload=alreadyPaid?{payment_method:(parts.find(part=>part.method==='dinheiro')||parts[0]).method,payments:parts}:{payment_method:$('#fiado-method').value,received_cents:received};
+      await api(`/api/admin/orders/${encodeURIComponent(order.id)}/fiado`,{method:'POST',body:JSON.stringify({...payload,customer_name:$('#fiado-name').value.trim(),phone:$('#fiado-phone').value.trim(),notes:$('#fiado-notes').value.trim()})});
       closeLayer();
       await Promise.allSettled([loadAdminOrders(),fiadoInCashier()?refreshCashier():Promise.resolve(),api('/api/admin/tables').then(tables=>{state.admin.tables=tables})]);
       fiadoRerender();toast('Pedido fechado e fiado registrado');
     }catch(error){toast(error.message);button.disabled=false}
   };
 }
-document.addEventListener('click',event=>{const button=event.target.closest('[data-order-fiado]');if(!button)return;event.preventDefault();event.stopPropagation();openOrderFiado(button.dataset.orderFiado)},true);
+document.addEventListener('click',event=>{const button=event.target.closest('[data-order-fiado]');if(!button)return;event.preventDefault();event.stopPropagation();openOrderFiado(button.dataset.orderFiado,button.closest('.owner-rv-payment-head')?primeOpsRecordedParts():[])},true);
 
 // Abre sempre o cardápio público no domínio oficial, em nova aba.
 document.addEventListener("click",event=>{
