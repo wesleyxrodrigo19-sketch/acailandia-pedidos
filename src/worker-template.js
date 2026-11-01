@@ -897,17 +897,68 @@ async function revenueReport(env, url, branchId = "") {
 
 function isMilkshakeName(name) { return /milk\s?-?shake|^milk\b/i.test(String(name || "")); }
 
+function bridgeInstaller(settings, siteOrigin) {
+  const connector = bridgeScript(settings, siteOrigin), bytes = new TextEncoder().encode(connector);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  const payload = btoa(bin).replace(/.{1,76}/g, "$&\r\n").trimEnd();
+  const psLines = [
+    "$ErrorActionPreference = 'Stop'",
+    "$dir = Join-Path $env:LOCALAPPDATA 'AcailandiaImpressora'",
+    "New-Item -ItemType Directory -Force -Path $dir | Out-Null",
+    "$ps1 = Join-Path $dir 'conector-impressao.ps1'",
+    "Get-CimInstance Win32_Process -Filter \"Name='powershell.exe'\" | Where-Object { $_.CommandLine -like '*AcailandiaImpressora*conector-impressao.ps1*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }",
+    "Start-Sleep -Seconds 1",
+    "$b64 = @'",
+    payload,
+    "'@",
+    "$bytes = [Convert]::FromBase64String(($b64 -replace '\\s', ''))",
+    "$bom = [byte[]](0xEF, 0xBB, 0xBF)",
+    "[IO.File]::WriteAllBytes($ps1, [byte[]]($bom + $bytes))",
+    "$vbs = Join-Path $dir 'iniciar-oculto.vbs'",
+    "$vbsText = 'CreateObject(\"WScript.Shell\").Run \"powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"\"' + $ps1 + '\"\"\", 0, False'",
+    "[IO.File]::WriteAllText($vbs, $vbsText, [Text.Encoding]::Unicode)",
+    "$startup = [Environment]::GetFolderPath('Startup')",
+    "$shell = New-Object -ComObject WScript.Shell",
+    "$link = $shell.CreateShortcut((Join-Path $startup 'Impressora Acailandia.lnk'))",
+    "$link.TargetPath = Join-Path $env:WINDIR 'System32\\wscript.exe'",
+    "$link.Arguments = '\"' + $vbs + '\"'",
+    "$link.WorkingDirectory = $dir",
+    "$link.WindowStyle = 7",
+    "$link.Save()",
+    "Start-Process -FilePath (Join-Path $env:WINDIR 'System32\\wscript.exe') -ArgumentList ('\"' + $vbs + '\"')",
+    "Write-Host ''",
+    "Write-Host 'Instalado com sucesso.' -ForegroundColor Green",
+    "Write-Host 'O conector ja esta rodando em segundo plano (oculto) e vai iniciar sozinho quando o Windows ligar.'",
+    "Write-Host ('Pasta: ' + $dir)",
+  ];
+  const batLines = [
+    "@echo off",
+    "title Instalador da impressora Acailandia",
+    "echo Instalando o conector de impressao...",
+    "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$s=[IO.File]::ReadAllText('%~f0',[Text.Encoding]::UTF8);$i=$s.IndexOf('#PS1'+'START');Invoke-Expression $s.Substring($i)\"",
+    "echo.",
+    "pause",
+    "exit /b",
+    "#PS1START",
+    ...psLines,
+    "",
+  ];
+  return batLines.join("\r\n");
+}
+
 function ticketText(order, items, target, settings) {
   const typeLabel=order.order_type === "delivery" ? "Entrega/Delivery" : order.order_type === "dine_in" ? "Consumir no local" : "Retirada";
   const isCustomerReceipt=target==="customer",isPrep=target==="prep"||(target==="reception"&&order.channel==="counter"&&Boolean(order.table_number));
   if(isCustomerReceipt||isPrep){
-    const createdAt=new Date(`${String(order.created_at).replace(" ","T")}Z`),elapsedMinutes=Number.isNaN(createdAt.getTime())?0:Math.max(0,Math.floor((Date.now()-createdAt.getTime())/60000)),people=Math.max(1,int(order.notes?.match(/Pessoas:\s*(\d+)/)?.[1],1)),attendant=order.notes?.match(/Atendente:\s*([^•]+)/)?.[1]?.trim(),amount=cents=>`R$ ${(Math.max(0,int(cents))/100).toFixed(2).replace(".",",")}`,line="--------------------------------",sao={timeZone:"America/Sao_Paulo"},title=order.table_number?`*** MESA ${String(order.table_number).padStart(2,"0")}${order.table_name?` (${String(order.table_name).toUpperCase()})`:""} ***`:"*** BALCÃO ***",orderDate=Number.isNaN(createdAt.getTime())?"":createdAt.toLocaleString("pt-BR",sao),shownItems=target==="prep"?items.filter(item=>isMilkshakeName(item.product_name)):items,lines=[];
+    const createdAt=new Date(`${String(order.created_at).replace(" ","T")}Z`),elapsedMinutes=Number.isNaN(createdAt.getTime())?0:Math.max(0,Math.floor((Date.now()-createdAt.getTime())/60000)),people=Math.max(1,int(order.notes?.match(/Pessoas:\s*(\d+)/)?.[1],1)),attendant=order.notes?.match(/Atendente:\s*([^•]+)/)?.[1]?.trim(),amount=cents=>`R$ ${(Math.max(0,int(cents))/100).toFixed(2).replace(".",",")}`,line="--------------------------------",sao={timeZone:"America/Sao_Paulo"},title=order.table_number?`*** MESA ${String(order.table_number).padStart(2,"0")} ***`:"*** BALCÃO ***",orderDate=Number.isNaN(createdAt.getTime())?"":createdAt.toLocaleString("pt-BR",sao),shownItems=target==="prep"?items.filter(item=>isMilkshakeName(item.product_name)):items,lines=[];
     const itemName=item=>{const weight=item.notes?.match(/Peso:\s*([\d.,]+)\s*g/i);return weight?`${(Number(weight[1].replace(",","."))/1000).toFixed(3).replace(".",",")} ACAI NO KG`:`${item.quantity} ${String(item.product_name||"").toUpperCase()}${item.product_id?` (Cód.: ${item.product_id})`:""}`};
     const detailLines=item=>{const rows=[];for(const option of parseJson(item.complements_json,[]))rows.push(`  - ${option.group_id==="flavor_extra"?"EXTRA ":""}${String(option.name||"").toUpperCase()}${(option.quantity||1)>1?` x${option.quantity}`:""}`);if(item.notes&&!/Peso:/i.test(item.notes))rows.push(`  OBS: ${item.notes}`);return rows};
     lines.push(...(isCustomerReceipt?[]:[settings.store_name||"Açailandia PE"]),title,isCustomerReceipt?`+++ Pedido Nº: ${order.id} +++`:`Pedido Nº: ${order.id}`,isCustomerReceipt?`+++ ${orderDate} +++`:orderDate);
-    lines.push("");
-    
-    
+    const wrap32=(label,text)=>{const out=[];let cur="";for(let word of `${label}${String(text).trim()}`.split(/\s+/)){while(word.length>32){if(cur){out.push(cur);cur=""}out.push(word.slice(0,32));word=word.slice(32)}if(!cur)cur=word;else if((cur+" "+word).length<=32)cur+=" "+word;else{out.push(cur);cur=word}}if(cur)out.push(cur);return out};
+    const customerLabel=String(order.customer_name||"").trim(),hasCustomer=customerLabel&&!/^(mesa\s*\d*|balc[aã]o|cliente)$/i.test(customerLabel);
+    if(order.table_name)lines.push(...wrap32("Local: ",String(order.table_name).toUpperCase()));
+    if(hasCustomer)lines.push(...wrap32("Cliente: ",customerLabel.toUpperCase()));
     lines.push("","*** ITENS DO PEDIDO ***",line);
     shownItems.forEach(item=>{
       const name=itemName(item);
@@ -923,7 +974,7 @@ function ticketText(order, items, target, settings) {
       if(order.delivery_fee_cents||order.waiter_fee_cents)lines.push(`Subtotal: ${amount(order.subtotal_cents||order.total_cents-order.waiter_fee_cents)}`);
       if(order.delivery_fee_cents)lines.push(`Taxa entrega: ${amount(order.delivery_fee_cents)}`);
       if(order.waiter_fee_cents)lines.push(`Serviço: ${amount(order.waiter_fee_cents)}`);
-      lines.push("Total".padEnd(22)+amount(order.total_cents).padStart(10),`+++ Tempo de permanência: ${Math.floor(elapsedMinutes/60)}h ${elapsedMinutes%60}min +++`,`+++ Qtd de pessoas: ${people} +++`,`+++ Valor por pessoa: ${amount(Math.round(order.total_cents/people))} +++`,"","+++ NÃO É DOCUMENTO FISCAL +++");
+      lines.push("Total".padEnd(22)+amount(order.total_cents).padStart(10),`+++ Qtd de pessoas: ${people} +++`,`+++ Valor por pessoa: ${amount(Math.round(order.total_cents/people))} +++`,"","+++ NÃO É DOCUMENTO FISCAL +++");
     }else{
       const now=new Date();
       
@@ -1755,6 +1806,11 @@ async function api(request, env, url) {
     const settings = await env.DB.prepare(`SELECT * FROM settings WHERE id=1`).first();
     if (!settings.print_bridge_key || (!settings.reception_printer && !settings.kitchen_printer)) return json({ error:"Configure a chave e pelo menos uma impressora antes de baixar." },400);
     return new Response(bridgeScript(settings,url.origin),{headers:{"content-type":"text/plain; charset=utf-8","content-disposition":"attachment; filename=conector-impressao-acaiteria.ps1","cache-control":"no-store"}});
+  }
+  if (url.pathname === "/api/admin/print-bridge-installer.bat" && request.method === "GET") {
+    const settings = await env.DB.prepare(`SELECT * FROM settings WHERE id=1`).first();
+    if (!settings.print_bridge_key || (!settings.reception_printer && !settings.kitchen_printer)) return json({ error:"Configure a chave e pelo menos uma impressora antes de baixar." },400);
+    return new Response(bridgeInstaller(settings,url.origin),{headers:{"content-type":"application/octet-stream","content-disposition":"attachment; filename=Instalar-Impressora-Acailandia.bat","cache-control":"no-store"}});
   }
   if (url.pathname === "/api/admin/fiado-message" && request.method === "PATCH") {
     const body = await readJson(request),message = String(body?.fiado_message ?? "").replace(/\r\n/g, "\n").trim().slice(0, 1000);
