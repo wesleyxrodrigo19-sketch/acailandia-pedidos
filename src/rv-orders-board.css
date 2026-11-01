@@ -1,0 +1,55 @@
+.rv-orders-wrap{display:flex;flex-direction:column;gap:10px}
+.rv-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.rv-toolbar .counter-orders-tabs{margin:0}
+.rv-orders{display:grid;grid-template-columns:minmax(230px,.85fr) minmax(250px,.95fr) minmax(340px,1.3fr);height:calc(100vh - 170px);min-height:430px;background:#fff;border:1px solid #e3e6ea;border-radius:12px;overflow:hidden}
+.rv-col{display:flex;flex-direction:column;min-height:0;border-right:1px solid #e3e6ea}
+.rv-col h3{margin:0;padding:10px 14px;font-size:13px;font-weight:700;color:#4b5563;background:#f8f9fa;border-bottom:1px solid #e3e6ea;display:flex;justify-content:space-between}
+.rv-col h3 span{background:#e5e7eb;border-radius:999px;padding:0 8px;font-size:12px}
+.rv-col-scroll{flex:1;overflow:auto;min-height:0}
+.rv-empty{display:grid;place-items:center;min-height:120px;padding:20px;text-align:center;color:#6b7280;font-size:14px}
+.rv-row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;padding:9px 12px;border:0;border-bottom:1px solid #eceff2;border-left:4px solid transparent;background:#fff;text-align:left;cursor:pointer;font:inherit}
+.rv-row:hover{background:#f6f7f9}
+.rv-row.selected{background:#e8ebee;border-left-color:#65a30d}
+.rv-row.st-novo{border-left-color:#f59e0b}
+.rv-row.st-concluido{border-left-color:#16a34a}
+.rv-row.st-cancelado{border-left-color:#dc2626}
+.rv-avatar{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#7c7f86;color:#fff;font-size:19px}
+.rv-avatar.big{width:46px;height:46px}
+.rv-main{display:flex;flex-direction:column;min-width:0;font-size:13px;color:#374151}
+.rv-main strong{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rv-main strong small{font-weight:400;color:#6b7280;font-size:12px}
+.rv-side{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:12px;color:#4b5563}
+.rv-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:700;white-space:nowrap}
+.rv-badge.st-novo,.rv-status-bar.st-novo{background:#fde68a;color:#78350f}
+.rv-badge.st-confirmado,.rv-badge.st-preparando,.rv-status-bar.st-confirmado,.rv-status-bar.st-preparando{background:#bfdbfe;color:#1e3a8a}
+.rv-badge.st-pronto,.rv-status-bar.st-pronto{background:#a3e635;color:#1a2e05}
+.rv-badge.st-saiu_entrega,.rv-status-bar.st-saiu_entrega{background:#c7d2fe;color:#312e81}
+.rv-badge.st-concluido,.rv-status-bar.st-concluido{background:#22c55e;color:#fff}
+.rv-badge.st-cancelado,.rv-status-bar.st-cancelado{background:#fecaca;color:#7f1d1d}
+.rv-detail{display:flex;flex-direction:column;min-height:0;min-width:0}
+.rv-detail-head{display:flex;align-items:center;gap:12px;padding:12px 14px}
+.rv-detail-head>div:nth-child(2){flex:1;display:flex;flex-direction:column;min-width:0}
+.rv-detail-head strong{font-size:16px}
+.rv-detail-head span{font-size:12px;color:#6b7280}
+.rv-detail-tools{display:flex;gap:6px}
+.rv-icon-btn{width:36px;height:36px;border:1px solid #d9dde2;border-radius:8px;background:#fff;font-size:17px;cursor:pointer}
+.rv-icon-btn:hover{background:#f3f4f6}
+.rv-status-bar{padding:7px 14px;text-align:center;font-weight:700;font-size:14px}
+.rv-status-bar small{font-weight:400}
+.rv-detail-body{flex:1;overflow:auto;min-height:0;padding:12px 14px}
+.rv-chips{display:flex;gap:8px;margin-bottom:10px}
+.rv-chips span{display:flex;gap:8px;align-items:center;border:1px solid #d9dde2;border-radius:6px;padding:4px 10px;font-size:13px}
+.rv-chips small{color:#6b7280}
+.rv-detail-body .order-card{border:0;box-shadow:none;padding:0;margin:0;background:transparent}
+.rv-detail-body .order-card-head,.rv-detail-body .source-tag{display:none}
+.rv-detail-body .order-customer{font-size:15px}
+.rv-detail-foot{padding:10px 14px;border-top:1px solid #e3e6ea;background:#fff}
+.rv-next-btn{width:100%;padding:12px;border:0;border-radius:8px;background:#1d4ed8;color:#fff;font-weight:700;font-size:14px;letter-spacing:.3px;cursor:pointer}
+.rv-next-btn:hover{background:#1e40af}
+.rv-next-btn:disabled{opacity:.6;cursor:wait}
+@media (max-width:980px){
+  .rv-orders{grid-template-columns:1fr;height:auto}
+  .rv-col{border-right:0;border-bottom:1px solid #e3e6ea}
+  .rv-col-scroll{max-height:300px}
+  .rv-detail-body{overflow:visible}
+}
