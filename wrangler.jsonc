@@ -11,12 +11,6 @@
       "migrations_dir": "drizzle-acailandia"
     }
   ],
-  "r2_buckets": [
-    {
-      "binding": "MEDIA",
-      "bucket_name": "acailandia-product-images"
-    }
-  ],
   "observability": {
     "enabled": true
   }
