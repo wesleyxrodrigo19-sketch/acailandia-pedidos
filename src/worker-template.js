@@ -30,8 +30,8 @@ const ACAILANDIA_PRODUCT_SEED=[
   [17,"Bebidas","Água mineral com gás","Água mineral com gás.",400,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1916005/thumb_c319d4c0image-removebg-preview_1_cbdc38fa-89cd-44e0-a4dd-4338ba6123c7.png",0,0,16],
   [18,"Monte seu pote","Monte seu pote 500 g","Escolha seus 5 complementos favoritos grátis e deixe seu açaí do jeitinho que você gosta. Tudo preparado junto, em camadas, em uma única embalagem.",4290,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834985/thumb_5d21a0ebIMG_2937.png",1,0,17],
   [19,"Monte seu pote","Monte seu pote 1 kg","Escolha seus 5 complementos favoritos grátis e deixe seu açaí do jeitinho que você gosta. Tudo preparado junto, em camadas, em uma única embalagem.",6890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834985/thumb_5d21a0ebIMG_2937.png",1,0,18],
-  [20,"Copos trufados","Copo trufado 300 ml","Escolha o sabor: Sensação, Surpresinha de Uva, Brownie, Cookies Oreo, Ouro Branco, Ninhotella, Kit Kat Especial ou Ovomaltine Black.",3190,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",1,0,19],
-  [21,"Copos trufados","Copo trufado 400 ml","Escolha o sabor: Sensação, Surpresinha de Uva, Brownie, Cookies Oreo, Ouro Branco, Ninhotella, Kit Kat Especial ou Ovomaltine Black.",3490,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",1,0,20],
+  [20,"Copos trufados","Copo trufado 300 ml","Escolha 1 dos 8 sabores disponíveis. Sabores feitos com açaí trufado, calda e acompanhamentos conforme a receita.",1890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",1,0,19],
+  [21,"Copos trufados","Copo trufado 400 ml","Escolha 1 dos 8 sabores disponíveis. Sabores feitos com açaí trufado, calda e acompanhamentos conforme a receita.",2390,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",1,0,20],
   [22,"Açaí na garrafa","Açaí na garrafa 300 ml","Escolha um sabor com mousse ou uma versão trufada.",2000,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1723792/thumb_306440ebIMG_6071.jpeg",0,0,21],
   [23,"Açaí na garrafa","Açaí na garrafa 500 ml","Escolha um sabor com mousse ou uma versão trufada.",2400,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1723902/thumb_694c4ebeIMG_6071.jpeg",0,0,22]
 ];
@@ -560,7 +560,7 @@ async function counterOrderItems(env, body, settings) {
     : (body?.self_service?[body.self_service]:[]);
   for(const entry of selfServiceEntries){
     const grams=Math.max(0,int(entry?.grams)),capturedAt=clean(entry?.captured_at,40),manual=bool(entry?.manual);
-    const capturedMs=Date.parse(capturedAt);
+    const hasTimezone=/(?:Z|[+-]\d{2}:?\d{2})$/i.test(capturedAt),normalizedAt=hasTimezone?capturedAt:(capturedAt.includes("T")?`${capturedAt}Z`:`${capturedAt.replace(" ","T")}Z`),capturedMs=Date.parse(normalizedAt);
     if(!grams||grams>30000)throw new Error("Peso do self-service inválido.");
     if(!manual&&(!capturedAt||!Number.isFinite(capturedMs)||capturedMs>Date.now()+60000))throw new Error("A leitura da balança é inválida. Pese novamente o self-service.");
     const pricePerKg=Math.max(1,int(settings.self_service_price_per_kg_cents||3000)),totalCents=Math.round(grams*pricePerKg/1000);
@@ -1309,7 +1309,7 @@ async function api(request, env, url) {
     const cashReceived=paymentStatus==="pago"&&cashDue>0?(body?.cash_received_cents==null?cashDue:Math.max(0,int(body.cash_received_cents))):null;
     if(paymentStatus==="pago"&&cashDue>0&&cashReceived<cashDue)return json({error:"O valor informado deve ser igual ou maior que a parte em dinheiro."},400);
     const change=paymentStatus==="pago"&&cashDue>0?cashReceived-cashDue:null;
-    const statements=[env.DB.prepare(`UPDATE orders SET payment_status=?,payment_method=?,total_cents=?,discount_cents=?,discount_type=?,employee_discount=?,employee_id=?,employee_name=?,payroll_debit=?,cash_received_cents=?,change_for_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND branch_id=?`).bind(paymentStatus,method,total,discountCents,discountType,isEmployee?1:0,employee?.id||null,employee?.name||"",method==="folha"?1:0,cashReceived,change,cashierPayment[1],branch),env.DB.prepare(`DELETE FROM order_payments WHERE order_id=?`).bind(cashierPayment[1])];
+    const statements=[env.DB.prepare(`UPDATE orders SET payment_status=?,status=CASE WHEN ?="pago" AND channel=\'counter\' AND table_number IS NOT NULL THEN \'concluido\' ELSE status END,payment_method=?,total_cents=?,discount_cents=?,discount_type=?,employee_discount=?,employee_id=?,employee_name=?,payroll_debit=?,cash_received_cents=?,change_for_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND branch_id=?`).bind(paymentStatus,paymentStatus,method,total,discountCents,discountType,isEmployee?1:0,employee?.id||null,employee?.name||"",method==="folha"?1:0,cashReceived,change,cashierPayment[1],branch),env.DB.prepare(`DELETE FROM order_payments WHERE order_id=?`).bind(cashierPayment[1])];
     if(paymentStatus==="pago"&&requestedPayments.length)for(const payment of requestedPayments)statements.push(env.DB.prepare(`INSERT INTO order_payments (order_id,method,amount_cents) VALUES (?,?,?)`).bind(order.id,payment.method,payment.amount_cents));
     statements.push(auditStatement(env.DB,paymentStatus==="pago"?"cashier_payment_received":"cashier_payment_reopened","order",cashierPayment[1],paymentStatus==="pago"?`Caixa recebeu pagamento do pedido ${cashierPayment[1]}`:`Caixa reabriu pagamento do pedido ${cashierPayment[1]}`,{branch_id:branch,payment_method:method,payments:requestedPayments,discount_cents:discountCents,discount_type:discountType,employee_discount:isEmployee,cash_received_cents:cashReceived,change_for_cents:change}));
     await env.DB.batch(statements);
@@ -1344,6 +1344,7 @@ async function api(request, env, url) {
     const sub=orderRoute?.[2]||"";
     const allowed=Boolean(branch)&&(
       (method==="GET"&&new Set(["/api/admin/orders","/api/admin/tables","/api/admin/products"]).has(path))||
+      (method==="PATCH"&&path==="/api/admin/store-availability")||
       (method==="POST"&&path==="/api/admin/orders")||
       (method==="GET"&&path==="/api/admin/fiado")||
       (method==="POST"&&(/^\/api\/admin\/fiado\/\d+\/pay$/.test(path)||path==="/api/admin/acai-complements"))||
@@ -1450,7 +1451,7 @@ async function api(request, env, url) {
     try {
       const body=await readJson(request),order=await env.DB.prepare(`SELECT id,table_number,status FROM orders WHERE id=?`).bind(tableNameRoute[1]).first();
       if(!order||!order.table_number||order.status==="concluido"||order.status==="cancelado")return json({error:"A mesa precisa estar aberta para ser renomeada."},400);
-      const name=clean(body.table_name,20);
+      const name=clean(body.table_name,80);
       await env.DB.prepare(`UPDATE orders SET table_name=? WHERE id=?`).bind(name||null,order.id).run();
       let customer=null;
       if(typeof body.customer_name==='string'&&clean(body.customer_name,100)){customer=clean(body.customer_name,100);await env.DB.prepare(`UPDATE orders SET customer_name=? WHERE id=?`).bind(customer,order.id).run()}
@@ -1458,7 +1459,7 @@ async function api(request, env, url) {
     } catch (error) { return json({ error: error.message || "Não foi possível renomear a mesa." }, 400); }
   }
   if (url.pathname === "/api/admin/orders" && request.method === "POST") {
-    try { const body=await readJson(request);if(!(await isAdmin(request,env)))body.branch_id=await cashierBranch(request,env);const created=await createOrder(env,body,"counter");const tableName=clean(body.table_name,20);if(tableName&&created?.id)await env.DB.prepare(`UPDATE orders SET table_name=? WHERE id=? AND table_number IS NOT NULL`).bind(tableName,created.id).run();return json(created, 201); }
+    try { const body=await readJson(request);if(!(await isAdmin(request,env)))body.branch_id=await cashierBranch(request,env);const created=await createOrder(env,body,"counter");const tableName=clean(body.table_name,80);if(tableName&&created?.id)await env.DB.prepare(`UPDATE orders SET table_name=? WHERE id=? AND table_number IS NOT NULL`).bind(tableName,created.id).run();return json(created, 201); }
     catch (error) { return json({ error: error.message || "Não foi possível criar o pedido." }, 400); }
   }
   const orderDetails = url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/details$/);
@@ -1600,7 +1601,7 @@ async function api(request, env, url) {
       ) THEN 1 ELSE 0 END`).bind(order.id,order.total_cents,order.status,order.table_number,order.cash_received_cents??null,order.change_for_cents??null,itemSnapshot,itemSnapshot,splitSnapshot,splitSnapshot,previousCash),
       env.DB.prepare(`DELETE FROM table_item_mutation_guard`),
       env.DB.prepare(`INSERT INTO order_bill_splits (id,order_id,customer_name,items_json,total_cents) VALUES (?,?,?,?,?)`).bind(splitId,order.id,customerName,JSON.stringify(safeItems),amountCents),
-      env.DB.prepare(`UPDATE orders SET payment_status=?,payment_method=?,cash_received_cents=?,change_for_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(fullyPaid?"pago": "aberto",method,cashPaid?cashReceivedTotal:order.cash_received_cents,cashPaid?changeTotal:order.change_for_cents,order.id),
+      env.DB.prepare(`UPDATE orders SET payment_status=?,status=CASE WHEN ?=1 AND channel=\'counter\' AND table_number IS NOT NULL THEN \'concluido\' ELSE status END,payment_method=?,cash_received_cents=?,change_for_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(fullyPaid?"pago": "aberto",fullyPaid?1:0,method,cashPaid?cashReceivedTotal:order.cash_received_cents,cashPaid?changeTotal:order.change_for_cents,order.id),
       auditStatement(env.DB,"table_bill_split_paid","order",order.id,`Divisão de conta paga na comanda ${order.id}`,{split_id:splitId,customer_name:customerName,items:safeItems,total_cents:amountCents,payments,cash_received_cents:cashReceived||null})
     ];
     for(const payment of payments)statements.push(env.DB.prepare(`INSERT INTO order_payments (order_id,method,amount_cents) VALUES (?,?,?)`).bind(order.id,payment.method,payment.amount_cents));
@@ -1697,7 +1698,7 @@ async function api(request, env, url) {
     if (paymentStatus === "pago" && requestedPayments.length && requestedPayments.reduce((sum,payment)=>sum+payment.amount_cents,0) !== total) return json({ error:"As formas de pagamento devem somar exatamente o total da conta." },400);
     if (paymentStatus === "pago" && cashDue > 0 && cashReceived < cashDue) return json({ error:"O valor informado deve ser igual ou maior que a parte em dinheiro." },400);
     const change = paymentStatus === "pago" && cashDue > 0 ? cashReceived - cashDue : null;
-    const statements = [env.DB.prepare(`UPDATE orders SET payment_status=?,payment_method=?,waiter_fee_cents=?,total_cents=?,discount_cents=?,discount_type=?,employee_discount=?,cash_received_cents=?,change_for_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(paymentStatus,method,waiterFee,total,discountCents,discountType,isEmployee?1:0,cashReceived,change,orderPayment[1]),env.DB.prepare(`DELETE FROM order_payments WHERE order_id=?`).bind(orderPayment[1])];
+    const statements = [env.DB.prepare(`UPDATE orders SET payment_status=?,status=CASE WHEN ?="pago" AND channel=\'counter\' AND table_number IS NOT NULL THEN \'concluido\' ELSE status END,payment_method=?,waiter_fee_cents=?,total_cents=?,discount_cents=?,discount_type=?,employee_discount=?,cash_received_cents=?,change_for_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(paymentStatus,paymentStatus,method,waiterFee,total,discountCents,discountType,isEmployee?1:0,cashReceived,change,orderPayment[1]),env.DB.prepare(`DELETE FROM order_payments WHERE order_id=?`).bind(orderPayment[1])];
     if (paymentStatus === "pago" && requestedPayments.length) for (const payment of requestedPayments) statements.push(env.DB.prepare(`INSERT INTO order_payments (order_id,method,amount_cents) VALUES (?,?,?)`).bind(orderPayment[1],payment.method,payment.amount_cents));
     await env.DB.batch(statements);
     await auditStatement(env.DB,paymentStatus==="pago"?"payment_received":"payment_reopened","order",order.id,paymentStatus==="pago"?`Pagamento do pedido ${order.id} recebido`:`Pagamento do pedido ${order.id} deixado em aberto`,{ payment_method:method,total_cents:total,waiter_fee_cents:waiterFee,discount_cents:discountCents,discount_type:discountType,employee_discount:isEmployee,payments:requestedPayments }).run();

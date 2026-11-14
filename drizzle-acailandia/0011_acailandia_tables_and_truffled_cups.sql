@@ -1,0 +1,4 @@
+-- Define 10 mesas como padrão e corrige os dois copos trufados do cardápio Açailandia.
+UPDATE settings SET table_count=10, updated_at=CURRENT_TIMESTAMP WHERE id=1;
+UPDATE products SET price_cents=1890, description='Escolha 1 dos 8 sabores disponíveis. Selecione o copo de 300 ml.', enable_flavors=1, flavors_json='["Sensação","Surpresinha de Uva","Brownie Trufado","Cookies Oreo","Ouro Branco","Ninhotella","Kit Kat Especial","Ovomaltine Black"]', updated_at=CURRENT_TIMESTAMP WHERE id=20;
+UPDATE products SET price_cents=2390, description='Escolha 1 dos 8 sabores disponíveis. Selecione o copo de 400 ml.', enable_flavors=1, flavors_json='["Sensação","Surpresinha de Uva","Brownie Trufado","Cookies Oreo","Ouro Branco","Ninhotella","Kit Kat Especial","Ovomaltine Black"]', updated_at=CURRENT_TIMESTAMP WHERE id=21;
