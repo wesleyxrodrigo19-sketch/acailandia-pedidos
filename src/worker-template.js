@@ -422,7 +422,7 @@ function storeAvailability(settings, now = new Date()) {
   return { is_open:scheduled&&!manual,scheduled_open:scheduled,manual_closed:manual,manual_closed_reason:clean(settings.manual_closed_reason,160),business_hours:hours,today };
 }
 
-async function normalizeOrderItems(db, requestedItems) {
+async function normalizeOrderItems(db, requestedItems, { tableMilkshakeExtras = false } = {}) {
   if (!Array.isArray(requestedItems) || !requestedItems.length || requestedItems.length > 50) throw new Error("Adicione ao menos um produto.");
   const requested = requestedItems.map(item => ({
     product_id: int(item?.product_id),
@@ -443,8 +443,10 @@ async function normalizeOrderItems(db, requestedItems) {
     const selectedCatalogIds=parseJson(product.selected_complement_ids_json,[]).map(Number).filter(Number.isFinite);
     for(const option of centralComplements){if(selectedCatalogIds.length&&!selectedCatalogIds.includes(Number(option.id)))continue;if(selectedCatalogIds.length||allowed.has(String(option.name).toLocaleLowerCase("pt-BR")))addAllowed({name:option.name,group_id:option.group_id,price_cents:option.group_id==="extra"?int(option.price_cents):0,max_quantity:1})}
     const flavors=cleanFlavors(product.flavors_json),selectedFlavorIds=new Set(centralComplements.filter(option=>String(option.group_id).startsWith("flavor")&&(!selectedCatalogIds.length||selectedCatalogIds.includes(Number(option.id)))).map(option=>String(option.name).toLocaleLowerCase("pt-BR")));
-    if(bool(product.enable_flavors))for(const flavor of flavors){const key=flavor.toLocaleLowerCase("pt-BR");if(!selectedCatalogIds.length||selectedFlavorIds.has(key))addAllowed({name:flavor,group_id:"flavor",price_cents:0,max_quantity:1})}
+    if(bool(product.enable_flavors)||tableMilkshakeExtras&&isMilkshakeName(product.name))for(const flavor of flavors){const key=flavor.toLocaleLowerCase("pt-BR");if(!selectedCatalogIds.length||selectedFlavorIds.has(key))addAllowed({name:flavor,group_id:"flavor",price_cents:0,max_quantity:1})}
     if([12,13,14,15].includes(int(product.id)))for(const option of [...allowed.values()].filter(option=>option.group_id==="flavor"))addAllowed({...option,group_id:"flavor_extra",price_cents:200,max_quantity:1});
+    const tableMilkshake=tableMilkshakeExtras&&isMilkshakeName(product.name);
+    if(tableMilkshake)for(const option of [...allowed.values()].filter(option=>option.group_id==="flavor"))addAllowed({...option,group_id:"flavor_extra",price_cents:200,max_quantity:1});
     const selected = [];
     for (const raw of item.complements.slice(0, 20)) {
       const name=clean(raw?.name,80).toLocaleLowerCase("pt-BR"),group=clean(raw?.group_id,20),option=allowed.get(group?`${group}|${name}`:name);
@@ -452,10 +454,10 @@ async function normalizeOrderItems(db, requestedItems) {
       const quantity = Math.max(1, Math.min(option.max_quantity, int(raw?.quantity, 1)));
       selected.push({ name:option.name, group_id:option.group_id, price_cents:option.price_cents, quantity });
     }
-    const productId=int(product.id),groupCount=group=>selected.filter(option=>option.group_id===group).length,productRules={1:{size:[1,1]},3:{size:[1,1]},4:{size:[1,1]},5:{size:[1,1]},6:{cream:[1,1],rv_topping:[0,3]},7:{cream:[1,1],rv_topping:[0,3]},8:{size:[1,1],cream:[1,1],rv_topping:[0,5]},9:{size:[1,1],cream:[1,1]},10:{size:[1,1],cream:[1,1]},11:{size:[1,1],flavor:[1,3]},12:{flavor:[1,2],flavor_extra:[0,3]},13:{flavor:[1,2],flavor_extra:[0,3]},14:{flavor:[1,2],flavor_extra:[0,3]},15:{flavor:[1,2],flavor_extra:[0,3]},18:{rv_topping:[0,5]},19:{rv_topping:[0,5]}},rules=productRules[productId]||{};
+    const productId=int(product.id),groupCount=group=>selected.filter(option=>option.group_id===group).length,productRules={1:{size:[1,1]},3:{size:[1,1]},4:{size:[1,1]},5:{size:[1,1]},6:{cream:[1,1],rv_topping:[0,3]},7:{cream:[1,1],rv_topping:[0,3]},8:{size:[1,1],cream:[1,1],rv_topping:[0,5]},9:{size:[1,1],cream:[1,1]},10:{size:[1,1],cream:[1,1]},11:{size:[1,1],flavor:[1,3]},12:{flavor:[1,2],flavor_extra:[0,3]},13:{flavor:[1,2],flavor_extra:[0,3]},14:{flavor:[1,2],flavor_extra:[0,3]},15:{flavor:[1,2],flavor_extra:[0,3]},18:{rv_topping:[0,5]},19:{rv_topping:[0,5]}},rules=tableMilkshake?{flavor_extra:[0,5]}:(productRules[productId]||{});
     for(const [group,[minimum,maximum]] of Object.entries(rules)){const count=groupCount(group);if(count<minimum||count>maximum)throw new Error(`${product.name}: selecione ${minimum===maximum?`exatamente ${minimum}`:`de ${minimum} a ${maximum}`} opção(ões) em ${group==="rv_topping"?"Acompanhamentos grátis":group==="size"?"Tamanho":group==="cream"?"Açaí ou creme":group==="flavor"?"Sabores":group==="flavor_extra"?"Sabores extras":group}.`)}
     const extraLimit=[6,7,10,11,18,19].includes(productId)?10:20;if(bool(product.enable_acai_extras)&&selected.filter(option=>option.group_id==="extra").length>extraLimit)throw new Error(`${product.name}: escolha no máximo ${extraLimit} extras.`);
-    const requiresFlavor=bool(product.enable_flavors),selectedFlavor=selected.find(option=>option.group_id==="flavor");
+    const requiresFlavor=!tableMilkshake&&bool(product.enable_flavors),selectedFlavor=selected.find(option=>option.group_id==="flavor");
     if(requiresFlavor&&(!flavors.length||!selectedFlavor))throw new Error(`Escolha um sabor válido para ${product.name}.`);
     const additions = selected.reduce((sum, option) => sum + option.price_cents * option.quantity, 0);
     // Garrafinhas trufadas e milk shakes têm sabor obrigatório, mas o sabor já
@@ -554,7 +556,7 @@ async function cashierBranch(request,env){
 
 async function counterOrderItems(env, body, settings) {
   const requestedItems=Array.isArray(body?.items)?body.items:[];
-  const items = requestedItems.length ? await normalizeOrderItems(env.DB,requestedItems) : [];
+  const items = requestedItems.length ? await normalizeOrderItems(env.DB,requestedItems,{tableMilkshakeExtras:body?.order_type==="dine_in"&&int(body?.table_number)>0}) : [];
   const selfServiceEntries=Array.isArray(body?.self_service_items)
     ? body.self_service_items
     : (body?.self_service?[body.self_service]:[]);
@@ -761,7 +763,7 @@ async function updateOrderItems(env, orderId, body) {
   if (!order) throw new Error("Pedido não encontrado.");
   if (order.status === "cancelado") throw new Error("Não é possível editar um pedido cancelado.");
   if(await env.DB.prepare(`SELECT id FROM order_bill_splits WHERE order_id=? LIMIT 1`).bind(orderId).first())throw new Error("NÃ£o Ã© possÃ­vel alterar os itens depois que a conta comeÃ§ou a ser dividida.");
-  let items = await normalizeOrderItems(env.DB, body?.items);
+  let items = await normalizeOrderItems(env.DB, body?.items,{tableMilkshakeExtras:order.channel==="counter"&&order.order_type==="dine_in"&&int(order.table_number)>0});
   if (Array.isArray(body?.self_service_items)) {
     const settings = await env.DB.prepare(`SELECT self_service_price_per_kg_cents FROM settings WHERE id=1`).first();
     const weighted = await counterOrderItems(env, { items:[], self_service_items:body.self_service_items }, settings);
