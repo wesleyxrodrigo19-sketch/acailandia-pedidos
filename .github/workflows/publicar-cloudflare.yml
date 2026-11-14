@@ -43,6 +43,13 @@ jobs:
       - name: Gerar aplicação
         run: npm run build
 
+      - name: Preparar armazenamento R2 das imagens
+        run: |
+          bucket_list="$(npx wrangler r2 bucket list)"
+          if ! grep -Fq "acailandia-product-images" <<< "$bucket_list"; then
+            npx wrangler r2 bucket create acailandia-product-images
+          fi
+
       - name: Aplicar migrações aditivas no banco remoto
         run: npx wrangler d1 migrations apply acailandia-pedidos-db --remote
 
