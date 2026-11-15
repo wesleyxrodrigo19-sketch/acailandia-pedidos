@@ -514,7 +514,7 @@ document.addEventListener('click',async event=>{
   button.disabled=true;
   try{
     await api(`/api/admin/orders/${encodeURIComponent(button.dataset.tableRename)}/table-name`,{method:'PATCH',body:JSON.stringify({table_name:value.trim()})});
-    state.admin.tables=await api('/api/admin/tables');await loadAdminOrders();renderAdmin();toast('Nome da mesa atualizado');
+    const tableNumber=document.querySelector('.table-tile.selected')?.dataset.tableSelect||state.admin.selectedTableNumber,table=(state.admin.tables?.tables||[]).find(item=>String(item.number)===String(tableNumber)),order=state.admin.orders.find(item=>String(item.id)===String(button.dataset.tableRename));if(table)table.table_name=value.trim();if(order)order.table_name=value.trim();renderAdmin();toast('Nome da mesa atualizado');Promise.all([api('/api/admin/tables'),loadAdminOrders()]).then(([tables])=>{state.admin.tables=tables;renderAdmin()}).catch(()=>{});
   }catch(error){toast(error.message);button.disabled=false}
 },true);
 
