@@ -1,3 +1,4 @@
+Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 const APP_HTML = __APP_HTML__;
 const APP_CSS = __APP_CSS__;
 const APP_JS = __APP_JS__;
@@ -1801,7 +1802,15 @@ async function api(request, env, url) {
     } catch (error) { return json({ error:error.message || "Não foi possível cadastrar o produto." },400); }
   }
   const product = url.pathname.match(/^\/api\/admin\/products\/(\d+)$/);
-  if (product && request.method === "DELETE") {\n    const current=await env.DB.prepare(`SELECT id,name FROM products WHERE id=?`).bind(product[1]).first();\n    if(!current)return json({error:"Produto não encontrado."},404);\n    await env.DB.prepare(`UPDATE products SET is_available=0,is_featured=0,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(product[1]).run();\n    await auditStatement(env.DB,"product_deleted","product",product[1],`Produto ${current.name} excluído do cardápio`,{}).run();\n    await clearCatalogCache();\n    return json({ok:true});\n  }\n  if (product && request.method === "PATCH") {
+  if (product && request.method === "DELETE") {
+    const current=await env.DB.prepare(`SELECT id,name FROM products WHERE id=?`).bind(product[1]).first();
+    if(!current)return json({error:"Produto não encontrado."},404);
+    await env.DB.prepare(`UPDATE products SET is_available=0,is_featured=0,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(product[1]).run();
+    await auditStatement(env.DB,"product_deleted","product",product[1],`Produto ${current.name} excluído do cardápio`,{}).run();
+    await clearCatalogCache();
+    return json({ok:true});
+  }
+  if (product && request.method === "PATCH") {
     const current = await env.DB.prepare(`SELECT * FROM products WHERE id=?`).bind(product[1]).first();
     if (!current) return json({ error: "Produto não encontrado." }, 404);
     try {
@@ -1898,4 +1907,5 @@ export default {
     }
   }
 };
+
 
