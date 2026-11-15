@@ -1801,12 +1801,21 @@ async function api(request, env, url) {
   }
   const product = url.pathname.match(/^\/api\/admin\/products\/(\d+)$/);
   if (product && request.method === "DELETE") {
-    const current=await env.DB.prepare(`SELECT id,name FROM products WHERE id=?`).bind(product[1]).first();
+    const current=await env.DB.prepare(`SELECT id,name,category,price_cents FROM products WHERE id=?`).bind(product[1]).first();
     if(!current)return json({error:"Produto não encontrado."},404);
-    await env.DB.prepare(`UPDATE products SET is_available=0,is_featured=0,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(product[1]).run();
-    await auditStatement(env.DB,"product_deleted","product",product[1],`Produto ${current.name} excluído do cardápio`,{}).run();
-    await clearCatalogCache();
-    return json({ok:true});
+    try {
+      // Preserve historical order line snapshots while unlinking the product FK.
+      await env.DB.batch([
+        env.DB.prepare(`UPDATE order_items SET product_id=NULL WHERE product_id=?`).bind(product[1]),
+        env.DB.prepare(`DELETE FROM product_fiscal WHERE product_id=?`).bind(product[1]),
+        env.DB.prepare(`DELETE FROM products WHERE id=?`).bind(product[1])
+      ]);
+      await auditStatement(env.DB,"product_deleted","product",product[1],`Produto ${current.name} excluído`,{name:current.name,category:current.category,price_cents:current.price_cents}).run();
+      await clearCatalogCache();
+      return json({ok:true,id:Number(product[1]),name:current.name});
+    } catch (error) {
+      return json({error:error.message || "Não foi possível excluir o produto."},400);
+    }
   }
   if (product && request.method === "PATCH") {
     const current = await env.DB.prepare(`SELECT * FROM products WHERE id=?`).bind(product[1]).first();
