@@ -74,3 +74,5 @@
 .truffled-flavor-description{margin:12px 0;padding:12px 14px;border-radius:10px;background:#f5f3f8;color:#4d4654;font-size:14px;line-height:1.5}
 
 .table-management-scroll{overflow:auto}.table-management-grid{width:100%;border-collapse:collapse;min-width:980px}.table-management-grid th,.table-management-grid td{padding:12px 10px;border-bottom:1px solid #e4e4e7;text-align:left;white-space:nowrap}.table-management-grid th{font-size:12px;color:#666;letter-spacing:.03em}.table-management-grid td:last-child{white-space:nowrap}
+
+.tables-summary{grid-template-columns:repeat(4,minmax(0,1fr))}.table-card.open-slot{background:#f0fdf4;border-color:#a7f3c3}@media(max-width:620px){.tables-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}

@@ -16,8 +16,8 @@ const ACAILANDIA_PRODUCT_SEED=[
   [3,"Copos promocionais","Copo 2","Açaí, leite em pó, leite condensado e morango. Escolha o tamanho no pedido.",1890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834910/thumb_3b6e2c3666562f5f-ed57-4e5a-9ffc-3091de05fde0.jpeg",1,1,2],
   [4,"Copos promocionais","Copo 3","Açaí, leite condensado, morango e paçoca. Escolha o tamanho no pedido.",1890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834908/thumb_0415a4adIMG_3050.png",1,1,3],
   [5,"Copos promocionais","Copo 4","Açaí intercalado de creme de ninho, leite em pó e morango. Escolha o tamanho no pedido.",1890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",1,1,4],
-  [6,"Monte seu combo pote","Combo açaí 500 ml","Escolha 1 creme, até 3 complementos grátis e até 10 extras pagos. Itens enviados separadamente para preservar a textura.",3990,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",1,0,5],
-  [7,"Monte seu combo pote","Combo açaí 1000 ml","Escolha 1 creme, até 3 complementos grátis e até 10 extras pagos. Itens enviados separadamente para preservar a textura.",5490,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",1,0,6],
+  [6,"Monte seu combo pote","Combo açaí 500 ml","Escolha 1 creme, até 3 complementos grátis e até 10 extras pagos. Itens enviados separadamente para preservar a textura.",3990,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1853820/thumb_ea3096e4fc47c3c4-bd03-4369-8a1f-8be92962a6f4.jpeg",1,0,5],
+  [7,"Monte seu combo pote","Combo açaí 1000 ml","Escolha 1 creme, até 3 complementos grátis e até 10 extras pagos. Itens enviados separadamente para preservar a textura.",5490,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1862255/thumb_559f13d6fc47c3c4-bd03-4369-8a1f-8be92962a6f4.jpeg",1,0,6],
   [8,"Monte seu açaí no copo","Monte seu copo","Escolha o tamanho, 1 creme e até 5 complementos grátis.",2590,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1587239/thumb_05da6f30IMG_2688.jpeg",1,0,7],
   [9,"Potes individuais","Pote de açaí","A partir de R$ 29,90. Escolha seu tamanho e complementos.",2990,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834987/thumb_d75f19e5IMG_3039.png",0,0,8],
   [10,"Potes individuais","Pote de creme","A partir de R$ 28,90. Escolha seu tamanho e sabor.",2890,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png",0,0,9],
@@ -35,6 +35,18 @@ const ACAILANDIA_PRODUCT_SEED=[
   [22,"Açaí na garrafa","Açaí na garrafa 300 ml","Escolha um sabor com mousse ou uma versão trufada.",2000,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1723792/thumb_306440ebIMG_6071.jpeg",0,0,21],
   [23,"Açaí na garrafa","Açaí na garrafa 500 ml","Escolha um sabor com mousse ou uma versão trufada.",2400,null,"https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1723902/thumb_694c4ebeIMG_6071.jpeg",0,0,22]
 ];
+
+const ACAILANDIA_TRUFFLED_CUPS=[
+  ["Sensação","Trufado com calda de Nutella, acompanhado de leite em pó, leite condensado e morangos. Finalizado com Nutella e morangos."],
+  ["Surpresinha de Uva","Trufado com calda de Ninho, acompanhado de leite em pó, leite condensado e uvas. Finalizado com Ninho e uvas."],
+  ["Brownie Trufado","Trufado com calda de Nutella, acompanhado de leite em pó, leite condensado e brownie. Finalizado com brownie e morangos."],
+  ["Cookies Oreo","Trufado com calda de Cookies, acompanhado de leite em pó, leite condensado e pedaços de Oreo. Finalizado com morangos e Oreo."],
+  ["Ouro Branco","Trufado com calda de Ninho, acompanhado de leite em pó, leite condensado e Ouro Branco. Finalizado com Ninho e Ouro Branco."],
+  ["Ninhotella","Trufado com calda de Nutella e Ninho, acompanhado de leite em pó, leite condensado e morangos. Finalizado com Ninho, Nutella e morangos."],
+  ["Kit Kat Especial","Trufado com calda de Nutella, acompanhado de leite em pó, leite condensado e Kit Kat. Finalizado com Nutella e Kit Kat."],
+  ["Ovomaltine Black","Trufado com calda de Nutella, acompanhado de leite em pó, leite condensado e Ovomaltine. Finalizado com Nutella, Ovomaltine e Choco Power Black."]
+];
+const TRUFFLED_CUP_SIZES=[{name:"300 ml",price_cents:0,max_quantity:1,group_id:"size"},{name:"400 ml",price_cents:500,max_quantity:1,group_id:"size"}];
 
 const ACAILANDIA_COMPLEMENT_SEED=[
   [3,[{name:"300 ml",price_cents:0,max_quantity:1,group_id:"size"},{name:"400 ml",price_cents:500,max_quantity:1,group_id:"size"}]],
@@ -199,6 +211,10 @@ async function seed(db) {
     VALUES (?,?,?,?,?,?,?,?,?,1,?)`).bind(...p));
   await db.batch(statements);
   await db.batch(ACAILANDIA_PRODUCT_SEED.map(p => db.prepare(`UPDATE products SET image_url=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(p[6],p[0])));
+  const truffledCupImage="https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png";
+  await db.batch(ACAILANDIA_TRUFFLED_CUPS.map(([name,description],index)=>db.prepare(`INSERT INTO products (category,name,description,price_cents,old_price_cents,image_url,is_featured,is_promo,is_available,sort_order,complements_json,enable_acai_complements,enable_acai_extras,enable_flavors,flavors_json,selected_complement_ids_json) SELECT 'Copos trufados',?,?,1890,NULL,?,0,0,1,?, ?,0,0,0,'[]','[]' WHERE NOT EXISTS (SELECT 1 FROM products WHERE category='Copos trufados' AND name=?)`).bind(name,description,truffledCupImage,24+index,JSON.stringify(TRUFFLED_CUP_SIZES),name)));
+  await db.batch(ACAILANDIA_TRUFFLED_CUPS.map(([name,description])=>db.prepare(`UPDATE products SET description=?,price_cents=1890,complements_json=?,enable_acai_complements=0,enable_acai_extras=0,enable_flavors=0,flavors_json='[]',updated_at=CURRENT_TIMESTAMP WHERE category='Copos trufados' AND name=?`).bind(description,JSON.stringify(TRUFFLED_CUP_SIZES),name)));
+  await db.prepare(`UPDATE products SET is_available=0,enable_flavors=0,flavors_json='[]',updated_at=CURRENT_TIMESTAMP WHERE id IN (20,21)`).run();
   await db.prepare(`UPDATE products SET image_gallery_json=? WHERE id=8 AND image_gallery_json='[]'`).bind(JSON.stringify([
     "https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1587239/thumb_05da6f30IMG_2688.jpeg",
     "https://storage.googleapis.com/prod-cardapio-web/uploads/item_image/image/64601/thumb_710ddf8270f25d9d-dc3b-46db-922d-f796c2575165.jpeg"
@@ -432,7 +448,7 @@ async function normalizeOrderItems(db, requestedItems) {
   })).filter(item => item.product_id);
   const ids = [...new Set(requested.map(item => item.product_id))];
   if (!ids.length) throw new Error("Pedido sem produtos válidos.");
-  const found = await db.prepare(`SELECT id,name,price_cents,is_available,complements_json,enable_acai_complements,enable_acai_extras,enable_flavors,flavors_json,selected_complement_ids_json FROM products WHERE id IN (${ids.map(() => "?").join(",")})`).bind(...ids).all();
+  const found = await db.prepare(`SELECT id,name,category,price_cents,is_available,complements_json,enable_acai_complements,enable_acai_extras,enable_flavors,flavors_json,selected_complement_ids_json FROM products WHERE id IN (${ids.map(() => "?").join(",")})`).bind(...ids).all();
   const products = new Map(found.results.map(product => [int(product.id), product]));
   if (products.size !== ids.length || [...products.values()].some(product => !product.is_available)) throw new Error("Um produto do pedido não está disponível.");
   const centralComplements=(await db.prepare(`SELECT id,name,price_cents,group_id,is_active FROM acai_complements WHERE is_active=1`).all()).results||[];
@@ -452,7 +468,7 @@ async function normalizeOrderItems(db, requestedItems) {
       const quantity = Math.max(1, Math.min(option.max_quantity, int(raw?.quantity, 1)));
       selected.push({ name:option.name, group_id:option.group_id, price_cents:option.price_cents, quantity });
     }
-    const productId=int(product.id),groupCount=group=>selected.filter(option=>option.group_id===group).length,productRules={1:{size:[1,1]},3:{size:[1,1]},4:{size:[1,1]},5:{size:[1,1]},6:{cream:[1,1],rv_topping:[0,3]},7:{cream:[1,1],rv_topping:[0,3]},8:{size:[1,1],cream:[1,1],rv_topping:[0,5]},9:{size:[1,1],cream:[1,1]},10:{size:[1,1],cream:[1,1]},11:{size:[1,1],flavor:[1,3]},12:{flavor:[1,2],flavor_extra:[0,3]},13:{flavor:[1,2],flavor_extra:[0,3]},14:{flavor:[1,2],flavor_extra:[0,3]},15:{flavor:[1,2],flavor_extra:[0,3]},18:{rv_topping:[0,5]},19:{rv_topping:[0,5]}},rules=productRules[productId]||{};
+    const productId=int(product.id),groupCount=group=>selected.filter(option=>option.group_id===group).length,productRules={1:{size:[1,1]},3:{size:[1,1]},4:{size:[1,1]},5:{size:[1,1]},6:{cream:[1,1],rv_topping:[0,3]},7:{cream:[1,1],rv_topping:[0,3]},8:{size:[1,1],cream:[1,1],rv_topping:[0,5]},9:{size:[1,1],cream:[1,1]},10:{size:[1,1],cream:[1,1]},11:{size:[1,1],flavor:[1,3]},12:{flavor:[1,2],flavor_extra:[0,3]},13:{flavor:[1,2],flavor_extra:[0,3]},14:{flavor:[1,2],flavor_extra:[0,3]},15:{flavor:[1,2],flavor_extra:[0,3]},18:{rv_topping:[0,5]},19:{rv_topping:[0,5]}},rules=product.category==="Copos trufados"?{size:[1,1]}:(productRules[productId]||{});
     for(const [group,[minimum,maximum]] of Object.entries(rules)){const count=groupCount(group);if(count<minimum||count>maximum)throw new Error(`${product.name}: selecione ${minimum===maximum?`exatamente ${minimum}`:`de ${minimum} a ${maximum}`} opção(ões) em ${group==="rv_topping"?"Acompanhamentos grátis":group==="size"?"Tamanho":group==="cream"?"Açaí ou creme":group==="flavor"?"Sabores":group==="flavor_extra"?"Sabores extras":group}.`)}
     const extraLimit=[6,7,10,11,18,19].includes(productId)?10:20;if(bool(product.enable_acai_extras)&&selected.filter(option=>option.group_id==="extra").length>extraLimit)throw new Error(`${product.name}: escolha no máximo ${extraLimit} extras.`);
     const requiresFlavor=bool(product.enable_flavors),selectedFlavor=selected.find(option=>option.group_id==="flavor");
@@ -750,9 +766,11 @@ async function tableBoard(env) {
   const maxActive = occupied.reduce((max, order) => Math.max(max, int(order.table_number)), 0);
   const count = Math.max(0, Math.min(200, Math.max(int(settings?.table_count), maxActive)));
   const byNumber = new Map(occupied.map(order => [int(order.table_number), order]));
-  return { table_count: count, occupied_count: occupied.length, available_count: Math.max(0, count - occupied.length), tables: Array.from({ length: count }, (_, index) => {
+  const openTableCount=Math.min(10,count);
+  const availableCount=Math.max(0,count-openTableCount-occupied.filter(order=>int(order.table_number)>openTableCount).length);
+  return { table_count: count, open_table_count:openTableCount, occupied_count: occupied.length, available_count: availableCount, tables: Array.from({ length: count }, (_, index) => {
     const number = index + 1, order = byNumber.get(number);
-    return order ? { number, occupied: true, order_id: order.id, status: order.status, customer_name: order.customer_name, created_at: order.created_at, table_name: order.table_name || "" } : { number, occupied: false };
+    return order ? { number, occupied: true, open_slot:number<=openTableCount, order_id: order.id, status: order.status, customer_name: order.customer_name, created_at: order.created_at, table_name: order.table_name || "" } : { number, occupied: false, open_slot:number<=openTableCount };
   }) };
 }
 
