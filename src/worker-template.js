@@ -1366,6 +1366,7 @@ async function api(request, env, url) {
     await env.DB.prepare(`UPDATE print_jobs SET status=?,attempts=attempts+1,printed_at=CASE WHEN ?='printed' THEN CURRENT_TIMESTAMP ELSE printed_at END,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(status,status,printJob[1]).run();
     return json({ ok:true });
   }
+  if(url.pathname==="/api/admin/session"&&request.method==="GET"){if(!(await isAdmin(request,env)))return json({error:"Acesso não autorizado."},401);return json({ok:true})}
   if (url.pathname.startsWith("/api/admin/") && !(await isAdmin(request, env))) {
     const branch=await cashierBranch(request,env),method=request.method,path=url.pathname;
     const orderRoute=path.match(/^\/api\/admin\/orders\/([^/]+)(?:\/(details|items|table-items\/\d+|bill-splits|payment|cancel|reprint|print-receipt|fiado|table-name))?$/);
