@@ -203,16 +203,18 @@ async function proxyImage(requestUrl) {
 async function seed(db) {
   await ensureOperationalColumns(db);
   await ensurePrimeOperationsSchema(db);
+  await db.prepare(`CREATE TABLE IF NOT EXISTS deleted_products (product_id INTEGER PRIMARY KEY,category TEXT NOT NULL,name TEXT NOT NULL,deleted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();
   await db.prepare(`INSERT OR IGNORE INTO settings (id) VALUES (1)`).run();
   const settings=await db.prepare(`SELECT delivery_neighborhood_fees_json FROM settings WHERE id=1`).first();
   if (!deliveryRules(settings?.delivery_neighborhood_fees_json).length) await db.prepare(`UPDATE settings SET delivery_neighborhood_fees_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=1`).bind(JSON.stringify(DEFAULT_DELIVERY_FEES)).run();
-  const statements = ACAILANDIA_PRODUCT_SEED.map(p => db.prepare(`INSERT OR IGNORE INTO products
+  const deletedIds=new Set(((await db.prepare(`SELECT product_id FROM deleted_products`).all()).results||[]).map(row=>Number(row.product_id)));
+  const statements = ACAILANDIA_PRODUCT_SEED.filter(p=>!deletedIds.has(Number(p[0]))).map(p => db.prepare(`INSERT OR IGNORE INTO products
     (id,category,name,description,price_cents,old_price_cents,image_url,is_featured,is_promo,is_available,sort_order)
     VALUES (?,?,?,?,?,?,?,?,?,1,?)`).bind(...p));
   await db.batch(statements);
   await db.batch(ACAILANDIA_PRODUCT_SEED.map(p => db.prepare(`UPDATE products SET image_url=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(p[6],p[0])));
   const truffledCupImage="https://storage.googleapis.com/prod-cardapio-web/uploads/item/image/1834914/thumb_d235dde0IMG_3049.png";
-  await db.batch(ACAILANDIA_TRUFFLED_CUPS.map(([name,description],index)=>db.prepare(`INSERT INTO products (category,name,description,price_cents,old_price_cents,image_url,is_featured,is_promo,is_available,sort_order,complements_json,enable_acai_complements,enable_acai_extras,enable_flavors,flavors_json,selected_complement_ids_json) SELECT 'Copos trufados',?,?,1890,NULL,?,0,0,1,?, ?,0,0,0,'[]','[]' WHERE NOT EXISTS (SELECT 1 FROM products WHERE category='Copos trufados' AND name=?)`).bind(name,description,truffledCupImage,24+index,JSON.stringify(TRUFFLED_CUP_SIZES),name)));
+  await db.batch(ACAILANDIA_TRUFFLED_CUPS.map(([name,description],index)=>db.prepare(`INSERT INTO products (category,name,description,price_cents,old_price_cents,image_url,is_featured,is_promo,is_available,sort_order,complements_json,enable_acai_complements,enable_acai_extras,enable_flavors,flavors_json,selected_complement_ids_json) SELECT 'Copos trufados',?,?,1890,NULL,?,0,0,1,?, ?,0,0,0,'[]','[]' WHERE NOT EXISTS (SELECT 1 FROM products WHERE category='Copos trufados' AND name=?) AND NOT EXISTS (SELECT 1 FROM deleted_products WHERE category='Copos trufados' AND name=?)`).bind(name,description,truffledCupImage,24+index,JSON.stringify(TRUFFLED_CUP_SIZES),name,name)));
   await db.batch(ACAILANDIA_TRUFFLED_CUPS.map(([name,description])=>db.prepare(`UPDATE products SET description=?,price_cents=1890,complements_json=?,enable_acai_complements=0,enable_acai_extras=0,enable_flavors=0,flavors_json='[]',updated_at=CURRENT_TIMESTAMP WHERE category='Copos trufados' AND name=?`).bind(description,JSON.stringify(TRUFFLED_CUP_SIZES),name)));
   await db.prepare(`UPDATE products SET is_available=0,enable_flavors=0,flavors_json='[]',updated_at=CURRENT_TIMESTAMP WHERE id IN (20,21)`).run();
   await db.prepare(`UPDATE products SET image_gallery_json=? WHERE id=8 AND image_gallery_json='[]'`).bind(JSON.stringify([
@@ -1804,8 +1806,10 @@ async function api(request, env, url) {
     const current=await env.DB.prepare(`SELECT id,name,category,price_cents FROM products WHERE id=?`).bind(product[1]).first();
     if(!current)return json({error:"Produto não encontrado."},404);
     try {
-      // Preserve historical order line snapshots while unlinking the product FK.
+      // Tombstone the product before deletion so startup seeds cannot recreate it.
+      await env.DB.prepare(`CREATE TABLE IF NOT EXISTS deleted_products (product_id INTEGER PRIMARY KEY,category TEXT NOT NULL,name TEXT NOT NULL,deleted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();
       await env.DB.batch([
+        env.DB.prepare(`INSERT OR IGNORE INTO deleted_products (product_id,category,name) VALUES (?,?,?)`).bind(product[1],current.category,current.name),
         env.DB.prepare(`UPDATE order_items SET product_id=NULL WHERE product_id=?`).bind(product[1]),
         env.DB.prepare(`DELETE FROM product_fiscal WHERE product_id=?`).bind(product[1]),
         env.DB.prepare(`DELETE FROM products WHERE id=?`).bind(product[1])
