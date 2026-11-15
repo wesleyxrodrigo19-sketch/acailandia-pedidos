@@ -29,6 +29,12 @@ renderAdmin=function(){
   if(state.admin.view==="tables"&&!tableSlotsEnsureFailed&&state.admin.tables?.tables?.some(table=>table.open_slot&&!table.occupied))queueMicrotask(()=>ensureOpenTableCommands().catch(error=>{tableSlotsEnsureFailed=true;toast(error.message)}));
   return result;
 };
+const tableOperationsBaseRenderCashierPanel=renderCashierPanel;
+renderCashierPanel=function(){
+  const result=tableOperationsBaseRenderCashierPanel();
+  if(typeof cashierTablesActive==="function"&&cashierTablesActive()&&!tableSlotsEnsureFailed&&state.admin.tables?.tables?.some(table=>table.open_slot&&!table.occupied))queueMicrotask(()=>ensureOpenTableCommands().catch(error=>{tableSlotsEnsureFailed=true;toast(error.message)}));
+  return result;
+};
 const tableOperationsBaseBoard=tablesBoardMarkup;
 function tablesBoardMarkup(data,{admin=false}={}){
   if(!admin)return tableOperationsBaseBoard(data,{admin});
