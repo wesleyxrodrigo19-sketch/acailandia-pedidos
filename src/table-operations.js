@@ -5,7 +5,7 @@ function tableOrderPaid(order){return order?.payment_status==='pago'?tableOrderT
 function tableOrderStarted(order){if(!order?.created_at)return "Agora";const elapsed=Math.max(0,Math.floor((Date.now()-new Date(`${String(order.created_at).replace(' ','T')}Z`).getTime())/60000));return elapsed<1?"Agora":`${elapsed} min`}
 function tableFilterButton(value,label,count,filter){return `<button type="button" class="table-filter ${filter===value?'active':''}" data-table-filter="${value}"><strong>${count}</strong><span>${label}</span></button>`}
 const tableOperationsBaseRenderAdmin=renderAdmin;
-let tableSlotsEnsurePromise=null,tableSlotsEnsureFailed=false;
+let tableSlotsEnsurePromise=null,tableSlotsEnsureFailed=false;const tableItemSavesInFlight=new Set();
 let tableOperationsFinalizingPaymentId=null;
 function createFixedTableCommand(number){
   const tableNumber=Number(number),label=`Mesa ${String(tableNumber).padStart(2,"0")}`;
@@ -96,7 +96,37 @@ function tableItemPickerMarkup(orderId,category='Todas',query=''){
   $('#overlay [data-table-picker-self-service]').onclick=event=>addSelfServiceFromScale({button:event.currentTarget,cart:state.admin.editOrderCart,onAdded:()=>{const active=document.querySelector('[data-table-picker-category].active')?.dataset.tablePickerCategory||category;tableItemPickerMarkup(orderId,active,$('#table-picker-search')?.value||'')},onCancelled:()=>tableItemPickerMarkup(orderId,category,query)});
   document.querySelectorAll('[data-table-picker-qty]').forEach(button=>button.onclick=()=>{updateQty(button.dataset.tablePickerKey,Number(button.dataset.tablePickerQty),state.admin.editOrderCart);tableItemPickerMarkup(orderId,category,query)});
   document.querySelectorAll('[data-table-picker-remove-key]').forEach(button=>button.onclick=()=>{state.admin.editOrderCart=state.admin.editOrderCart.filter(item=>item.key!==button.dataset.tablePickerRemoveKey);tableItemPickerMarkup(orderId,category,query)});
-  $('#table-picker-save').onclick=async buttonEvent=>{const button=buttonEvent.currentTarget;button.disabled=true;try{const cart=state.admin.editOrderCart||[],items=cart.filter(item=>!item.selfService).map(item=>({product_id:item.product.id,quantity:item.quantity,complements:item.complements||[],notes:item.notes||''})),self_service_items=cart.filter(item=>item.selfService&&!item.existingSelfService).map(item=>({grams:item.grams,captured_at:item.capturedAt,manual:Boolean(item.manual),gross_grams:item.grossGrams,tare_grams:item.tareGrams,price_per_kg_cents:item.pricePerKgCents}));if(draft){const created=await api('/api/admin/orders',{method:'POST',body:JSON.stringify({...draft,open_table:undefined,id:undefined,items,self_service_items})});state.admin.pendingTableOpen=null;state.admin.orders=[created,...state.admin.orders.filter(item=>String(item.id)!==String(created.id))];closeLayer();renderAdmin();toast(`Comanda ${created.id} aberta na mesa ${created.table_number}`);Promise.all([loadAdminOrders(),api('/api/admin/tables').then(data=>state.admin.tables=data)]).then(()=>renderAdmin()).catch(()=>{})}else{await api(`/api/admin/orders/${encodeURIComponent(orderId)}/items`,{method:'PATCH',body:JSON.stringify({items,self_service_items})});closeLayer();renderAdmin();toast('Itens adicionados à comanda');Promise.all([loadAdminOrders(),api('/api/admin/tables').then(data=>state.admin.tables=data)]).then(()=>renderAdmin()).catch(()=>{})}}catch(error){toast(error.message);button.disabled=false}};
+  $('#table-picker-save').onclick=async buttonEvent=>{
+    const button=buttonEvent.currentTarget,cart=state.admin.editOrderCart||[],saveKey=String(orderId);
+    if(tableItemSavesInFlight.has(saveKey))return;
+    button.disabled=true;
+    const items=cart.filter(item=>!item.selfService).map(item=>({product_id:item.product.id,quantity:item.quantity,complements:item.complements||[],notes:item.notes||''}));
+    const self_service_items=cart.filter(item=>item.selfService&&!item.existingSelfService).map(item=>({grams:item.grams,captured_at:item.capturedAt,manual:Boolean(item.manual),gross_grams:item.grossGrams,tare_grams:item.tareGrams,price_per_kg_cents:item.pricePerKgCents}));
+    if(draft){
+      tableItemSavesInFlight.add(saveKey);
+      try{
+        const created=await api('/api/admin/orders',{method:'POST',body:JSON.stringify({...draft,open_table:undefined,id:undefined,items,self_service_items})});
+        tableItemSavesInFlight.delete(saveKey);state.admin.pendingTableOpen=null;state.admin.orders=[created,...state.admin.orders.filter(item=>String(item.id)!==String(created.id))];closeLayer();renderAdmin();toast(`Comanda ${created.id} aberta na mesa ${created.table_number}`);
+        Promise.all([loadAdminOrders(),api('/api/admin/tables').then(data=>state.admin.tables=data)]).then(()=>renderAdmin()).catch(()=>{});
+      }catch(error){tableItemSavesInFlight.delete(saveKey);toast(error.message);button.disabled=false}
+      return;
+    }
+    const order=state.admin.orders.find(item=>String(item.id)===saveKey);
+    if(!order){toast('A comanda não está mais ativa. Atualize as mesas.');button.disabled=false;return}
+    const previous={items:order.items,subtotal_cents:order.subtotal_cents,total_cents:order.total_cents};
+    const total=cartTotal(cart);
+    const optimisticItems=cart.map(item=>({product_id:item.selfService?null:item.product.id,product_name:item.product.name,quantity:item.quantity,unit_price_cents:item.unit_price_cents,complements_json:JSON.stringify(item.complements||[]),notes:item.notes||''}));
+    tableItemSavesInFlight.add(saveKey);
+    const request=api(`/api/admin/orders/${encodeURIComponent(orderId)}/items`,{method:'PATCH',body:JSON.stringify({items,self_service_items})});
+    order.items=optimisticItems;order.subtotal_cents=total;order.total_cents=total;
+    closeLayer();renderAdmin();toast('Adicionando produtos à comanda…');
+    request.then(()=>{
+      tableItemSavesInFlight.delete(saveKey);toast('Itens adicionados à comanda');
+      Promise.all([loadAdminOrders(),api('/api/admin/tables').then(data=>state.admin.tables=data)]).then(()=>renderAdmin()).catch(()=>{});
+    }).catch(error=>{
+      tableItemSavesInFlight.delete(saveKey);order.items=previous.items;order.subtotal_cents=previous.subtotal_cents;order.total_cents=previous.total_cents;renderAdmin();tableItemPickerMarkup(orderId);toast(`Não foi possível adicionar os produtos: ${error.message}`);
+    });
+  };
 }
 
 async function openTableItemPicker(orderId){
