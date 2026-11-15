@@ -402,6 +402,18 @@ async function ensurePrimeOperationsSchema(db) {
     updates.push(db.prepare(`INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('rv-menu-detail-parity-2026-10-v4')`));
     await db.batch(updates);
   }
+  const individualPotPhotoMigration=await db.prepare(`SELECT name FROM acai_complement_migrations WHERE name='individual-pot-photos-2026-11-v1'`).first();
+  if(!individualPotPhotoMigration){
+    await db.batch([
+      db.prepare(`UPDATE products SET image_url=?,updated_at=CURRENT_TIMESTAMP WHERE id=9`).bind("/uploads/products/d34e2713-d4e5-476d-8023-a2d0cdebea4f.png"),
+      db.prepare(`UPDATE products SET image_url=?,updated_at=CURRENT_TIMESTAMP WHERE id=10`).bind("/uploads/products/628e5e4e-bcb7-44a2-8afa-efeaa9c24bb1.png"),
+      db.prepare(`UPDATE products SET image_url=?,updated_at=CURRENT_TIMESTAMP WHERE id=11`).bind("/uploads/products/e0f2d91a-2592-466a-a1b8-85e4cecdff2a.jpg"),
+      db.prepare(`UPDATE products SET selected_complement_ids_json=(SELECT selected_complement_ids_json FROM products WHERE id=9),updated_at=CURRENT_TIMESTAMP WHERE category='Potes individuais' AND name='Pote de açaí 1 litro'`),
+      db.prepare(`UPDATE products SET selected_complement_ids_json=(SELECT selected_complement_ids_json FROM products WHERE id=10),updated_at=CURRENT_TIMESTAMP WHERE category='Potes individuais' AND name='Pote de creme 1 litro'`),
+      db.prepare(`UPDATE products SET selected_complement_ids_json=(SELECT selected_complement_ids_json FROM products WHERE id=11),flavors_json=(SELECT flavors_json FROM products WHERE id=11),updated_at=CURRENT_TIMESTAMP WHERE category='Potes individuais' AND name='Pote de sorvete 1 litro'`),
+      db.prepare(`INSERT OR IGNORE INTO acai_complement_migrations (name) VALUES ('individual-pot-photos-2026-11-v1')`)
+    ]);
+  }
   primeOperationsSchemaReady=true;
 }
 async function ensureOperationalColumns(db) {
