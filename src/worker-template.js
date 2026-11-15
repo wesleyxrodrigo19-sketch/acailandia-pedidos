@@ -1319,18 +1319,17 @@ async function api(request, env, url) {
   if(cashierPayment&&request.method==="PATCH") {
     const branch=await cashierBranch(request,env),body=await readJson(request),paymentStatus=clean(body?.payment_status,20)==="aberto"?"aberto":"pago";
     if(!branch)return json({error:"Acesso não autorizado."},401);
-    const order=await env.DB.prepare(`SELECT * FROM orders WHERE id=? AND branch_id=?`).bind(cashierPayment[1],branch).first();
+    const order=await env.DB.prepare(`SELECT o.*,s.employee_discount_percent,EXISTS(SELECT 1 FROM order_bill_splits b WHERE b.order_id=o.id) AS has_bill_split,e.id AS matched_employee_id,e.name AS matched_employee_name FROM orders o LEFT JOIN settings s ON s.id=1 LEFT JOIN employees e ON e.id=? AND e.is_active=1 WHERE o.id=? AND o.branch_id=?`).bind(int(body?.employee_id),cashierPayment[1],branch).first();
     if(!order)return json({error:"Pedido não encontrado nesta unidade."},404);
-    if(await env.DB.prepare(`SELECT id FROM order_bill_splits WHERE order_id=? LIMIT 1`).bind(order.id).first())return json({error:"Esta comanda jÃ¡ possui pagamentos divididos por item. Continue pelo botÃ£o Dividir conta."},409);
+    if(order.has_bill_split)return json({error:"Esta comanda jÃ¡ possui pagamentos divididos por item. Continue pelo botÃ£o Dividir conta."},409);
     const requestedPayments=Array.isArray(body?.payments)?body.payments.slice(0,4).map(payment=>({method:paymentMethod(payment?.method),amount_cents:Math.max(0,int(payment?.amount_cents))})).filter(payment=>payment.amount_cents>0):[];
-    const settings=await env.DB.prepare(`SELECT employee_discount_percent FROM settings WHERE id=1`).first();
     const grossTotal=Math.max(0,int(order.subtotal_cents)+int(order.delivery_fee_cents)+int(order.waiter_fee_cents));
-    const employee=paymentStatus==="pago"&&bool(body?.employee_discount)?await env.DB.prepare(`SELECT id,name FROM employees WHERE id=? AND is_active=1`).bind(int(body?.employee_id)).first():null;
+    const employee=paymentStatus==="pago"&&bool(body?.employee_discount)&&order.matched_employee_id?{id:order.matched_employee_id,name:order.matched_employee_name}:null;
     const isEmployee=Boolean(employee);
     if(paymentStatus==="pago"&&bool(body?.employee_discount)&&!employee)return json({error:"Selecione o funcionário responsável pela compra."},400);
     const discountMode=clean(body?.discount_mode,20);
     const discountType=isEmployee?"funcionario":(discountMode==="percent"?"percent":(discountMode==="amount"?"amount":""));
-    const discountCents=paymentStatus!=="pago"?0:Math.min(grossTotal,isEmployee?Math.round(grossTotal*Math.max(0,Math.min(100,int(settings?.employee_discount_percent)))/100):discountType==="percent"?Math.round(grossTotal*Math.max(0,Math.min(100,Number(body?.discount_percent)||0))/100):discountType==="amount"?Math.max(0,int(body?.discount_amount_cents)):0);
+    const discountCents=paymentStatus!=="pago"?0:Math.min(grossTotal,isEmployee?Math.round(grossTotal*Math.max(0,Math.min(100,int(order.employee_discount_percent)))/100):discountType==="percent"?Math.round(grossTotal*Math.max(0,Math.min(100,Number(body?.discount_percent)||0))/100):discountType==="amount"?Math.max(0,int(body?.discount_amount_cents)):0);
     const total=Math.max(0,grossTotal-discountCents),splitPayment=requestedPayments.length>1,method=splitPayment?"misto":(requestedPayments[0]?.method||(body?.payment_method?paymentMethod(body.payment_method):order.payment_method));
     if(method==="folha"&&!isEmployee)return json({error:"Débito em folha é permitido apenas para funcionário identificado."},400);
     if(paymentStatus==="pago"&&requestedPayments.length&&requestedPayments.reduce((sum,payment)=>sum+payment.amount_cents,0)!==total)return json({error:"As formas de pagamento devem somar exatamente o total da conta."},400);
@@ -1708,16 +1707,15 @@ async function api(request, env, url) {
   }
   const orderPayment = url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/payment$/);
   if (orderPayment && request.method === "PATCH") {
-    const body = await readJson(request); const order = await env.DB.prepare(`SELECT * FROM orders WHERE id=?`).bind(orderPayment[1]).first();
+    const body = await readJson(request); const order = await env.DB.prepare(`SELECT o.*,s.waiter_fee_enabled,s.waiter_fee_percent,s.employee_discount_percent,EXISTS(SELECT 1 FROM order_bill_splits b WHERE b.order_id=o.id) AS has_bill_split FROM orders o LEFT JOIN settings s ON s.id=1 WHERE o.id=?`).bind(orderPayment[1]).first();
     if (!order) return json({ error:"Pedido não encontrado." },404);
-    if(await env.DB.prepare(`SELECT id FROM order_bill_splits WHERE order_id=? LIMIT 1`).bind(orderPayment[1]).first())return json({error:"Esta comanda jÃ¡ possui pagamentos divididos por item. Continue pelo botÃ£o Dividir conta."},409);
+    if(order.has_bill_split)return json({error:"Esta comanda jÃ¡ possui pagamentos divididos por item. Continue pelo botÃ£o Dividir conta."},409);
     const paymentStatus = clean(body?.payment_status,20) === "aberto" ? "aberto" : "pago";
-    const settings = await env.DB.prepare(`SELECT waiter_fee_enabled,waiter_fee_percent,employee_discount_percent FROM settings WHERE id=1`).first();
-    const applyWaiterFee = paymentStatus === "pago" && order.channel === "counter" && bool(body?.apply_waiter_fee) && settings.waiter_fee_enabled;
-    const waiterFee = applyWaiterFee ? Math.round((order.subtotal_cents || 0) * settings.waiter_fee_percent / 100) : 0;
+    const applyWaiterFee = paymentStatus === "pago" && order.channel === "counter" && bool(body?.apply_waiter_fee) && order.waiter_fee_enabled;
+    const waiterFee = applyWaiterFee ? Math.round((order.subtotal_cents || 0) * order.waiter_fee_percent / 100) : 0;
     const grossTotal = (order.subtotal_cents || 0) + (order.delivery_fee_cents || 0) + waiterFee;
     const isEmployee=paymentStatus==="pago"&&bool(body?.employee_discount),discountMode=clean(body?.discount_mode,20),discountType=isEmployee?"funcionario":(discountMode==="percent"?"percent":(discountMode==="amount"?"amount":""));
-    const discountCents=paymentStatus!=="pago"?0:Math.min(grossTotal,isEmployee?Math.round(grossTotal*Math.max(0,Math.min(100,int(settings.employee_discount_percent)))/100):discountType==="percent"?Math.round(grossTotal*Math.max(0,Math.min(100,Number(body?.discount_percent)||0))/100):discountType==="amount"?Math.max(0,int(body?.discount_amount_cents)):0);
+    const discountCents=paymentStatus!=="pago"?0:Math.min(grossTotal,isEmployee?Math.round(grossTotal*Math.max(0,Math.min(100,int(order.employee_discount_percent)))/100):discountType==="percent"?Math.round(grossTotal*Math.max(0,Math.min(100,Number(body?.discount_percent)||0))/100):discountType==="amount"?Math.max(0,int(body?.discount_amount_cents)):0);
     const total = Math.max(0,grossTotal-discountCents);
     const requestedPayments = Array.isArray(body?.payments) ? body.payments.slice(0,4).map(payment=>({ method:paymentMethod(payment?.method), amount_cents:Math.max(0,int(payment?.amount_cents)) })).filter(payment=>payment.amount_cents>0) : [];
     const splitPayment = requestedPayments.length > 1;
@@ -1729,8 +1727,8 @@ async function api(request, env, url) {
     const change = paymentStatus === "pago" && cashDue > 0 ? cashReceived - cashDue : null;
     const statements = [env.DB.prepare(`UPDATE orders SET payment_status=?,status=CASE WHEN ?="pago" AND channel=\'counter\' AND table_number IS NOT NULL THEN \'concluido\' ELSE status END,payment_method=?,waiter_fee_cents=?,total_cents=?,discount_cents=?,discount_type=?,employee_discount=?,cash_received_cents=?,change_for_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(paymentStatus,paymentStatus,method,waiterFee,total,discountCents,discountType,isEmployee?1:0,cashReceived,change,orderPayment[1]),env.DB.prepare(`DELETE FROM order_payments WHERE order_id=?`).bind(orderPayment[1])];
     if (paymentStatus === "pago" && requestedPayments.length) for (const payment of requestedPayments) statements.push(env.DB.prepare(`INSERT INTO order_payments (order_id,method,amount_cents) VALUES (?,?,?)`).bind(orderPayment[1],payment.method,payment.amount_cents));
+    statements.push(auditStatement(env.DB,paymentStatus==="pago"?"payment_received":"payment_reopened","order",order.id,paymentStatus==="pago"?`Pagamento do pedido ${order.id} recebido`:`Pagamento do pedido ${order.id} deixado em aberto`,{ payment_method:method,total_cents:total,waiter_fee_cents:waiterFee,discount_cents:discountCents,discount_type:discountType,employee_discount:isEmployee,payments:requestedPayments }));
     await env.DB.batch(statements);
-    await auditStatement(env.DB,paymentStatus==="pago"?"payment_received":"payment_reopened","order",order.id,paymentStatus==="pago"?`Pagamento do pedido ${order.id} recebido`:`Pagamento do pedido ${order.id} deixado em aberto`,{ payment_method:method,total_cents:total,waiter_fee_cents:waiterFee,discount_cents:discountCents,discount_type:discountType,employee_discount:isEmployee,payments:requestedPayments }).run();
     return json({ ok:true,payment_status:paymentStatus,payment_method:method,waiter_fee_cents:waiterFee,total_cents:total,discount_cents:discountCents,discount_type:discountType,cash_received_cents:cashReceived,change_for_cents:change,payments:requestedPayments });
   }
   if (url.pathname === "/api/admin/fiado" && request.method === "GET") {
