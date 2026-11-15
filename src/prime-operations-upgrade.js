@@ -573,3 +573,38 @@ function primeOpsDecoratePickerMeta(){
   let pickerScheduled=false;
   new MutationObserver(()=>{if(pickerScheduled)return;pickerScheduled=true;requestAnimationFrame(()=>{pickerScheduled=false;primeOpsDecoratePickerMeta()})}).observe(document.body,{childList:true,subtree:true});
 }
+
+
+/* Navegação do caixa: desenha a tela antes de atualizar seus dados pela rede. */
+let primeOpsCashierNavigationRequest=0;
+function primeOpsLoadCashierMenuView(view){
+  if(view==='orders')return refreshCashier();
+  if(view==='tables')return Promise.all([
+    api('/api/admin/products').then(data=>state.catalog=data),
+    api('/api/admin/tables').then(data=>state.admin.tables=data),
+    loadAdminOrders()
+  ]);
+  if(view==='table-management')return refreshCashier();
+  if(view==='store-availability')return api('/api/cashier/catalog?branch='+state.cashier.branch).then(data=>{state.cashier.catalog=data;state.catalog=data});
+  if(view==='products'||view==='pos'||view==='revenue')return refreshCashier(view==='products'||view==='pos');
+  if(view==='complements')return api('/api/admin/products').then(data=>state.catalog=data);
+  if(view==='fiado')return loadFiado();
+  if(view==='cash-register')return loadCashRegister();
+  return Promise.resolve();
+}
+document.addEventListener('click',event=>{
+  const button=event.target.closest('[data-cashier-view]');
+  if(!button)return;
+  event.preventDefault();event.stopImmediatePropagation();
+  const view=button.dataset.cashierView,request=++primeOpsCashierNavigationRequest;
+  state.cashier.view=view;state.cashier.orderFilter='all';state.cashier.sidebarOpen=false;
+  if(view==='tables'){state.admin.view='tables';state.admin.logged=true}
+  const titles={orders:'Pedidos Delivery',tables:'Mesas','table-management':'Gestão de mesas','store-availability':'Abrir / fechar loja',products:'Produtos',complements:'Complementos',fiado:'Fiado','cash-register':'Abrir / fechar caixa',pos:'Balcão',revenue:'Faturamento'};
+  try{renderCashierPanel()}catch{
+    $('#app').innerHTML=cashierLayout('<section class="panel" role="status" aria-live="polite" style="min-height:190px;display:grid;place-items:center">Carregando dados…</section>',titles[view]||'Caixa');
+    applyBlissBrand();bindCashierV2();
+  }
+  Promise.resolve().then(()=>primeOpsLoadCashierMenuView(view)).then(()=>{
+    if(request===primeOpsCashierNavigationRequest&&state.cashier.view===view)renderCashierPanel();
+  }).catch(error=>{if(request===primeOpsCashierNavigationRequest&&state.cashier.view===view)toast(error.message||'Não foi possível atualizar esta tela.')});
+},true);
