@@ -1,4 +1,3 @@
-Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 const APP_HTML = __APP_HTML__;
 const APP_CSS = __APP_CSS__;
 const APP_JS = __APP_JS__;
@@ -1907,5 +1906,4 @@ export default {
     }
   }
 };
-
 
