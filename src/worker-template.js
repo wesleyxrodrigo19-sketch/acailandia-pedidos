@@ -1266,6 +1266,17 @@ async function api(request, env, url) {
     try { const result=await updateOrderDetails(env,cashierOrderDetails[1],await readJson(request)); await auditStatement(env.DB,"cashier_order_details_edited","order",cashierOrderDetails[1],`Caixa alterou os dados do pedido ${cashierOrderDetails[1]}`,{branch_id:branch}).run(); return json(result); }
     catch(error){return json({error:error.message||"Não foi possível editar o pedido."},400);}
   }
+  const cashierOrderMetadata=url.pathname.match(/^\/api\/cashier\/orders\/([^/]+)\/metadata$/);
+  if(cashierOrderMetadata&&request.method==="PATCH"){
+    const branch=await cashierBranch(request,env);if(!branch)return json({error:"Acesso não autorizado."},401);
+    const order=await env.DB.prepare(`SELECT id,branch_id,customer_name,table_name,notes,table_number,channel,status FROM orders WHERE id=? AND branch_id=?`).bind(cashierOrderMetadata[1],branch).first();
+    if(!order||order.channel!=="counter"||!order.table_number)return json({error:"Comanda de mesa não encontrada nesta unidade."},404);
+    if(order.status==="cancelado"||order.status==="concluido")return json({error:"Não é possível editar uma comanda finalizada."},409);
+    const body=await readJson(request),customerName=clean(body?.customer_name,120)||`Mesa ${String(order.table_number).padStart(2,"0")}`,tableName=clean(body?.table_name,80),notes=String(body?.notes??"").replace(/\r\n/g,"\n").trim().slice(0,1000);
+    await env.DB.prepare(`UPDATE orders SET customer_name=?,table_name=?,notes=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND branch_id=?`).bind(customerName,tableName,notes,order.id,branch).run();
+    await auditStatement(env.DB,"cashier_table_metadata_edited","order",order.id,`Caixa corrigiu identificação da comanda ${order.id}`,{branch_id:branch}).run();
+    return json({ok:true,customer_name:customerName,table_name:tableName,notes});
+  }
   const cashierOrderCancel=url.pathname.match(/^\/api\/cashier\/orders\/([^/]+)\/cancel$/);
   if(cashierOrderCancel&&request.method==="PATCH"){
     const branch=await cashierBranch(request,env); if(!branch)return json({error:"Acesso não autorizado."},401);
@@ -1790,7 +1801,7 @@ async function api(request, env, url) {
     } catch (error) { return json({ error:error.message || "Não foi possível cadastrar o produto." },400); }
   }
   const product = url.pathname.match(/^\/api\/admin\/products\/(\d+)$/);
-  if (product && request.method === "PATCH") {
+  if (product && request.method === "DELETE") {\n    const current=await env.DB.prepare(`SELECT id,name FROM products WHERE id=?`).bind(product[1]).first();\n    if(!current)return json({error:"Produto não encontrado."},404);\n    await env.DB.prepare(`UPDATE products SET is_available=0,is_featured=0,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(product[1]).run();\n    await auditStatement(env.DB,"product_deleted","product",product[1],`Produto ${current.name} excluído do cardápio`,{}).run();\n    await clearCatalogCache();\n    return json({ok:true});\n  }\n  if (product && request.method === "PATCH") {
     const current = await env.DB.prepare(`SELECT * FROM products WHERE id=?`).bind(product[1]).first();
     if (!current) return json({ error: "Produto não encontrado." }, 404);
     try {
