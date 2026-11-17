@@ -245,13 +245,25 @@ const primeOpsBaseTablePayment=openPaymentSettlement;
 openPaymentSettlement=async function(orderId){
   const order=state.admin.orders.find(item=>String(item.id)===String(orderId));
   if(!order?.table_number)return primeOpsBaseTablePayment(orderId);
-  if(order.payment_status==='aberto'){
-    try{
-      const bill=await api(`/api/admin/orders/${encodeURIComponent(orderId)}/bill-splits`);
-      if(Number(bill.paid_cents)>0)return openTableBillSplit(orderId,bill);
-    }catch(error){toast(error.message);return}
-  }
-  return primeOpsOpenTablePayment(orderId);
+  if(order.payment_status!=='aberto')return primeOpsOpenTablePayment(orderId);
+  primeOpsOpenTablePayment(orderId);
+  const drawer=document.querySelector('.owner-rv-payment-drawer');
+  if(!drawer)return;
+  const content=drawer.querySelector('#owner-table-payment-content'),division=drawer.querySelector('#owner-table-division'),divide=drawer.querySelector('#owner-table-divide'),confirm=drawer.querySelector('#owner-table-confirm');
+  if(content)content.inert=true;
+  if(division)division.inert=true;
+  if(divide)divide.disabled=true;
+  if(confirm)confirm.disabled=true;
+  const notice=document.createElement('p');notice.className='muted';notice.textContent='Conferindo pagamentos da comanda…';drawer.querySelector('.owner-rv-payment-head')?.append(notice);
+  try{
+    const bill=await api(`/api/admin/orders/${encodeURIComponent(orderId)}/bill-splits`);
+    if(!drawer.isConnected)return;
+    if(Number(bill.paid_cents)>0){closeLayer();return openTableBillSplit(orderId,bill)}
+    if(content)content.inert=false;
+    if(division)division.inert=false;
+    if(divide)divide.disabled=false;
+    notice.remove();
+  }catch(error){if(drawer.isConnected){closeLayer();toast(`Não foi possível conferir o pagamento: ${error.message}`)}}
 };
 
 /* Botao "Imprimir conta" (cupom do cliente) nas telas de pagamento da mesa. */
@@ -608,3 +620,4 @@ document.addEventListener('click',event=>{
     if(request===primeOpsCashierNavigationRequest&&state.cashier.view===view)renderCashierPanel();
   }).catch(error=>{if(request===primeOpsCashierNavigationRequest&&state.cashier.view===view)toast(error.message||'Não foi possível atualizar esta tela.')});
 },true);
+
