@@ -123,8 +123,21 @@ function tableItemPickerMarkup(orderId,category='Todas',query=''){
     request.then(()=>{
       tableItemSavesInFlight.delete(saveKey);toast('Itens adicionados à comanda');
       Promise.all([loadAdminOrders(),api('/api/admin/tables').then(data=>state.admin.tables=data)]).then(()=>renderAdmin()).catch(()=>{});
-    }).catch(error=>{
-      tableItemSavesInFlight.delete(saveKey);order.items=previous.items;order.subtotal_cents=previous.subtotal_cents;order.total_cents=previous.total_cents;renderAdmin();tableItemPickerMarkup(orderId);toast(`Não foi possível adicionar os produtos: ${error.message}`);
+    }).catch(async error=>{
+      order.items=previous.items;order.subtotal_cents=previous.subtotal_cents;order.total_cents=previous.total_cents;
+      if(/pedido não encontrado/i.test(String(error.message||'')) && !(previous.items||[]).length && Number(order.table_number)>0){
+        try{
+          let board=await api('/api/admin/tables');
+          let table=(board.tables||[]).find(item=>Number(item.number)===Number(order.table_number));
+          if(table&&!table.occupied){await createFixedTableCommand(order.table_number);board=await api('/api/admin/tables');table=(board.tables||[]).find(item=>Number(item.number)===Number(order.table_number))}
+          const result=await api('/api/admin/orders'),replacement=(result.orders||[]).find(item=>String(item.id)===String(table?.order_id));
+          if(!replacement||String(replacement.id)===saveKey||replacement.payment_status!=='aberto'||(replacement.items||[]).length)throw new Error('A mesa foi alterada. Confira a comanda antes de adicionar os produtos.');
+          await api(`/api/admin/orders/${encodeURIComponent(replacement.id)}/items`,{method:'PATCH',body:JSON.stringify({items,self_service_items})});
+          tableItemSavesInFlight.delete(saveKey);
+          const [updated,tables]=await Promise.all([api('/api/admin/orders'),api('/api/admin/tables')]);state.admin.orders=updated.orders||[];state.admin.tables=tables;renderAdmin();toast('Itens adicionados à comanda');return;
+        }catch(recoveryError){error=recoveryError}
+      }
+      tableItemSavesInFlight.delete(saveKey);renderAdmin();tableItemPickerMarkup(orderId);toast(`Não foi possível adicionar os produtos: ${error.message}`);
     });
   };
 }
@@ -217,3 +230,4 @@ async function openTableBillSplit(orderId,previouslyLoaded=null){
     }catch(error){toast(error.message);button.disabled=false}
   };
 }
+
