@@ -810,7 +810,7 @@ async function updateOrderItems(env, orderId, body) {
   if (!order) throw new Error("Pedido não encontrado.");
   if (order.status === "cancelado") throw new Error("Não é possível editar um pedido cancelado.");
   if(await env.DB.prepare(`SELECT id FROM order_bill_splits WHERE order_id=? LIMIT 1`).bind(orderId).first())throw new Error("NÃ£o Ã© possÃ­vel alterar os itens depois que a conta comeÃ§ou a ser dividida.");
-  let items = await normalizeOrderItems(env.DB, body?.items);
+  let items = Array.isArray(body?.items) && body.items.length ? await normalizeOrderItems(env.DB, body.items) : [];
   if (Array.isArray(body?.self_service_items)) {
     const settings = await env.DB.prepare(`SELECT self_service_price_per_kg_cents FROM settings WHERE id=1`).first();
     const weighted = await counterOrderItems(env, { items:[], self_service_items:body.self_service_items }, settings);
