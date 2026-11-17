@@ -1683,15 +1683,14 @@ async function api(request, env, url) {
   }
   const orderDelete = url.pathname.match(/^\/api\/admin\/orders\/([^/]+)$/);
   if (orderDelete && request.method === "DELETE") {
-    const body=await readJson(request),submitted=String(body?.password||""),configured=String(env.DELETE_ORDER_PASSWORD||"");
-    const passwordMatches=configured ? submitted===configured : await sha256(submitted)===DELETE_ORDER_PASSWORD_HASH;
-    if (!passwordMatches) return json({ error:"Senha de exclusão incorreta." },401);
     const order=await env.DB.prepare(`SELECT * FROM orders WHERE id=?`).bind(orderDelete[1]).first();
     if (!order) return json({ error:"Pedido não encontrado." },404);
     const items=(await env.DB.prepare(`SELECT product_name,quantity,unit_price_cents FROM order_items WHERE order_id=? ORDER BY id`).bind(order.id).all()).results;
     await env.DB.batch([
       auditStatement(env.DB,"order_deleted","order",order.id,`Pedido ${order.id} excluído do histórico`,{ customer_name:order.customer_name,total_cents:order.total_cents,status:order.status,created_at:order.created_at,items }),
       env.DB.prepare(`DELETE FROM print_jobs WHERE order_id=?`).bind(order.id),
+      env.DB.prepare(`DELETE FROM order_bill_splits WHERE order_id=?`).bind(order.id),
+      env.DB.prepare(`DELETE FROM fiado WHERE order_id=?`).bind(order.id),
       env.DB.prepare(`DELETE FROM order_payments WHERE order_id=?`).bind(order.id),
       env.DB.prepare(`DELETE FROM order_items WHERE order_id=?`).bind(order.id),
       env.DB.prepare(`DELETE FROM orders WHERE id=?`).bind(order.id)
@@ -1947,5 +1946,6 @@ export default {
     }
   }
 };
+
 
 
