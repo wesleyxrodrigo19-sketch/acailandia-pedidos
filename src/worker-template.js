@@ -702,6 +702,7 @@ async function appendCounterOrderItems(env, orderId, body, branchId) {
   for(const item of items)statements.push(env.DB.prepare(`INSERT INTO order_items (order_id,product_id,product_name,quantity,unit_price_cents,complements_json,notes) VALUES (?,?,?,?,?,?,?)`).bind(order.id,item.product_id,item.product_name,item.quantity,item.unit_price_cents,JSON.stringify(item.complements),item.notes));
   statements.push(env.DB.prepare(`UPDATE orders SET subtotal_cents=?,waiter_fee_cents=?,total_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND branch_id=?`).bind(subtotal,waiterFee,total,order.id,branchId));
   statements.push(auditStatement(env.DB,"cashier_order_items_added","order",order.id,`Caixa adicionou ${items.length} item(ns) ao pedido ${order.id}`,{branch_id:branchId,added_subtotal_cents:addedSubtotal,total_cents:total,self_service:selfServiceEntries.map(entry=>({grams:int(entry?.grams),manual:bool(entry?.manual)}))}));
+  addMilkshakePrintJobs(env,statements,order.id,settings,items);
   await env.DB.batch(statements);
   return {ok:true,id:order.id,subtotal_cents:subtotal,waiter_fee_cents:waiterFee,delivery_fee_cents:Math.max(0,int(order.delivery_fee_cents)),total_cents:total,items_added:items.length};
 }
@@ -830,6 +831,12 @@ async function updateOrderItems(env, orderId, body) {
     let complements=[];try{complements=JSON.parse(item.complements_json||"[]")}catch{}
     items.push({product_id:null,product_name:item.product_name,quantity:item.quantity,unit_price_cents:item.unit_price_cents,complements,notes:item.notes||""});
   }
+  const oldItems=(await env.DB.prepare(`SELECT * FROM order_items WHERE order_id=? ORDER BY id`).bind(orderId).all()).results||[];
+  const previousMilk=new Map();
+  const milkKey=item=>JSON.stringify([int(item.product_id),item.product_name,clean(item.notes,300),typeof item.complements_json==='string'?JSON.stringify(parseJson(item.complements_json,[])):JSON.stringify(item.complements||[])]);
+  for(const item of oldItems.filter(item=>isMilkshakeName(item.product_name))){const key=milkKey(item);previousMilk.set(key,(previousMilk.get(key)||0)+int(item.quantity))}
+  const newMilk=[];
+  for(const item of [...items,...identified].filter(item=>isMilkshakeName(item.product_name))){const key=milkKey(item),previous=previousMilk.get(key)||0,quantity=int(item.quantity),used=Math.min(previous,quantity);previousMilk.set(key,previous-used);if(quantity>used)newMilk.push({...item,quantity:quantity-used,complements_json:typeof item.complements_json==='string'?item.complements_json:JSON.stringify(item.complements||[])})}
   const subtotal = items.reduce((sum,item) => sum + item.quantity * item.unit_price_cents, 0)+identified.reduce((sum,item)=>sum+int(item.quantity)*int(item.unit_price_cents),0);
   const waiterFee = order.waiter_fee_cents && order.subtotal_cents ? Math.round(subtotal * order.waiter_fee_cents / order.subtotal_cents) : 0;
   const statements = [
@@ -845,6 +852,7 @@ async function updateOrderItems(env, orderId, body) {
   for (const item of items) statements.push(env.DB.prepare(`INSERT INTO order_items (order_id,product_id,product_name,quantity,unit_price_cents,complements_json,notes) VALUES (?,?,?,?,?,?,?)`).bind(orderId,item.product_id,item.product_name,item.quantity,item.unit_price_cents,JSON.stringify(item.complements),item.notes));
   statements.push(env.DB.prepare(`UPDATE orders SET subtotal_cents=?,waiter_fee_cents=?,total_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(subtotal,waiterFee,subtotal+waiterFee+(order.delivery_fee_cents||0),orderId));
   statements.push(auditStatement(env.DB,"order_edited","order",orderId,`Itens do pedido ${orderId} alterados`,{ previous_total_cents:order.total_cents,total_cents:subtotal+waiterFee+(order.delivery_fee_cents||0),item_count:items.reduce((sum,item)=>sum+item.quantity,0)+identified.reduce((sum,item)=>sum+int(item.quantity),0) }));
+  if(order.channel==='counter'&&newMilk.length){const printSettings=await env.DB.prepare(`SELECT auto_print_enabled,reception_printer,kitchen_printer,print_copies FROM settings WHERE id=1`).first();addMilkshakePrintJobs(env,statements,orderId,printSettings,newMilk)}
   try { await env.DB.batch(statements); }
   catch(error) {
     if(String(error.message).includes("CHECK constraint failed"))throw new Error("A comanda foi alterada. Atualize e tente novamente.");
@@ -945,6 +953,11 @@ async function revenueReport(env, url, branchId = "") {
 }
 
 function isMilkshakeName(name) { return /milk\s?-?shake|^milk\b/i.test(String(name || "")); }
+function addMilkshakePrintJobs(env,statements,orderId,settings,items){
+  const milk=items.filter(item=>isMilkshakeName(item.product_name)).map(item=>({...item,complements_json:typeof item.complements_json==='string'?item.complements_json:JSON.stringify(item.complements||[])}));
+  if(!milk.length||!settings?.auto_print_enabled||!(clean(settings.kitchen_printer,120)||clean(settings.reception_printer,120)))return;
+  for(let copy=0,copies=Math.max(1,Math.min(5,int(settings.print_copies,1)));copy<copies;copy++)statements.push(env.DB.prepare(`INSERT INTO print_jobs (order_id,target,status,items_snapshot_json) VALUES (?,'prep','pending',?)`).bind(orderId,JSON.stringify(milk)));
+}
 
 function bridgeInstaller(settings, siteOrigin) {
   const connector = bridgeScript(settings, siteOrigin), bytes = new TextEncoder().encode(connector);
@@ -1078,7 +1091,7 @@ async function listPrintJobs(env) {
   const result = [];
   for (const job of jobs) {
     const order = await env.DB.prepare(`SELECT * FROM orders WHERE id=?`).bind(job.order_id).first();
-    const items = (await env.DB.prepare(`SELECT * FROM order_items WHERE order_id=? ORDER BY id`).bind(job.order_id).all()).results;
+    const items = job.items_snapshot_json ? parseJson(job.items_snapshot_json,[]) : (await env.DB.prepare(`SELECT * FROM order_items WHERE order_id=? ORDER BY id`).bind(job.order_id).all()).results;
     if (order) result.push({ id:job.id, order_id:job.order_id, target:job.target, printer_name:job.target === "kitchen" ? settings.kitchen_printer : job.target === "prep" ? (settings.kitchen_printer||settings.reception_printer) : settings.reception_printer, ticket:ticketText(order,items,job.target,settings) });
   }
   if (jobs.length) await env.DB.batch(jobs.map(job=>env.DB.prepare(`UPDATE print_jobs SET status='processing',updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(job.id)));
@@ -1946,6 +1959,7 @@ export default {
     }
   }
 };
+
 
 
 
