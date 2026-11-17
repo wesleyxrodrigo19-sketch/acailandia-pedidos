@@ -1185,7 +1185,7 @@ async function api(request, env, url) {
   if (url.pathname === "/api/scale/weight" && request.method === "POST") {
     if (!(await scaleAuthorized(request, env))) return json({ error:"Ponte de balança não autorizada." },401);
     const body=await readJson(request),rawKg=Number(String(body?.Liquido??body?.Bruto??"").replace(",",".")), grams=Math.max(0,Math.min(32000,body?.grams!=null?int(body.grams):Math.round(rawKg*1000)));
-    await env.DB.prepare(`UPDATE settings SET scale_last_grams=?,scale_captured_at=?,updated_at=CURRENT_TIMESTAMP WHERE id=1`).bind(grams,clean(body?.captured_at,40)||new Date().toISOString()).run();
+    await env.DB.prepare(`UPDATE settings SET scale_last_grams=?,scale_captured_at=?,updated_at=CURRENT_TIMESTAMP WHERE id=1`).bind(grams,new Date().toISOString()).run();
     return json({ ok:true,grams });
   }
   await seed(env.DB);
@@ -1448,7 +1448,7 @@ async function api(request, env, url) {
   }
   if (url.pathname === "/api/admin/scale/current" && request.method === "GET") {
     const row=await env.DB.prepare(`SELECT scale_last_grams,scale_captured_at FROM settings WHERE id=1`).first();
-    return json({ grams:int(row?.scale_last_grams),captured_at:row?.scale_captured_at||"" });
+    return json({ grams:int(row?.scale_last_grams),captured_at:row?.scale_captured_at||"",server_time:new Date().toISOString() });
   }
   if (url.pathname === "/api/admin/orders" && request.method === "GET") {
     const visits=await safeVisitSummary(env,undefined,undefined,"acailandia");
@@ -1947,4 +1947,5 @@ export default {
     }
   }
 };
+
 
