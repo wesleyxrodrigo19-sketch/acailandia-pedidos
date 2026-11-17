@@ -733,7 +733,7 @@ async function listAbandonedCarts(env) {
 
 async function listAdminOrders(env, branchId="") {
   const branch=branchId?validBranch(branchId):"";
-  const orders = (await (branch?env.DB.prepare(`SELECT * FROM orders WHERE branch_id=? ORDER BY datetime(created_at) DESC LIMIT 200`).bind(branch):env.DB.prepare(`SELECT * FROM orders ORDER BY datetime(created_at) DESC LIMIT 200`)).all()).results;
+  const orders = (await (branch?env.DB.prepare(`SELECT orders.*,COALESCE((SELECT SUM(total_cents) FROM order_bill_splits WHERE order_id=orders.id),0) AS split_paid_cents FROM orders WHERE branch_id=? ORDER BY datetime(created_at) DESC LIMIT 200`).bind(branch):env.DB.prepare(`SELECT orders.*,COALESCE((SELECT SUM(total_cents) FROM order_bill_splits WHERE order_id=orders.id),0) AS split_paid_cents FROM orders ORDER BY datetime(created_at) DESC LIMIT 200`)).all()).results;
   if (!orders.length) return [];
   // Evita exceder o limite de parâmetros do D1 quando a lista estiver cheia.
   const items = (await env.DB.prepare(`SELECT oi.*,tl.label AS table_label FROM order_items oi LEFT JOIN table_item_labels tl ON tl.order_item_id=oi.id INNER JOIN (SELECT id FROM orders ORDER BY datetime(created_at) DESC LIMIT 200) recent_orders ON recent_orders.id=oi.order_id ORDER BY oi.id`).all()).results;
@@ -1946,6 +1946,7 @@ export default {
     }
   }
 };
+
 
 
 

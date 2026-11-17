@@ -246,6 +246,7 @@ openPaymentSettlement=async function(orderId){
   const order=state.admin.orders.find(item=>String(item.id)===String(orderId));
   if(!order?.table_number)return primeOpsBaseTablePayment(orderId);
   if(order.payment_status!=='aberto')return primeOpsOpenTablePayment(orderId);
+  if(order.split_paid_cents!=null && Number(order.split_paid_cents)===0)return primeOpsOpenTablePayment(orderId);
   primeOpsOpenTablePayment(orderId);
   const drawer=document.querySelector('.owner-rv-payment-drawer');
   if(!drawer)return;
@@ -620,4 +621,5 @@ document.addEventListener('click',event=>{
     if(request===primeOpsCashierNavigationRequest&&state.cashier.view===view)renderCashierPanel();
   }).catch(error=>{if(request===primeOpsCashierNavigationRequest&&state.cashier.view===view)toast(error.message||'Não foi possível atualizar esta tela.')});
 },true);
+
 
