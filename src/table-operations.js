@@ -134,7 +134,8 @@ function tableItemPickerMarkup(orderId,category='Todas',query=''){
           if(!replacement||String(replacement.id)===saveKey||replacement.payment_status!=='aberto'||(replacement.items||[]).length)throw new Error('A mesa foi alterada. Confira a comanda antes de adicionar os produtos.');
           await api(`/api/admin/orders/${encodeURIComponent(replacement.id)}/items`,{method:'PATCH',body:JSON.stringify({items,self_service_items})});
           tableItemSavesInFlight.delete(saveKey);
-          const [updated,tables]=await Promise.all([api('/api/admin/orders'),api('/api/admin/tables')]);state.admin.orders=updated.orders||[];state.admin.tables=tables;renderAdmin();toast('Itens adicionados à comanda');return;
+          toast('Itens adicionados à comanda');
+          Promise.all([api('/api/admin/orders'),api('/api/admin/tables')]).then(([updated,tables])=>{state.admin.orders=updated.orders||[];state.admin.tables=tables;renderAdmin()}).catch(()=>toast('Itens adicionados. Atualize as mesas para ver a comanda.'));return;
         }catch(recoveryError){error=recoveryError}
       }
       tableItemSavesInFlight.delete(saveKey);renderAdmin();tableItemPickerMarkup(orderId);toast(`Não foi possível adicionar os produtos: ${error.message}`);
