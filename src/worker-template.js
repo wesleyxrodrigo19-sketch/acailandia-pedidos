@@ -1281,7 +1281,7 @@ async function api(request, env, url) {
     const branch=await cashierBranch(request,env); if(!branch)return json({error:"Acesso não autorizado."},401);
     try {
       const row=await env.DB.prepare(`SELECT scale_last_grams,scale_captured_at,self_service_price_per_kg_cents FROM settings WHERE id=1`).first();
-      return json({grams:int(row?.scale_last_grams),captured_at:row?.scale_captured_at||"",price_per_kg_cents:int(row?.self_service_price_per_kg_cents,3000)});
+      return json({grams:int(row?.scale_last_grams),captured_at:row?.scale_captured_at||"",server_time:new Date().toISOString(),price_per_kg_cents:int(row?.self_service_price_per_kg_cents,3000)});
     } catch(error) {
       console.error("Balança ainda não configurada",error);
       return json({grams:0,captured_at:"",price_per_kg_cents:3000});
@@ -1959,6 +1959,7 @@ export default {
     }
   }
 };
+
 
 
 
