@@ -150,6 +150,12 @@ function primeOpsOpenTableItemAction(orderId,item,action,onSaved){
     }catch(error){toast(error.message);button.disabled=false}
   };
 }
+function tableCashPaymentValues(amount,received,remaining){
+  if(!amount||!remaining)return null;
+  if(amount>remaining){if(received!==null&&received<amount)return null;return {amount_cents:remaining,received_cents:received===null?amount:received}}
+  const cashReceived=received===null?amount:received;
+  return cashReceived<amount?null:{amount_cents:amount,received_cents:cashReceived};
+}
 function primeOpsOpenTablePayment(orderId){
   const order=state.admin.orders.find(item=>String(item.id)===String(orderId));
   if(!order)return;
@@ -207,14 +213,16 @@ function primeOpsOpenTablePayment(orderId){
     document.querySelector('.owner-rv-payment-drawer').append(scrim);
     const amount=scrim.querySelector('#owner-table-entry-amount'),received=scrim.querySelector('#owner-table-entry-received'),change=scrim.querySelector('#owner-table-entry-change'),saveButton=scrim.querySelector('#owner-table-entry-save');
     let saving=false;
-    const updateChange=()=>{if(change)change.textContent=money(Math.max(0,parseCents(received.value)-parseCents(amount.value)))};
+    const updateChange=()=>{if(change){const entered=parseCents(amount.value),given=String(received.value||'').trim()?parseCents(received.value):null,result=tableCashPaymentValues(entered,given,remaining);change.textContent=money(result?result.received_cents-result.amount_cents:0)}};
     const closeEntry=()=>{document.removeEventListener('keydown',onEnter,true);scrim.remove()};
     const save=()=>{
       if(saving||!scrim.isConnected)return;
-      let cents=parseCents(amount.value);
-      if(!cents||cents>remaining)return toast('Informe um valor válido, até o saldo restante.');
-      const cashReceived=method==='dinheiro'&&String(received?.value||'').trim()?parseCents(received.value):cents;
-      if(method==='dinheiro'&&cashReceived<cents)return toast('O valor entregue deve ser igual ou maior que o valor pago.');
+      let cents=parseCents(amount.value),cashReceived=cents;
+      if(method==='dinheiro'){
+        const given=String(received?.value||'').trim()?parseCents(received.value):null,result=tableCashPaymentValues(cents,given,remaining);
+        if(!result)return toast('Informe um valor válido e confira o dinheiro entregue.');
+        cents=result.amount_cents;cashReceived=result.received_cents;
+      }else if(!cents||cents>remaining)return toast('Informe um valor válido, até o saldo restante.');
       saving=true;saveButton.disabled=true;
       const existingIndex=payments.findIndex(payment=>payment.method===method),payment={method,amount_cents:cents,received_cents:method==='dinheiro'?cashReceived:cents};
       if(existingIndex>=0)payments[existingIndex]=payment;else payments.push(payment);
@@ -223,7 +231,7 @@ function primeOpsOpenTablePayment(orderId){
     };
     const onEnter=event=>{if(event.key!=='Enter'||!scrim.isConnected)return;event.preventDefault();event.stopImmediatePropagation();save()};
     document.addEventListener('keydown',onEnter,true);
-    if(received)received.oninput=updateChange;
+    if(received){received.oninput=updateChange;amount.oninput=updateChange}
     scrim.querySelectorAll('[data-owner-entry-close]').forEach(button=>button.onclick=closeEntry);
     saveButton.onclick=save;
     amount.focus({preventScroll:true});amount.select();
@@ -621,5 +629,6 @@ document.addEventListener('click',event=>{
     if(request===primeOpsCashierNavigationRequest&&state.cashier.view===view)renderCashierPanel();
   }).catch(error=>{if(request===primeOpsCashierNavigationRequest&&state.cashier.view===view)toast(error.message||'Não foi possível atualizar esta tela.')});
 },true);
+
 
 
