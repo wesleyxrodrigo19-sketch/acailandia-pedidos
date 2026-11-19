@@ -946,7 +946,7 @@ async function revenueReport(env, url, branchId = "") {
     if (row.payment_method !== "misto") byPayment[paymentMethod(row.payment_method)] += row.total_cents || 0;
     byChannel[row.channel === "online" ? "online" : "counter"] += row.total_cents || 0;
   }
-  const splitPayments = (await env.DB.prepare(`SELECT p.method,p.amount_cents FROM order_payments p JOIN orders o ON o.id=p.order_id WHERE o.status != 'cancelado' AND date(datetime(o.created_at,'-3 hours')) BETWEEN ? AND ?${BRANCHES[branchId]?" AND o.branch_id=?":""}`).bind(...params).all()).results;
+  const splitPayments = (await env.DB.prepare(`SELECT p.method,p.amount_cents FROM order_payments p JOIN orders o ON o.id=p.order_id WHERE o.status != 'cancelado' AND o.payment_method='misto' AND date(datetime(o.created_at,'-3 hours')) BETWEEN ? AND ?${BRANCHES[branchId]?" AND o.branch_id=?":""}`).bind(...params).all()).results;
   for (const payment of splitPayments) byPayment[paymentMethod(payment.method)] += payment.amount_cents || 0;
   const visits=await safeVisitSummary(env,from,to,branchId);
   return { from, to, total_cents:total, waiter_fee_cents:waiterFees, order_count:rows.length, average_cents:rows.length?Math.round(total/rows.length):0, visit_count:visits.period,visits_by_day:visits.by_day,by_payment:byPayment, by_channel:byChannel };
@@ -1366,7 +1366,8 @@ async function api(request, env, url) {
     const order=await env.DB.prepare(`SELECT o.*,s.employee_discount_percent,EXISTS(SELECT 1 FROM order_bill_splits b WHERE b.order_id=o.id) AS has_bill_split,e.id AS matched_employee_id,e.name AS matched_employee_name FROM orders o LEFT JOIN settings s ON s.id=1 LEFT JOIN employees e ON e.id=? AND e.is_active=1 WHERE o.id=? AND o.branch_id=?`).bind(int(body?.employee_id),cashierPayment[1],branch).first();
     if(!order)return json({error:"Pedido não encontrado nesta unidade."},404);
     if(order.has_bill_split)return json({error:"Esta comanda jÃ¡ possui pagamentos divididos por item. Continue pelo botÃ£o Dividir conta."},409);
-    const requestedPayments=Array.isArray(body?.payments)?body.payments.slice(0,4).map(payment=>({method:paymentMethod(payment?.method),amount_cents:Math.max(0,int(payment?.amount_cents))})).filter(payment=>payment.amount_cents>0):[];
+    if(Array.isArray(body?.payments)&&body.payments.length>50)return json({error:"Limite de 50 pagamentos por comanda."},400);
+    const requestedPayments=Array.isArray(body?.payments)?body.payments.map(payment=>({method:paymentMethod(payment?.method),amount_cents:Math.max(0,int(payment?.amount_cents))})).filter(payment=>payment.amount_cents>0):[];
     const grossTotal=Math.max(0,int(order.subtotal_cents)+int(order.delivery_fee_cents)+int(order.waiter_fee_cents));
     const employee=paymentStatus==="pago"&&bool(body?.employee_discount)&&order.matched_employee_id?{id:order.matched_employee_id,name:order.matched_employee_name}:null;
     const isEmployee=Boolean(employee);
@@ -1374,7 +1375,7 @@ async function api(request, env, url) {
     const discountMode=clean(body?.discount_mode,20);
     const discountType=isEmployee?"funcionario":(discountMode==="percent"?"percent":(discountMode==="amount"?"amount":""));
     const discountCents=paymentStatus!=="pago"?0:Math.min(grossTotal,isEmployee?Math.round(grossTotal*Math.max(0,Math.min(100,int(order.employee_discount_percent)))/100):discountType==="percent"?Math.round(grossTotal*Math.max(0,Math.min(100,Number(body?.discount_percent)||0))/100):discountType==="amount"?Math.max(0,int(body?.discount_amount_cents)):0);
-    const total=Math.max(0,grossTotal-discountCents),splitPayment=requestedPayments.length>1,method=splitPayment?"misto":(requestedPayments[0]?.method||(body?.payment_method?paymentMethod(body.payment_method):order.payment_method));
+    const total=Math.max(0,grossTotal-discountCents),splitPayment=new Set(requestedPayments.map(payment=>payment.method)).size>1,method=splitPayment?"misto":(requestedPayments[0]?.method||(body?.payment_method?paymentMethod(body.payment_method):order.payment_method));
     if(method==="folha"&&!isEmployee)return json({error:"Débito em folha é permitido apenas para funcionário identificado."},400);
     if(paymentStatus==="pago"&&requestedPayments.length&&requestedPayments.reduce((sum,payment)=>sum+payment.amount_cents,0)!==total)return json({error:"As formas de pagamento devem somar exatamente o total da conta."},400);
     const cashDue=method==="dinheiro"?total:requestedPayments.filter(payment=>payment.method==="dinheiro").reduce((sum,payment)=>sum+payment.amount_cents,0);
@@ -1761,8 +1762,9 @@ async function api(request, env, url) {
     const isEmployee=paymentStatus==="pago"&&bool(body?.employee_discount),discountMode=clean(body?.discount_mode,20),discountType=isEmployee?"funcionario":(discountMode==="percent"?"percent":(discountMode==="amount"?"amount":""));
     const discountCents=paymentStatus!=="pago"?0:Math.min(grossTotal,isEmployee?Math.round(grossTotal*Math.max(0,Math.min(100,int(order.employee_discount_percent)))/100):discountType==="percent"?Math.round(grossTotal*Math.max(0,Math.min(100,Number(body?.discount_percent)||0))/100):discountType==="amount"?Math.max(0,int(body?.discount_amount_cents)):0);
     const total = Math.max(0,grossTotal-discountCents);
-    const requestedPayments = Array.isArray(body?.payments) ? body.payments.slice(0,4).map(payment=>({ method:paymentMethod(payment?.method), amount_cents:Math.max(0,int(payment?.amount_cents)) })).filter(payment=>payment.amount_cents>0) : [];
-    const splitPayment = requestedPayments.length > 1;
+    if(Array.isArray(body?.payments)&&body.payments.length>50)return json({error:"Limite de 50 pagamentos por comanda."},400);
+    const requestedPayments = Array.isArray(body?.payments) ? body.payments.map(payment=>({ method:paymentMethod(payment?.method), amount_cents:Math.max(0,int(payment?.amount_cents)) })).filter(payment=>payment.amount_cents>0) : [];
+    const splitPayment = new Set(requestedPayments.map(payment=>payment.method)).size > 1;
     const method = splitPayment ? "misto" : (requestedPayments[0]?.method || (body?.payment_method ? paymentMethod(body.payment_method) : order.payment_method));
     const cashDue = method === "dinheiro" ? total : requestedPayments.filter(payment=>payment.method==="dinheiro").reduce((sum,payment)=>sum+payment.amount_cents,0);
     const cashReceived = paymentStatus === "pago" && cashDue > 0 ? (body?.cash_received_cents == null ? cashDue : Math.max(0,int(body.cash_received_cents))) : null;
@@ -1793,7 +1795,7 @@ async function api(request, env, url) {
     if(received>=total)return json({error:"O valor recebido deve ser menor que o total do pedido."},400);
     const method=paymentMethod(body?.payment_method||order.payment_method),name=clean(body?.customer_name,100)||clean(order.customer_name,100)||"Cliente",phone=clean(body?.phone,30)||clean(order.phone,30);
     const statements=[
-      env.DB.prepare(`UPDATE orders SET payment_status='pago',payment_method=?,total_cents=?,cash_received_cents=?,change_for_cents=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(parts.length>1?"misto":parts.length?parts[0].method:method,received,(parts.length?parts.filter(part=>part.method==="dinheiro").reduce((sum,part)=>sum+part.amount_cents,0):method==="dinheiro"?received:0)||null,order.id),
+      env.DB.prepare(`UPDATE orders SET payment_status='pago',payment_method=?,total_cents=?,cash_received_cents=?,change_for_cents=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(new Set(parts.map(part=>part.method)).size>1?"misto":parts.length?parts[0].method:method,received,(parts.length?parts.filter(part=>part.method==="dinheiro").reduce((sum,part)=>sum+part.amount_cents,0):method==="dinheiro"?received:0)||null,order.id),
       env.DB.prepare(`DELETE FROM order_payments WHERE order_id=?`).bind(order.id)
     ];
     if(parts.length)for(const part of parts)statements.push(env.DB.prepare(`INSERT INTO order_payments (order_id,method,amount_cents) VALUES (?,?,?)`).bind(order.id,part.method,part.amount_cents));else if(received>0)statements.push(env.DB.prepare(`INSERT INTO order_payments (order_id,method,amount_cents) VALUES (?,?,?)`).bind(order.id,method,received));
@@ -1959,6 +1961,7 @@ export default {
     }
   }
 };
+
 
 
 
