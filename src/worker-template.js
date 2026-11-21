@@ -566,8 +566,8 @@ async function cashRegisterSummary(db,branchId){
   const sessions=(await db.prepare(`SELECT * FROM cash_register_sessions WHERE branch_id=? ORDER BY opened_at DESC LIMIT 7`).bind(branchId).all()).results||[];
   if(!active)return {active:null,history:sessions};
   const [sales,changes,entries,fiadoRow]=await Promise.all([
-    db.prepare(`SELECT COALESCE(SUM(CASE WHEN payment_method='misto' THEN COALESCE((SELECT SUM(amount_cents) FROM order_payments WHERE order_id=orders.id AND method='dinheiro'),0) WHEN payment_status='pago' AND payment_method='dinheiro' THEN total_cents ELSE 0 END - CASE WHEN payment_status='pago' THEN COALESCE((SELECT SUM(amount_cents) FROM order_partial_payments WHERE order_id=orders.id AND method='dinheiro'),0) ELSE 0 END),0) + COALESCE((SELECT SUM(p.received_cents) FROM order_partial_payments p JOIN orders o ON o.id=p.order_id WHERE o.branch_id=? AND o.status!='cancelado' AND p.method='dinheiro' AND p.created_at>=?),0) AS value FROM orders WHERE branch_id=? AND status!='cancelado' AND updated_at>=?`).bind(branchId,active.opened_at,branchId,active.opened_at).first(),
-    db.prepare(`SELECT COALESCE(SUM(COALESCE(change_for_cents,0)-COALESCE((SELECT SUM(received_cents-amount_cents) FROM order_partial_payments WHERE order_id=orders.id AND method='dinheiro'),0)),0) + COALESCE((SELECT SUM(p.received_cents-p.amount_cents) FROM order_partial_payments p JOIN orders o ON o.id=p.order_id WHERE o.branch_id=? AND o.status!='cancelado' AND p.method='dinheiro' AND p.created_at>=?),0) AS value FROM orders WHERE branch_id=? AND (payment_status='pago' OR payment_method='misto') AND status!='cancelado' AND updated_at>=?`).bind(branchId,active.opened_at,branchId,active.opened_at).first(),
+    db.prepare(`SELECT COALESCE(SUM(CASE WHEN payment_method='misto' THEN COALESCE((SELECT SUM(amount_cents) FROM order_payments WHERE order_id=orders.id AND method='dinheiro'),0) WHEN payment_status='pago' AND payment_method='dinheiro' THEN total_cents ELSE 0 END - CASE WHEN payment_status='pago' THEN COALESCE((SELECT SUM(amount_cents) FROM order_partial_payments WHERE order_id=orders.id AND voided_at IS NULL AND method='dinheiro'),0) ELSE 0 END),0) + COALESCE((SELECT SUM(p.received_cents) FROM order_partial_payments p JOIN orders o ON o.id=p.order_id WHERE o.branch_id=? AND p.method='dinheiro' AND datetime(p.created_at)>=datetime(?)),0) - COALESCE((SELECT SUM(p.amount_cents) FROM order_partial_payments p JOIN orders o ON o.id=p.order_id WHERE o.branch_id=? AND p.method='dinheiro' AND datetime(p.voided_at)>=datetime(?)),0) AS value FROM orders WHERE branch_id=? AND status!='cancelado' AND updated_at>=?`).bind(branchId,active.opened_at,branchId,active.opened_at,branchId,active.opened_at).first(),
+    db.prepare(`SELECT COALESCE(SUM(COALESCE(change_for_cents,0)-COALESCE((SELECT SUM(received_cents-amount_cents) FROM order_partial_payments WHERE order_id=orders.id AND voided_at IS NULL AND method='dinheiro'),0)),0) + COALESCE((SELECT SUM(p.received_cents-p.amount_cents) FROM order_partial_payments p JOIN orders o ON o.id=p.order_id WHERE o.branch_id=? AND p.method='dinheiro' AND datetime(p.created_at)>=datetime(?)),0) AS value FROM orders WHERE branch_id=? AND (payment_status='pago' OR payment_method='misto') AND status!='cancelado' AND updated_at>=?`).bind(branchId,active.opened_at,branchId,active.opened_at).first(),
     db.prepare(`SELECT COALESCE(SUM(CASE WHEN entry_type='in' THEN amount_cents ELSE 0 END),0) AS cash_in,COALESCE(SUM(CASE WHEN entry_type='out' THEN amount_cents ELSE 0 END),0) AS cash_out FROM cash_register_entries WHERE session_id=?`).bind(active.id).first(),
     db.prepare(`SELECT COALESCE(SUM(amount_cents),0) AS value FROM fiado WHERE branch_id=? AND original_method='dinheiro' AND created_at>=?`).bind(branchId,active.opened_at).first()
   ]);
@@ -740,7 +740,7 @@ async function listAdminOrders(env, branchId="") {
   const items = (await env.DB.prepare(`SELECT oi.*,tl.label AS table_label FROM order_items oi LEFT JOIN table_item_labels tl ON tl.order_item_id=oi.id INNER JOIN (SELECT id FROM orders ORDER BY datetime(created_at) DESC LIMIT 200) recent_orders ON recent_orders.id=oi.order_id ORDER BY oi.id`).all()).results;
   const grouped = new Map();
   for (const item of items) { if (!grouped.has(item.order_id)) grouped.set(item.order_id, []); grouped.get(item.order_id).push(item); }
-  const partialRows=(await env.DB.prepare(`SELECT p.* FROM order_partial_payments p JOIN orders o ON o.id=p.order_id WHERE o.payment_status='aberto' AND o.status NOT IN ('cancelado','concluido') ORDER BY p.created_at,p.id`).all()).results||[];
+  const partialRows=(await env.DB.prepare(`SELECT p.* FROM order_partial_payments p JOIN orders o ON o.id=p.order_id WHERE p.voided_at IS NULL AND o.payment_status='aberto' AND o.status NOT IN ('cancelado','concluido') ORDER BY p.created_at,p.id`).all()).results||[];
   const partials=new Map();for(const item of partialRows){if(!partials.has(item.order_id))partials.set(item.order_id,[]);partials.get(item.order_id).push(item)}
   return orders.map(o => ({ ...o, items: grouped.get(o.id) || [], partial_payments:partials.get(o.id)||[] }));
 }
@@ -841,13 +841,13 @@ async function updateOrderItems(env, orderId, body) {
   for(const item of [...items,...identified].filter(item=>isMilkshakeName(item.product_name))){const key=milkKey(item),previous=previousMilk.get(key)||0,quantity=int(item.quantity),used=Math.min(previous,quantity);previousMilk.set(key,previous-used);if(quantity>used)newMilk.push({...item,quantity:quantity-used,complements_json:typeof item.complements_json==='string'?item.complements_json:JSON.stringify(item.complements||[])})}
   const subtotal = items.reduce((sum,item) => sum + item.quantity * item.unit_price_cents, 0)+identified.reduce((sum,item)=>sum+int(item.quantity)*int(item.unit_price_cents),0);
   const waiterFee = order.waiter_fee_cents && order.subtotal_cents ? Math.round(subtotal * order.waiter_fee_cents / order.subtotal_cents) : 0;
-  const partialPaid=await env.DB.prepare(`SELECT COALESCE(SUM(amount_cents),0) AS total,COALESCE(MAX(discount_cents),0) AS discount FROM order_partial_payments WHERE order_id=?`).bind(orderId).first();
+  const partialPaid=await env.DB.prepare(`SELECT COALESCE(SUM(amount_cents),0) AS total,COALESCE(MAX(discount_cents),0) AS discount FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL`).bind(orderId).first();
   if(subtotal+waiterFee+int(order.delivery_fee_cents)<int(partialPaid?.total)+int(partialPaid?.discount))throw new Error("O total não pode ficar menor que os pagamentos já recebidos.");
   const statements = [
     env.DB.prepare(`INSERT INTO table_item_mutation_guard(valid) SELECT CASE WHEN EXISTS (
       SELECT 1 FROM orders WHERE id=? AND subtotal_cents=? AND total_cents=?
       AND NOT EXISTS (SELECT 1 FROM order_bill_splits WHERE order_id=orders.id)
-      AND COALESCE((SELECT SUM(amount_cents)+COALESCE(MAX(discount_cents),0) FROM order_partial_payments WHERE order_id=orders.id),0)<=?
+      AND COALESCE((SELECT SUM(amount_cents)+COALESCE(MAX(discount_cents),0) FROM order_partial_payments WHERE order_id=orders.id AND voided_at IS NULL),0)<=?
     ) AND COALESCE((SELECT group_concat(id,',') FROM (
       SELECT oi.id FROM order_items oi JOIN table_item_labels tl ON tl.order_item_id=oi.id WHERE oi.order_id=? ORDER BY oi.id
     )),'')=? THEN 1 ELSE 0 END`).bind(orderId,order.subtotal_cents,order.total_cents,subtotal+waiterFee+int(order.delivery_fee_cents),orderId,identified.map(item=>item.id).join(",")),
@@ -870,7 +870,7 @@ async function updateOrderDetails(env, orderId, body) {
   const order = await env.DB.prepare(`SELECT * FROM orders WHERE id=?`).bind(orderId).first();
   if (!order) throw new Error("Pedido não encontrado.");
   if (order.status === "cancelado") throw new Error("Não é possível editar um pedido cancelado.");
-  if(await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? LIMIT 1`).bind(orderId).first())throw new Error("A comanda possui pagamentos parciais. Os dados financeiros não podem ser alterados.");
+  if(await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL LIMIT 1`).bind(orderId).first())throw new Error("A comanda possui pagamentos parciais. Os dados financeiros não podem ser alterados.");
   const settings = await env.DB.prepare(`SELECT * FROM settings WHERE id=1`).first();
   const requestedType = clean(body?.order_type,20);
   const orderType = ["delivery","pickup","dine_in"].includes(requestedType) ? requestedType : order.order_type;
@@ -1330,7 +1330,7 @@ async function api(request, env, url) {
   const cashierOrderCancel=url.pathname.match(/^\/api\/cashier\/orders\/([^/]+)\/cancel$/);
   if(cashierOrderCancel&&request.method==="PATCH"){
     const branch=await cashierBranch(request,env); if(!branch)return json({error:"Acesso não autorizado."},401);
-    if(await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? LIMIT 1`).bind(cashierOrderCancel[1]).first())return json({error:"A comanda possui pagamentos parciais; confira o reembolso antes de cancelar."},409);
+    if(await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL LIMIT 1`).bind(cashierOrderCancel[1]).first())return json({error:"A comanda possui pagamentos parciais; confira o reembolso antes de cancelar."},409);
     const body=await readJson(request),reason=clean(body?.reason,500);
     if(!reason)return json({error:"Informe o motivo do cancelamento."},400);
     const result=await env.DB.prepare(`UPDATE orders SET status='cancelado',cancel_reason=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND branch_id=? AND status<>'cancelado'`).bind(reason,cashierOrderCancel[1],branch).run();
@@ -1346,7 +1346,7 @@ async function api(request, env, url) {
     if(!passwordMatches)return json({error:"Senha de exclusão incorreta."},401);
     const order=await env.DB.prepare(`SELECT * FROM orders WHERE id=? AND branch_id=?`).bind(cashierOrderDelete[1],branch).first();
     if(!order)return json({error:"Pedido não encontrado nesta unidade."},404);
-    if(order.payment_status==='aberto'&&await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? LIMIT 1`).bind(order.id).first())return json({error:"Pedido com pagamentos parciais em aberto não pode ser excluído."},409);
+    if(order.payment_status==='aberto'&&await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL LIMIT 1`).bind(order.id).first())return json({error:"Pedido com pagamentos parciais em aberto não pode ser excluído."},409);
     const items=(await env.DB.prepare(`SELECT product_name,quantity,unit_price_cents FROM order_items WHERE order_id=? ORDER BY id`).bind(order.id).all()).results;
     await env.DB.batch([
       auditStatement(env.DB,"cashier_order_deleted","order",order.id,`Caixa excluiu pedido ${order.id}`,{branch_id:branch,customer_name:order.customer_name,total_cents:order.total_cents,status:order.status,created_at:order.created_at,items}),
@@ -1362,7 +1362,7 @@ async function api(request, env, url) {
     const branch=await cashierBranch(request,env),body=await readJson(request),status=clean(body?.status,30);
     if(!branch)return json({error:"Acesso não autorizado."},401);
     if(!ORDER_STATUSES.has(status)||status==="cancelado")return json({error:"Status inválido."},400);
-    if(status==='concluido'&&await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? LIMIT 1`).bind(cashierOrderStatus[1]).first())return json({error:"Finalize o recebimento dos pagamentos parciais antes de concluir."},409);
+    if(status==='concluido'&&await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL LIMIT 1`).bind(cashierOrderStatus[1]).first())return json({error:"Finalize o recebimento dos pagamentos parciais antes de concluir."},409);
     const previous=await env.DB.prepare(`SELECT status FROM orders WHERE id=? AND branch_id=?`).bind(cashierOrderStatus[1],branch).first();
     if(!previous)return json({error:"Pedido não encontrado nesta unidade."},404);
     await env.DB.batch([env.DB.prepare(`UPDATE orders SET status=?,cancel_reason='',updated_at=CURRENT_TIMESTAMP WHERE id=? AND branch_id=?`).bind(status,cashierOrderStatus[1],branch),auditStatement(env.DB,"cashier_order_status_changed","order",cashierOrderStatus[1],`Caixa alterou pedido ${cashierOrderStatus[1]} para ${statusLabelForAudit(status)}`,{from:previous.status,to:status,branch_id:branch})]);
@@ -1374,7 +1374,7 @@ async function api(request, env, url) {
     if(!branch)return json({error:"Acesso não autorizado."},401);
     const order=await env.DB.prepare(`SELECT o.*,s.employee_discount_percent,EXISTS(SELECT 1 FROM order_bill_splits b WHERE b.order_id=o.id) AS has_bill_split,e.id AS matched_employee_id,e.name AS matched_employee_name FROM orders o LEFT JOIN settings s ON s.id=1 LEFT JOIN employees e ON e.id=? AND e.is_active=1 WHERE o.id=? AND o.branch_id=?`).bind(int(body?.employee_id),cashierPayment[1],branch).first();
     if(!order)return json({error:"Pedido não encontrado nesta unidade."},404);
-    if(await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? LIMIT 1`).bind(order.id).first())return json({error:"Esta comanda possui pagamentos parciais; finalize pela tela de mesas."},409);
+    if(await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL LIMIT 1`).bind(order.id).first())return json({error:"Esta comanda possui pagamentos parciais; finalize pela tela de mesas."},409);
     if(order.has_bill_split)return json({error:"Esta comanda jÃ¡ possui pagamentos divididos por item. Continue pelo botÃ£o Dividir conta."},409);
     if(Array.isArray(body?.payments)&&body.payments.length>50)return json({error:"Limite de 50 pagamentos por comanda."},400);
     const requestedPayments=Array.isArray(body?.payments)?body.payments.map(payment=>({method:paymentMethod(payment?.method),amount_cents:Math.max(0,int(payment?.amount_cents))})).filter(payment=>payment.amount_cents>0):[];
@@ -1565,7 +1565,7 @@ async function api(request, env, url) {
     if(!order||!item)return json({error:"Item não encontrado nesta comanda."},404);
     if(order.channel!=="counter"||!order.table_number||order.status==="concluido"||order.status==="cancelado"||order.payment_status!=="aberto")return json({error:"A comanda precisa estar aberta e sem pagamento finalizado."},400);
     const splitRows=(await env.DB.prepare(`SELECT id,items_json,total_cents FROM order_bill_splits WHERE order_id=?`).bind(orderId).all()).results||[];
-    if(action!=="identify"&&await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? LIMIT 1`).bind(orderId).first())return json({error:"A comanda possui pagamentos parciais; não é possível alterar ou excluir itens."},409);
+    if(action!=="identify"&&await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL LIMIT 1`).bind(orderId).first())return json({error:"A comanda possui pagamentos parciais; não é possível alterar ou excluir itens."},409);
     if(splitRows.length&&action!=="identify")return json({error:"Não é possível alterar itens após iniciar a divisão da conta."},409);
     const used=splitRows.reduce((total,split)=>total+JSON.parse(split.items_json||"[]").reduce((sum,entry)=>sum+(int(entry.order_item_id)===itemId?int(entry.quantity):0),0),0);
     if(action==="identify"&&used>=int(item.quantity))return json({error:"Este item já foi pago e não pode mais ser identificado."},409);
@@ -1613,20 +1613,32 @@ async function api(request, env, url) {
   }
   const partialRoute=url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/partial-payments$/);
   if(partialRoute&&request.method==="GET"){
-    const rows=(await env.DB.prepare(`SELECT id,method,amount_cents,received_cents,discount_cents,created_at FROM order_partial_payments WHERE order_id=? ORDER BY created_at,id`).bind(partialRoute[1]).all()).results||[];
+    const rows=(await env.DB.prepare(`SELECT id,method,amount_cents,received_cents,discount_cents,created_at FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL ORDER BY created_at,id`).bind(partialRoute[1]).all()).results||[];
     return json({payments:rows});
+  }
+  if(partialRoute&&request.method==="PATCH"){
+    const body=await readJson(request),id=clean(body?.id,64);
+    if(body?.action!=="void"||!/^[0-9a-f-]{36}$/i.test(id))return json({error:"Pagamento inválido."},400);
+    const previous=await env.DB.prepare(`SELECT * FROM order_partial_payments WHERE id=? AND order_id=?`).bind(id,partialRoute[1]).first();
+    if(!previous)return json({error:"Pagamento não encontrado."},404);
+    if(previous.voided_at)return json({ok:true,already_voided:true});
+    const voidedAt=new Date().toISOString(),update=env.DB.prepare(`UPDATE order_partial_payments SET voided_at=? WHERE id=? AND order_id=? AND voided_at IS NULL AND EXISTS(SELECT 1 FROM orders o WHERE o.id=order_id AND o.payment_status='aberto' AND o.status NOT IN ('cancelado','concluido'))`).bind(voidedAt,id,partialRoute[1]);
+    const audit=env.DB.prepare(`INSERT INTO audit_log(action_type,entity_type,entity_id,summary,details_json) SELECT 'partial_payment_voided','order',?,'Pagamento parcial removido',? WHERE EXISTS(SELECT 1 FROM order_partial_payments WHERE id=? AND voided_at=?)`).bind(partialRoute[1],JSON.stringify({id,method:previous.method,amount_cents:previous.amount_cents,received_cents:previous.received_cents}),id,voidedAt);
+    const [result]=await env.DB.batch([update,audit]);
+    if(!result.meta.changes)return json({error:"A comanda ou o pagamento foi alterado. Atualize e tente novamente."},409);
+    return json({ok:true});
   }
   if(partialRoute&&request.method==="POST"){
     const body=await readJson(request),id=clean(body?.id,64),method=clean(body?.method,20),amount=int(body?.amount_cents),received=int(body?.received_cents),discount=int(body?.discount_cents);
     if(!/^[0-9a-f-]{36}$/i.test(id)||!["dinheiro","pix","credito","debito"].includes(method)||amount<1||discount<0||received<amount||(method!=="dinheiro"&&received!==amount))return json({error:"Pagamento inválido."},400);
     const previous=await env.DB.prepare(`SELECT * FROM order_partial_payments WHERE id=?`).bind(id).first();
-    if(previous){if(previous.order_id!==partialRoute[1]||previous.method!==method||int(previous.amount_cents)!==amount||int(previous.received_cents)!==received||int(previous.discount_cents)!==discount)return json({error:"Identificador de pagamento em uso."},409);return json({ok:true,payment:previous})}
+    if(previous){if(previous.voided_at)return json({error:"Este pagamento foi removido."},409);if(previous.order_id!==partialRoute[1]||previous.method!==method||int(previous.amount_cents)!==amount||int(previous.received_cents)!==received||int(previous.discount_cents)!==discount)return json({error:"Identificador de pagamento em uso."},409);return json({ok:true,payment:previous})}
     const insert=env.DB.prepare(`INSERT INTO order_partial_payments(id,order_id,method,amount_cents,received_cents,discount_cents)
       SELECT ?,o.id,?,?,?,? FROM orders o WHERE o.id=? AND o.channel='counter' AND o.table_number IS NOT NULL AND o.status NOT IN ('cancelado','concluido') AND o.payment_status='aberto'
       AND NOT EXISTS(SELECT 1 FROM order_bill_splits WHERE order_id=o.id)
-      AND (SELECT COUNT(*) FROM order_partial_payments WHERE order_id=o.id)<50
-      AND NOT EXISTS(SELECT 1 FROM order_partial_payments WHERE order_id=o.id AND discount_cents<>?)
-      AND COALESCE((SELECT SUM(amount_cents) FROM order_partial_payments WHERE order_id=o.id),0)+? <= o.total_cents-?`).bind(id,method,amount,received,discount,partialRoute[1],discount,amount,discount);
+      AND (SELECT COUNT(*) FROM order_partial_payments WHERE order_id=o.id AND voided_at IS NULL)<50
+      AND NOT EXISTS(SELECT 1 FROM order_partial_payments WHERE order_id=o.id AND voided_at IS NULL AND discount_cents<>?)
+      AND COALESCE((SELECT SUM(amount_cents) FROM order_partial_payments WHERE order_id=o.id AND voided_at IS NULL),0)+? <= o.total_cents-?`).bind(id,method,amount,received,discount,partialRoute[1],discount,amount,discount);
     const audit=env.DB.prepare(`INSERT INTO audit_log(action_type,entity_type,entity_id,summary,details_json) SELECT 'partial_payment_received','order',?,'Pagamento parcial registrado',? WHERE EXISTS(SELECT 1 FROM order_partial_payments WHERE id=?)`).bind(partialRoute[1],JSON.stringify({id,method,amount_cents:amount,received_cents:received}),id);
     const [insertResult]=await env.DB.batch([insert,audit]);
     if(!insertResult.meta.changes)return json({error:"A comanda mudou ou o valor supera o saldo. Atualize e tente novamente."},409);
@@ -1656,7 +1668,7 @@ async function api(request, env, url) {
     if(!order)return json({error:"Pedido não encontrado."},404);
     if(order.status==="cancelado"||order.status==="concluido"||order.channel!=="counter"||!order.table_number)return json({error:"A divisão por itens está disponível apenas para comandas ativas de mesa."},400);
     if(order.payment_status==="pago")return json({error:"Esta comanda já foi paga."},400);
-    if(await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? LIMIT 1`).bind(order.id).first())return json({error:"Esta comanda possui pagamentos parciais; conclua pelo recebimento normal."},409);
+    if(await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL LIMIT 1`).bind(order.id).first())return json({error:"Esta comanda possui pagamentos parciais; conclua pelo recebimento normal."},409);
     const requestedItems=Array.isArray(body?.items)?body.items:[],allocated=new Map();
     if(!requestedItems.length)return json({error:"Selecione ao menos um item."},400);
     for(const allocation of requestedItems){
@@ -1693,7 +1705,7 @@ async function api(request, env, url) {
       env.DB.prepare(`INSERT INTO table_item_mutation_guard(valid) SELECT CASE WHEN EXISTS (
         SELECT 1 FROM orders o WHERE o.id=? AND o.total_cents=? AND o.status=?
         AND o.channel='counter' AND o.table_number=? AND o.payment_status='aberto'
-        AND NOT EXISTS(SELECT 1 FROM order_partial_payments WHERE order_id=o.id)
+        AND NOT EXISTS(SELECT 1 FROM order_partial_payments WHERE order_id=o.id AND voided_at IS NULL)
         AND o.cash_received_cents IS ? AND o.change_for_cents IS ?
         AND (SELECT COUNT(*) FROM order_items WHERE order_id=o.id)=(SELECT COUNT(*) FROM json_each(?))
         AND NOT EXISTS (SELECT 1 FROM json_each(?) j WHERE NOT EXISTS (
@@ -1723,7 +1735,7 @@ async function api(request, env, url) {
   }
   const orderCancel = url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/cancel$/);
   if (orderCancel && request.method === "PATCH") {
-    if(await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? LIMIT 1`).bind(orderCancel[1]).first())return json({error:"Esta comanda possui pagamentos parciais registrados; confira o reembolso antes de cancelar."},409);
+    if(await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL LIMIT 1`).bind(orderCancel[1]).first())return json({error:"Esta comanda possui pagamentos parciais registrados; confira o reembolso antes de cancelar."},409);
     const body = await readJson(request); const reason = clean(body?.reason,500);
     if (!reason) return json({ error:"Informe o motivo do cancelamento." },400);
     const result = await env.DB.prepare(`UPDATE orders SET status='cancelado',cancel_reason=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(reason,orderCancel[1]).run();
@@ -1735,7 +1747,7 @@ async function api(request, env, url) {
   if (orderDelete && request.method === "DELETE") {
     const order=await env.DB.prepare(`SELECT * FROM orders WHERE id=?`).bind(orderDelete[1]).first();
     if (!order) return json({ error:"Pedido não encontrado." },404);
-    if(order.payment_status==='aberto'&&await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? LIMIT 1`).bind(order.id).first())return json({error:"Pedido com pagamentos parciais em aberto não pode ser excluído."},409);
+    if(order.payment_status==='aberto'&&await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL LIMIT 1`).bind(order.id).first())return json({error:"Pedido com pagamentos parciais em aberto não pode ser excluído."},409);
     const items=(await env.DB.prepare(`SELECT product_name,quantity,unit_price_cents FROM order_items WHERE order_id=? ORDER BY id`).bind(order.id).all()).results;
     await env.DB.batch([
       auditStatement(env.DB,"order_deleted","order",order.id,`Pedido ${order.id} excluído do histórico`,{ customer_name:order.customer_name,total_cents:order.total_cents,status:order.status,created_at:order.created_at,items }),
@@ -1753,7 +1765,7 @@ async function api(request, env, url) {
     const body = await readJson(request); const status = clean(body?.status, 30);
     if (!ORDER_STATUSES.has(status)) return json({ error: "Status inválido." }, 400);
     if (status === "cancelado") return json({ error:"Use o botão Cancelar e informe o motivo." },400);
-    if(status==='concluido'&&await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? LIMIT 1`).bind(orderStatus[1]).first())return json({error:"Finalize o recebimento dos pagamentos parciais antes de concluir."},409);
+    if(status==='concluido'&&await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL LIMIT 1`).bind(orderStatus[1]).first())return json({error:"Finalize o recebimento dos pagamentos parciais antes de concluir."},409);
     const previous=await env.DB.prepare(`SELECT status FROM orders WHERE id=?`).bind(orderStatus[1]).first();
     if (!previous) return json({ error:"Pedido não encontrado." },404);
     await env.DB.batch([
@@ -1802,8 +1814,8 @@ async function api(request, env, url) {
     const total = Math.max(0,grossTotal-discountCents);
     if(Array.isArray(body?.payments)&&body.payments.length>50)return json({error:"Limite de 50 pagamentos por comanda."},400);
     const requestedPayments = Array.isArray(body?.payments) ? body.payments.map(payment=>({ method:paymentMethod(payment?.method), amount_cents:Math.max(0,int(payment?.amount_cents)) })).filter(payment=>payment.amount_cents>0) : [];
-    const savedPartials=(await env.DB.prepare(`SELECT id,method,amount_cents,received_cents,discount_cents FROM order_partial_payments WHERE order_id=? ORDER BY created_at,id`).bind(order.id).all()).results||[];
-    if(savedPartials.length){
+    const savedPartials=(await env.DB.prepare(`SELECT id,method,amount_cents,received_cents,discount_cents FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL ORDER BY created_at,id`).bind(order.id).all()).results||[];
+    if(savedPartials.length||(Array.isArray(body?.partial_ids)&&body.partial_ids.length)){
       if(paymentStatus!=="pago"||savedPartials.some(p=>int(p.discount_cents)!==discountCents))return json({error:"Com pagamentos parciais registrados, finalize com o desconto original."},409);
       const supplied=Array.isArray(body?.partial_ids)?body.partial_ids.map(String):[];
       if(supplied.length!==savedPartials.length||new Set(supplied).size!==savedPartials.length||requestedPayments.length!==savedPartials.length||supplied.some((id,i)=>{const p=savedPartials.find(row=>row.id===id);return !p||p.method!==requestedPayments[i].method||int(p.amount_cents)!==requestedPayments[i].amount_cents}))return json({error:"Os pagamentos mudaram. Feche e abra a comanda novamente."},409);
@@ -1817,7 +1829,7 @@ async function api(request, env, url) {
     if (paymentStatus === "pago" && cashDue > 0 && cashReceived < cashDue) return json({ error:"O valor informado deve ser igual ou maior que a parte em dinheiro." },400);
     const change = paymentStatus === "pago" && cashDue > 0 ? cashReceived - cashDue : null;
     const statements = [env.DB.prepare(`UPDATE orders SET payment_status=?,status=CASE WHEN ?="pago" AND channel=\'counter\' AND table_number IS NOT NULL THEN \'concluido\' ELSE status END,payment_method=?,waiter_fee_cents=?,total_cents=?,discount_cents=?,discount_type=?,employee_discount=?,cash_received_cents=?,change_for_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(paymentStatus,paymentStatus,method,waiterFee,total,discountCents,discountType,isEmployee?1:0,cashReceived,change,orderPayment[1]),env.DB.prepare(`DELETE FROM order_payments WHERE order_id=?`).bind(orderPayment[1])];
-    if(order.channel==='counter'&&order.table_number&&paymentStatus==='pago'){const ids=JSON.stringify(savedPartials.map(p=>p.id));statements.unshift(env.DB.prepare(`INSERT INTO table_item_mutation_guard(valid) SELECT CASE WHEN EXISTS(SELECT 1 FROM orders WHERE id=? AND payment_status='aberto' AND total_cents=?) AND (SELECT COUNT(*) FROM order_partial_payments WHERE order_id=?)=json_array_length(?) AND NOT EXISTS(SELECT 1 FROM json_each(?) j WHERE NOT EXISTS(SELECT 1 FROM order_partial_payments p WHERE p.order_id=? AND p.id=j.value)) THEN 1 ELSE 0 END`).bind(order.id,order.total_cents,order.id,ids,ids,order.id),env.DB.prepare(`DELETE FROM table_item_mutation_guard`));}
+    if(order.channel==='counter'&&order.table_number&&paymentStatus==='pago'){const ids=JSON.stringify(savedPartials.map(p=>p.id));statements.unshift(env.DB.prepare(`INSERT INTO table_item_mutation_guard(valid) SELECT CASE WHEN EXISTS(SELECT 1 FROM orders WHERE id=? AND payment_status='aberto' AND total_cents=?) AND (SELECT COUNT(*) FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL)=json_array_length(?) AND NOT EXISTS(SELECT 1 FROM json_each(?) j WHERE NOT EXISTS(SELECT 1 FROM order_partial_payments p WHERE p.order_id=? AND p.voided_at IS NULL AND p.id=j.value)) THEN 1 ELSE 0 END`).bind(order.id,order.total_cents,order.id,ids,ids,order.id),env.DB.prepare(`DELETE FROM table_item_mutation_guard`));}
     if (paymentStatus === "pago" && requestedPayments.length) for (const payment of requestedPayments) statements.push(env.DB.prepare(`INSERT INTO order_payments (order_id,method,amount_cents) VALUES (?,?,?)`).bind(orderPayment[1],payment.method,payment.amount_cents));
     statements.push(auditStatement(env.DB,paymentStatus==="pago"?"payment_received":"payment_reopened","order",order.id,paymentStatus==="pago"?`Pagamento do pedido ${order.id} recebido`:`Pagamento do pedido ${order.id} deixado em aberto`,{ payment_method:method,total_cents:total,waiter_fee_cents:waiterFee,discount_cents:discountCents,discount_type:discountType,employee_discount:isEmployee,payments:requestedPayments }));
     try{await env.DB.batch(statements)}catch(error){if(String(error.message).includes('CHECK constraint failed'))return json({error:"Os pagamentos mudaram. Atualize a comanda e tente novamente."},409);throw error}
@@ -1835,7 +1847,7 @@ async function api(request, env, url) {
     if(!order)return json({error:"Pedido não encontrado."},404);
     if(order.status==="cancelado")return json({error:"Pedido cancelado não pode virar fiado."},409);
     if(order.payment_status==="pago")return json({error:"Este pedido já está pago."},409);
-    if(await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? LIMIT 1`).bind(order.id).first())return json({error:"A comanda possui pagamentos parciais; conclua o pagamento normalmente."},409);
+    if(await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL LIMIT 1`).bind(order.id).first())return json({error:"A comanda possui pagamentos parciais; conclua o pagamento normalmente."},409);
     if(await env.DB.prepare(`SELECT id FROM order_bill_splits WHERE order_id=? LIMIT 1`).bind(order.id).first())return json({error:"Esta comanda já possui pagamentos divididos por item. Continue pelo botão Dividir conta."},409);
     await ensureFiadoTable(env.DB);
     const total=Math.max(0,int(order.total_cents)),parts=(Array.isArray(body?.payments)?body.payments:[]).map(part=>({method:paymentMethod(part?.method),amount_cents:Math.max(0,int(part?.amount_cents))})).filter(part=>part.amount_cents>0),received=parts.length?parts.reduce((sum,part)=>sum+part.amount_cents,0):Math.max(0,int(body?.received_cents));
