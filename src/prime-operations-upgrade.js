@@ -157,7 +157,7 @@ function tableCashPaymentValues(amount,received,remaining){
   const cashReceived=received===null?amount:received;
   return cashReceived<amount?null:{amount_cents:amount,received_cents:cashReceived};
 }
-function primeOpsOpenTablePayment(orderId){
+function primeOpsOpenTablePayment(orderId,savedPayments=[]){
   const order=state.admin.orders.find(item=>String(item.id)===String(orderId));
   if(!order)return;
   const settings=state.catalog?.settings||{};
@@ -170,7 +170,7 @@ function primeOpsOpenTablePayment(orderId){
   const attendant=(order.notes||'').match(/Atendente:\s*([^•]+)/)?.[1]?.trim()||'Não informado';
   const methods=[['dinheiro','▣','Dinheiro','Ctrl + 1'],['credito','▰','Crédito','Ctrl + 2'],['debito','▰','Débito','Ctrl + 3'],['pix','☑','Pix','Ctrl + 4']];
   const methodLabels=Object.fromEntries(methods.map(([value,,label])=>[value,label]));
-  const payments=[];
+  const payments=savedPayments.map(payment=>({...payment,amount_cents:Number(payment.amount_cents),received_cents:Number(payment.received_cents)}));
   let divisions=people;
   const parseCents=value=>Math.max(0,Math.round(Number(String(value||'').replace(/[^0-9,.-]/g,'').replace(/\./g,'').replace(',','.'))*100)||0);
   const formatInput=cents=>(Math.max(0,cents)/100).toFixed(2).replace('.',',');
@@ -178,6 +178,7 @@ function primeOpsOpenTablePayment(orderId){
   layer(`<div class="drawer-header owner-rv-payment-head"><button type="button" class="icon-btn" data-close aria-label="Fechar">×</button><div><span class="eyebrow">RECEBIMENTO</span><h2>Fechar conta</h2><span class="muted">Pedido #${esc(order.id)} · Mesa ${String(order.table_number).padStart(2,'0')}</span></div></div><section class="owner-rv-info-grid"><div><span>Cliente</span><strong>${esc(order.customer_name||'Não informado')}</strong></div><div><span>Pessoas</span><strong>${people} ${people===1?'pessoa':'pessoas'}</strong></div><div><span>Atendente</span><strong>${esc(attendant)}</strong></div><div><span>Mesa</span><strong>${String(order.table_number).padStart(2,'0')}</strong></div></section><div class="drawer-content owner-rv-payment" id="owner-table-payment-content"><section class="owner-rv-order-items"><h3>Itens da comanda</h3>${items||'<p class="muted">Nenhum item nesta comanda.</p>'}</section><div class="owner-rv-account"><div class="owner-rv-total-card"><span>Subtotal</span><strong>${money(subtotal)}</strong></div><div class="owner-rv-total-card owner-rv-discount-card"><span>Desconto</span><strong id="owner-table-discount">${money(0)}</strong><div class="owner-rv-discount-controls"><select id="owner-table-discount-mode" aria-label="Tipo de desconto"><option value="">Sem desconto</option><option value="amount">R$</option><option value="percent">%</option></select><input id="owner-table-discount-value" inputmode="decimal" placeholder="0,00" aria-label="Valor do desconto"></div></div><div class="owner-rv-total-card owner-rv-total-grand"><span>Total</span><strong id="owner-table-total">${money(baseTotal)}</strong></div><div class="owner-rv-total-card owner-rv-paid"><span>Total pago</span><strong id="owner-table-paid">${money(0)}</strong></div><div class="owner-rv-total-card owner-rv-due"><span>Falta pagar</span><strong id="owner-table-due">${money(baseTotal)}</strong></div></div><section class="owner-rv-method-section"><h3>Forma de pagamento</h3><div class="owner-rv-methods" role="group" aria-label="Forma de pagamento">${methods.map(([value,icon,label,shortcut])=>`<button type="button" class="owner-rv-method" data-owner-table-method="${value}"><span>${icon}</span><b>${label}</b><small>${shortcut}</small></button>`).join('')}<button type="button" class="owner-rv-method owner-rv-method-disabled" disabled><span>✥</span><b>Pix auto</b><small>Não configurado</small></button></div></section><section class="owner-rv-recorded"><h3>Pagamentos registrados</h3><div id="owner-table-recorded"><p class="muted">Nenhum pagamento registrado.</p></div></section><label class="check-row owner-rv-employee ${Number(settings.employee_discount_percent||0)?'':'hidden'}"><input type="checkbox" id="owner-table-employee"><span><strong>Desconto de funcionário</strong><small>${Number(settings.employee_discount_percent||0)}% configurado nas opções do painel.</small></span></label></div><div class="owner-rv-division" id="owner-table-division"><strong>Divisão por pessoa</strong><div><button type="button" data-owner-table-division="-1" aria-label="Diminuir divisões">−</button><strong id="owner-table-division-count">${divisions}</strong><button type="button" data-owner-table-division="1" aria-label="Aumentar divisões">＋</button><b id="owner-table-division-total">${money(Math.ceil(baseTotal/divisions))}</b></div></div><div class="drawer-footer owner-rv-payment-footer"><button type="button" class="secondary-btn" data-close>Voltar</button><button type="button" class="secondary-btn" id="owner-table-divide">Dividir conta</button><button type="button" class="primary-btn" id="owner-table-confirm" disabled>Finalizar · ${money(baseTotal)}</button></div>`,`drawer admin-order-drawer owner-rv-payment-drawer`);
   document.querySelectorAll('.owner-rv-payment-drawer [data-close]').forEach(button=>button.onclick=closeLayer);
   const discountMode=$('#owner-table-discount-mode'),discountValue=$('#owner-table-discount-value'),employee=$('#owner-table-employee');
+  if(payments.length&&Number(payments[0].discount_cents)>0){discountMode.value='amount';discountValue.value=formatInput(Number(payments[0].discount_cents))}
   const discount=()=>employee?.checked?Math.min(baseTotal,Math.round(baseTotal*Math.max(0,Math.min(100,Number(settings.employee_discount_percent||0)))/100)):discountMode.value==='percent'?Math.min(baseTotal,Math.round(baseTotal*Math.max(0,Math.min(100,parseCents(discountValue.value)/100))/100)):discountMode.value==='amount'?Math.min(baseTotal,parseCents(discountValue.value)):0;
   const paid=()=>payments.reduce((sum,payment)=>sum+payment.amount_cents,0);
   const afterItemSaved=async action=>{
@@ -202,9 +203,9 @@ function primeOpsOpenTablePayment(orderId){
     }
     primeOpsOpenTableItemAction(orderId,item,action,afterItemSaved);
   });
-  const renderPayments=()=>{$('#owner-table-recorded').innerHTML=payments.length?payments.map((payment,index)=>`<div class="owner-rv-recorded-row"><span>${esc(methodLabels[payment.method])}${payment.received_cents>payment.amount_cents?` <small>(troco ${money(payment.received_cents-payment.amount_cents)})</small>`:''}</span><strong>${money(payment.amount_cents)}</strong><button type="button" class="icon-btn" data-owner-table-remove="${index}" aria-label="Remover ${esc(methodLabels[payment.method])}">×</button></div>`).join(''):'<p class="muted">Nenhum pagamento registrado.</p>';document.querySelectorAll('[data-owner-table-remove]').forEach(button=>button.onclick=()=>{const index=Number(button.dataset.ownerTableRemove);if(Number.isInteger(index)&&index>=0&&index<payments.length)payments.splice(index,1);refresh()})};
+  const renderPayments=()=>{$('#owner-table-recorded').innerHTML=payments.length?payments.map((payment,index)=>`<div class="owner-rv-recorded-row"><span>${esc(methodLabels[payment.method])}${payment.received_cents>payment.amount_cents?` <small>(troco ${money(payment.received_cents-payment.amount_cents)})</small>`:''}</span><strong>${money(payment.amount_cents)}</strong>${payment.id?'':`<button type="button" class="icon-btn" data-owner-table-remove="${index}" aria-label="Remover ${esc(methodLabels[payment.method])}">×</button>`}</div>`).join(''):'<p class="muted">Nenhum pagamento registrado.</p>';document.querySelectorAll('[data-owner-table-remove]').forEach(button=>button.onclick=()=>{const index=Number(button.dataset.ownerTableRemove);if(Number.isInteger(index)&&index>=0&&index<payments.length)payments.splice(index,1);refresh()})};
   let fiadoOn=false;
-  const refresh=()=>{const total=Math.max(0,baseTotal-discount()),sum=paid(),due=total-sum;$('#owner-table-discount').textContent=money(discount());$('#owner-table-total').textContent=money(total);$('#owner-table-paid').textContent=money(sum);$('#owner-table-due').textContent=money(Math.max(0,due));const fiadoNow=fiadoOn&&sum<total;$('#owner-table-confirm').disabled=total<=0||(sum!==total&&!fiadoNow);$('#owner-table-confirm').textContent=fiadoNow?`Finalizar com fiado de ${money(due)}`:`Finalizar · ${money(total)}`;const fiadoButton=$('#owner-table-fiado');if(fiadoButton){fiadoButton.classList.toggle('active',fiadoNow);fiadoButton.querySelector('small').textContent=fiadoNow?`Restante ${money(due)}`:'Deixar restante'}$('#owner-table-division-count').textContent=String(divisions);$('#owner-table-division-total').textContent=money(Math.ceil(total/divisions));if(employee?.checked){discountMode.value='';discountValue.value='';discountMode.disabled=true;discountValue.disabled=true}else{discountMode.disabled=false;discountValue.disabled=false}renderPayments()};
+  const refresh=()=>{const total=Math.max(0,baseTotal-discount()),sum=paid(),due=total-sum;$('#owner-table-discount').textContent=money(discount());$('#owner-table-total').textContent=money(total);$('#owner-table-paid').textContent=money(sum);$('#owner-table-due').textContent=money(Math.max(0,due));const fiadoNow=fiadoOn&&sum<total;$('#owner-table-confirm').disabled=total<=0||(sum!==total&&!fiadoNow);$('#owner-table-confirm').textContent=fiadoNow?`Finalizar com fiado de ${money(due)}`:`Finalizar · ${money(total)}`;const fiadoButton=$('#owner-table-fiado');if(fiadoButton){fiadoButton.classList.toggle('active',fiadoNow);fiadoButton.querySelector('small').textContent=fiadoNow?`Restante ${money(due)}`:'Deixar restante'}$('#owner-table-division-count').textContent=String(divisions);$('#owner-table-division-total').textContent=money(Math.ceil(total/divisions));if(employee?.checked){discountMode.value='';discountValue.value=''}discountMode.disabled=Boolean(employee?.checked)||payments.some(payment=>payment.id);discountValue.disabled=discountMode.disabled;if(employee)employee.disabled=payments.some(payment=>payment.id);renderPayments()};
   const openEntry=method=>{
     if(document.querySelector('.owner-payment-entry-scrim'))return;
     if(payments.length>=50)return toast('Limite de 50 pagamentos por comanda.');
@@ -214,10 +215,10 @@ function primeOpsOpenTablePayment(orderId){
     scrim.innerHTML=`<section class="owner-payment-entry" role="dialog" aria-modal="true" aria-labelledby="owner-table-entry-title"><header><h3 id="owner-table-entry-title">Registrar pagamento</h3><button type="button" class="icon-btn" data-owner-entry-close aria-label="Fechar">×</button></header><p>Valor pago em <strong>${esc(methodLabels[method])}</strong></p><label class="owner-payment-entry-value"><span>R$</span><input id="owner-table-entry-amount" inputmode="decimal" value="${formatInput(remaining)}" aria-label="Valor do pagamento"></label>${method==='dinheiro'?'<label class="field owner-payment-entry-cash"><span>Valor entregue pelo cliente <small>(opcional)</small></span><input id="owner-table-entry-received" inputmode="decimal" placeholder="Em branco, valor exato"><small>Troco: <strong id="owner-table-entry-change">R$ 0,00</strong></small></label>':''}<footer><button type="button" class="secondary-btn" data-owner-entry-close>Voltar</button><button type="button" class="primary-btn" id="owner-table-entry-save">Registrar</button></footer></section>`;
     document.querySelector('.owner-rv-payment-drawer').append(scrim);
     const amount=scrim.querySelector('#owner-table-entry-amount'),received=scrim.querySelector('#owner-table-entry-received'),change=scrim.querySelector('#owner-table-entry-change'),saveButton=scrim.querySelector('#owner-table-entry-save');
-    let saving=false;
+    let saving=false;const paymentId=crypto.randomUUID();
     const updateChange=()=>{if(change){const entered=parseCents(amount.value),given=String(received.value||'').trim()?parseCents(received.value):null,result=tableCashPaymentValues(entered,given,remaining);change.textContent=money(result?result.received_cents-result.amount_cents:0)}};
     const closeEntry=()=>{document.removeEventListener('keydown',onEnter,true);scrim.remove()};
-    const save=()=>{
+    const save=async()=>{
       if(saving||!scrim.isConnected)return;
       let cents=parseCents(amount.value),cashReceived=cents;
       if(method==='dinheiro'){
@@ -227,9 +228,21 @@ function primeOpsOpenTablePayment(orderId){
       }else if(!cents||cents>remaining)return toast('Informe um valor válido, até o saldo restante.');
       saving=true;saveButton.disabled=true;
       const payment={method,amount_cents:cents,received_cents:method==='dinheiro'?cashReceived:cents};
-      payments.push(payment);
-      closeEntry();refresh();
-      if(paid()===Math.max(0,baseTotal-discount()))queueMicrotask(()=>$('#owner-table-confirm')?.click());
+      if(employee?.checked&&paid()+cents<Math.max(0,baseTotal-discount())){saving=false;saveButton.disabled=false;return toast('O desconto de funcionário deve ser aplicado no pagamento integral.')}
+      try{
+        if(!employee?.checked){
+          payment.discount_cents=discount();payment.id=paymentId;
+          const result=await api(`/api/admin/orders/${encodeURIComponent(orderId)}/partial-payments`,{method:'POST',body:JSON.stringify(payment)});
+          Object.assign(payment,result.payment);
+        }
+        payments.push(payment);
+        order.partial_payments=payments.filter(entry=>entry.id);
+        const detail=document.querySelector('.table-detail-settlement');
+        if(detail){const paidNode=detail.querySelector('.settlement-paid strong'),dueNode=detail.querySelector('.settlement-due strong');if(paidNode)paidNode.textContent=money(paid());if(dueNode)dueNode.textContent=money(Math.max(0,baseTotal-discount()-paid()))}
+        if(!scrim.isConnected)return;
+        closeEntry();refresh();
+        if(paid()===Math.max(0,baseTotal-discount()))queueMicrotask(()=>$('#owner-table-confirm')?.click());
+      }catch(error){saving=false;saveButton.disabled=false;toast(error.message)}
     };
     const onEnter=event=>{if(event.key!=='Enter'||!scrim.isConnected)return;event.preventDefault();event.stopImmediatePropagation();save()};
     document.addEventListener('keydown',onEnter,true);
@@ -249,15 +262,14 @@ function primeOpsOpenTablePayment(orderId){
     openTableBillSplit(orderId).catch(error=>toast(error.message));
   };
   refresh();
-  $('#owner-table-confirm').onclick=async()=>{const button=$('#owner-table-confirm'),total=Math.max(0,baseTotal-discount());if(fiadoOn&&paid()<total){if(discount()>0)return toast('Remova o desconto para lançar fiado.');button.disabled=true;try{const first=payments.find(payment=>payment.method==='dinheiro')||payments[0];await api(`/api/admin/orders/${encodeURIComponent(orderId)}/fiado`,{method:'POST',body:JSON.stringify({payment_method:first?.method||'dinheiro',payments:tablePaymentParts(payments),customer_name:order.customer_name||'',phone:order.phone||''})});await loadAdminOrders();if(state.admin.tables)state.admin.tables=await api('/api/admin/tables');closeLayer();renderAdmin();toast(`Pagamento confirmado · fiado de ${money(total-paid())}`)}catch(error){toast(error.message);button.disabled=false}return}if(paid()!==total)return toast('Registre os pagamentos até completar o total.');button.disabled=true;try{const selectedDiscount=discount(),mode=employee?.checked?'':discountMode.value,result=await api(`/api/admin/orders/${encodeURIComponent(orderId)}/payment`,{method:'PATCH',body:JSON.stringify({payment_status:'pago',payment_method:new Set(payments.map(payment=>payment.method)).size>1?'misto':payments[0].method,apply_waiter_fee:false,employee_discount:Boolean(employee?.checked),discount_mode:mode,discount_percent:mode==='percent'?parseCents(discountValue.value)/100:0,discount_amount_cents:mode==='amount'?parseCents(discountValue.value):0,cash_received_cents:payments.some(payment=>payment.method==='dinheiro')?payments.filter(payment=>payment.method==='dinheiro').reduce((sum,payment)=>sum+payment.received_cents,0):null,payments:tablePaymentParts(payments)})});const localOrder=state.admin.orders.find(item=>String(item.id)===String(orderId));if(localOrder){localOrder.payment_status='pago';localOrder.payment_method=new Set(payments.map(payment=>payment.method)).size>1?'misto':payments[0].method;localOrder.total_cents=total;localOrder.discount_cents=selectedDiscount}closeLayer();renderAdmin();toast(result.change_for_cents?`Pagamento confirmado · troco ${money(result.change_for_cents)}`:'Pagamento confirmado');Promise.all([loadAdminOrders(),api('/api/admin/tables')]).then(([_,tables])=>{state.admin.tables=tables;renderAdmin()}).catch(()=>{})}catch(error){toast(error.message);button.disabled=false}};
+  $('#owner-table-confirm').onclick=async()=>{const button=$('#owner-table-confirm'),total=Math.max(0,baseTotal-discount());if(fiadoOn&&paid()<total){if(discount()>0)return toast('Remova o desconto para lançar fiado.');button.disabled=true;try{const first=payments.find(payment=>payment.method==='dinheiro')||payments[0];await api(`/api/admin/orders/${encodeURIComponent(orderId)}/fiado`,{method:'POST',body:JSON.stringify({payment_method:first?.method||'dinheiro',payments:tablePaymentParts(payments),customer_name:order.customer_name||'',phone:order.phone||''})});await loadAdminOrders();if(state.admin.tables)state.admin.tables=await api('/api/admin/tables');closeLayer();renderAdmin();toast(`Pagamento confirmado · fiado de ${money(total-paid())}`)}catch(error){toast(error.message);button.disabled=false}return}if(paid()!==total)return toast('Registre os pagamentos até completar o total.');button.disabled=true;try{const selectedDiscount=discount(),mode=employee?.checked?'':discountMode.value,result=await api(`/api/admin/orders/${encodeURIComponent(orderId)}/payment`,{method:'PATCH',body:JSON.stringify({payment_status:'pago',payment_method:new Set(payments.map(payment=>payment.method)).size>1?'misto':payments[0].method,apply_waiter_fee:false,employee_discount:Boolean(employee?.checked),discount_mode:mode,discount_percent:mode==='percent'?parseCents(discountValue.value)/100:0,discount_amount_cents:mode==='amount'?parseCents(discountValue.value):0,cash_received_cents:payments.some(payment=>payment.method==='dinheiro')?payments.filter(payment=>payment.method==='dinheiro').reduce((sum,payment)=>sum+payment.received_cents,0):null,payments:tablePaymentParts(payments),partial_ids:payments.filter(payment=>payment.id).map(payment=>payment.id)})});const localOrder=state.admin.orders.find(item=>String(item.id)===String(orderId));if(localOrder){localOrder.payment_status='pago';localOrder.payment_method=new Set(payments.map(payment=>payment.method)).size>1?'misto':payments[0].method;localOrder.total_cents=total;localOrder.discount_cents=selectedDiscount}closeLayer();renderAdmin();toast(result.change_for_cents?`Pagamento confirmado · troco ${money(result.change_for_cents)}`:'Pagamento confirmado');Promise.all([loadAdminOrders(),api('/api/admin/tables')]).then(([_,tables])=>{state.admin.tables=tables;renderAdmin()}).catch(()=>{})}catch(error){toast(error.message);button.disabled=false}};
 }
 const primeOpsBaseTablePayment=openPaymentSettlement;
 openPaymentSettlement=async function(orderId){
   const order=state.admin.orders.find(item=>String(item.id)===String(orderId));
   if(!order?.table_number)return primeOpsBaseTablePayment(orderId);
   if(order.payment_status!=='aberto')return primeOpsOpenTablePayment(orderId);
-  if(order.split_paid_cents!=null && Number(order.split_paid_cents)===0)return primeOpsOpenTablePayment(orderId);
-  primeOpsOpenTablePayment(orderId);
+    primeOpsOpenTablePayment(orderId);
   const drawer=document.querySelector('.owner-rv-payment-drawer');
   if(!drawer)return;
   const content=drawer.querySelector('#owner-table-payment-content'),division=drawer.querySelector('#owner-table-division'),divide=drawer.querySelector('#owner-table-divide'),confirm=drawer.querySelector('#owner-table-confirm');
@@ -267,13 +279,10 @@ openPaymentSettlement=async function(orderId){
   if(confirm)confirm.disabled=true;
   const notice=document.createElement('p');notice.className='muted';notice.textContent='Conferindo pagamentos da comanda…';drawer.querySelector('.owner-rv-payment-head')?.append(notice);
   try{
-    const bill=await api(`/api/admin/orders/${encodeURIComponent(orderId)}/bill-splits`);
+    const [partials,bill]=await Promise.all([api(`/api/admin/orders/${encodeURIComponent(orderId)}/partial-payments`),Number(order.split_paid_cents)>0||order.split_paid_cents==null?api(`/api/admin/orders/${encodeURIComponent(orderId)}/bill-splits`):Promise.resolve(null)]);
     if(!drawer.isConnected)return;
-    if(Number(bill.paid_cents)>0){closeLayer();return openTableBillSplit(orderId,bill)}
-    if(content)content.inert=false;
-    if(division)division.inert=false;
-    if(divide)divide.disabled=false;
-    notice.remove();
+    if(Number(bill?.paid_cents)>0){closeLayer();return openTableBillSplit(orderId,bill)}
+    closeLayer();primeOpsOpenTablePayment(orderId,partials.payments||[]);
   }catch(error){if(drawer.isConnected){closeLayer();toast(`Não foi possível conferir o pagamento: ${error.message}`)}}
 };
 
