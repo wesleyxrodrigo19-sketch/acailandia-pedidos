@@ -1572,11 +1572,31 @@ async function api(request, env, url) {
   const tableItemAction=url.pathname.match(/^\/api\/admin\/orders\/([^/]+)\/table-items\/(\d+)$/);
   if(tableItemAction&&request.method==="PATCH"){
     const body=await readJson(request),action=body?.action,orderId=tableItemAction[1],itemId=int(tableItemAction[2]);
-    if(!new Set(["identify","edit","delete"]).has(action))return json({error:"Ação inválida."},400);
+    if(!new Set(["identify","edit","delete","transfer"]).has(action))return json({error:"Ação inválida."},400);
     const order=await env.DB.prepare(`SELECT * FROM orders WHERE id=?`).bind(orderId).first();
     const item=await env.DB.prepare(`SELECT oi.*,tl.label AS table_label FROM order_items oi LEFT JOIN table_item_labels tl ON tl.order_item_id=oi.id WHERE oi.id=? AND oi.order_id=?`).bind(itemId,orderId).first();
     if(!order||!item)return json({error:"Item não encontrado nesta comanda."},404);
     if(order.channel!=="counter"||!order.table_number||order.status==="concluido"||order.status==="cancelado"||order.payment_status!=="aberto")return json({error:"A comanda precisa estar aberta e sem pagamento finalizado."},400);
+    if(action==="transfer"){
+      const destinationId=clean(body?.destination_order_id,80);
+      if(!destinationId||destinationId===orderId)return json({error:"Selecione outra comanda aberta."},400);
+      const dest=await env.DB.prepare(`SELECT * FROM orders WHERE id=? AND branch_id=? AND channel='counter' AND table_number IS NOT NULL AND status NOT IN ('concluido','cancelado') AND payment_status='aberto'`).bind(destinationId,order.branch_id).first();
+      if(!dest)return json({error:"A mesa de destino não está aberta nesta unidade."},409);
+      const amount=int(item.quantity)*int(item.unit_price_cents);
+      const values=o=>{const subtotal=int(o.subtotal_cents),fee=int(o.waiter_fee_cents);return {subtotal,fee,total:int(o.total_cents)}};
+      const from=values(order),to=values(dest);
+      if(from.subtotal<amount)return json({error:"O valor do item não corresponde ao subtotal da comanda."},409);
+      const totals=(o,subtotal)=>{const fee=o.fee&&o.subtotal?Math.round(subtotal*o.fee/o.subtotal):0;return {subtotal,fee,total:subtotal+fee+int(o===from?order.delivery_fee_cents:dest.delivery_fee_cents)}};
+      const a=totals(from,from.subtotal-amount),b=totals(to,to.subtotal+amount);
+      const guard=env.DB.prepare(`INSERT INTO table_item_mutation_guard(valid) SELECT CASE WHEN
+        EXISTS(SELECT 1 FROM order_items WHERE id=? AND order_id=? AND quantity=? AND unit_price_cents=? AND product_name=? AND COALESCE(notes,'')=? AND COALESCE(complements_json,'')=?)
+        AND (SELECT COUNT(*) FROM orders o WHERE o.id IN (?,?) AND o.branch_id=? AND o.channel='counter' AND o.table_number IS NOT NULL AND o.status NOT IN ('concluido','cancelado') AND o.payment_status='aberto' AND COALESCE(o.discount_cents,0)=0 AND NOT EXISTS(SELECT 1 FROM order_bill_splits s WHERE s.order_id=o.id) AND NOT EXISTS(SELECT 1 FROM order_partial_payments p WHERE p.order_id=o.id AND p.voided_at IS NULL))=2
+        AND EXISTS(SELECT 1 FROM orders WHERE id=? AND subtotal_cents=? AND total_cents=? AND COALESCE(waiter_fee_cents,0)=?)
+        AND EXISTS(SELECT 1 FROM orders WHERE id=? AND subtotal_cents=? AND total_cents=? AND COALESCE(waiter_fee_cents,0)=?) THEN 1 ELSE 0 END`).bind(itemId,orderId,item.quantity,item.unit_price_cents,item.product_name,item.notes||'',item.complements_json||'',orderId,destinationId,order.branch_id,orderId,from.subtotal,from.total,from.fee,destinationId,to.subtotal,to.total,to.fee);
+      try{await env.DB.batch([guard,env.DB.prepare(`DELETE FROM table_item_mutation_guard`),env.DB.prepare(`UPDATE order_items SET order_id=? WHERE id=? AND order_id=?`).bind(destinationId,itemId,orderId),env.DB.prepare(`UPDATE orders SET subtotal_cents=?,waiter_fee_cents=?,total_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(a.subtotal,a.fee,a.total,orderId),env.DB.prepare(`UPDATE orders SET subtotal_cents=?,waiter_fee_cents=?,total_cents=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(b.subtotal,b.fee,b.total,destinationId),auditStatement(env.DB,'order_item_transferred','order',orderId,`Item transferido da mesa ${order.table_number} para a mesa ${dest.table_number}`,{item_id:itemId,destination_order_id:destinationId,amount_cents:amount})]);}
+      catch(error){if(String(error.message).includes('CHECK constraint failed'))return json({error:'Não foi possível transferir: uma das comandas mudou, possui pagamento, divisão ou desconto. Atualize e confira as contas.'},409);throw error}
+      return json({ok:true});
+    }
     const splitRows=(await env.DB.prepare(`SELECT id,items_json,total_cents FROM order_bill_splits WHERE order_id=?`).bind(orderId).all()).results||[];
     if(action!=="identify"&&await env.DB.prepare(`SELECT id FROM order_partial_payments WHERE order_id=? AND voided_at IS NULL LIMIT 1`).bind(orderId).first())return json({error:"A comanda possui pagamentos parciais; não é possível alterar ou excluir itens."},409);
     if(splitRows.length&&action!=="identify")return json({error:"Não é possível alterar itens após iniciar a divisão da conta."},409);

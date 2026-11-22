@@ -22,7 +22,7 @@ sql.exec(`
     FOREIGN KEY(order_id) REFERENCES orders(id)
   );
   CREATE TABLE products (
-    id INTEGER PRIMARY KEY, name TEXT, price_cents INTEGER, is_available INTEGER, complements_json TEXT DEFAULT '[]',
+    id INTEGER PRIMARY KEY, name TEXT, category TEXT DEFAULT '', price_cents INTEGER, is_available INTEGER, complements_json TEXT DEFAULT '[]',
     enable_acai_complements INTEGER DEFAULT 0, enable_acai_extras INTEGER DEFAULT 0,
     enable_flavors INTEGER DEFAULT 0, flavors_json TEXT DEFAULT '[]', selected_complement_ids_json TEXT DEFAULT '[]'
   );
@@ -37,6 +37,8 @@ sql.exec(`
     VALUES ('TEST',100,'Produto original',2,600);
 `);
 sql.exec(await readFile(new URL("drizzle-acailandia/0003_table_item_labels.sql", root), "utf8"));
+sql.exec(await readFile(new URL("drizzle-acailandia/0014_order_partial_payments.sql", root), "utf8"));
+sql.exec(await readFile(new URL("drizzle-acailandia/0015_partial_payment_void.sql", root), "utf8"));
 sql.exec("CREATE TABLE settings (id INTEGER PRIMARY KEY, updated_at TEXT, reception_printer TEXT DEFAULT '', print_bridge_key TEXT DEFAULT ''); INSERT INTO settings (id) VALUES (1);");
 sql.exec("CREATE TABLE print_jobs (id INTEGER PRIMARY KEY AUTOINCREMENT, order_id TEXT NOT NULL, target TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending');");
 sql.exec(`
@@ -95,6 +97,20 @@ async function request(path, method = "GET", body, authenticated = true) {
   return { status: response.status, body: await response.json() };
 }
 const action = (id, body) => request(`/api/admin/orders/TEST/table-items/${id}`, "PATCH", body);
+sql.exec(`INSERT INTO orders (id,branch_id,channel,table_number,status,payment_status,subtotal_cents,total_cents) VALUES ('DEST','sao-goncalo','counter',2,'novo','aberto',0,0); INSERT INTO table_item_labels(order_item_id,label) VALUES(1,'João')`);
+assert.equal((await action(1,{action:'transfer',destination_order_id:'DEST'})).status,200);
+assert.deepEqual({...sql.prepare(`SELECT order_id,quantity FROM order_items WHERE id=1`).get()},{order_id:'DEST',quantity:2});
+assert.equal(sql.prepare(`SELECT label FROM table_item_labels WHERE order_item_id=1`).get().label,'João');
+assert.equal(sql.prepare(`SELECT total_cents FROM orders WHERE id='TEST'`).get().total_cents,0);
+assert.equal(sql.prepare(`SELECT total_cents FROM orders WHERE id='DEST'`).get().total_cents,1200);
+assert.equal((await request('/api/admin/orders/DEST/table-items/1','PATCH',{action:'transfer',destination_order_id:'TEST'})).status,200);
+sql.exec(`DELETE FROM table_item_labels WHERE order_item_id=1; INSERT INTO order_partial_payments(id,order_id,method,amount_cents,received_cents) VALUES('partial','DEST','pix',100,100)`);
+assert.equal((await action(1,{action:'transfer',destination_order_id:'DEST'})).status,409);
+sql.exec(`DELETE FROM order_partial_payments WHERE id='partial'`);
+DB.beforeBatch=()=>sql.exec(`UPDATE orders SET status='concluido' WHERE id='DEST'`);
+assert.equal((await action(1,{action:'transfer',destination_order_id:'DEST'})).status,409);
+assert.equal(sql.prepare(`SELECT order_id FROM order_items WHERE id=1`).get().order_id,'TEST');
+sql.exec(`DELETE FROM orders WHERE id='DEST'`);
 const pay = (id, amount = 600) => request("/api/admin/orders/TEST/bill-splits", "POST", {
   items: [{ order_item_id: id, quantity: 1 }],
   payments: [{ method: "pix", amount_cents: amount }]
@@ -207,7 +223,7 @@ const finalPayment = await pay(1);
 assert.equal(finalPayment.status, 201, JSON.stringify(finalPayment.body));
 assert.equal(finalPayment.body.due_cents, 0);
 assert.equal(finalPayment.body.payment_status, "pago");
-sql.exec("DELETE FROM order_bill_splits; DELETE FROM order_payments; UPDATE orders SET payment_method='dinheiro',payment_status='aberto' WHERE id='TEST'");
+sql.exec("DELETE FROM order_bill_splits; DELETE FROM order_payments; UPDATE orders SET payment_method='dinheiro',payment_status='aberto',status='novo' WHERE id='TEST'");
 assert.equal((await action(2, { action: "delete" })).status, 200);
 assert.equal(sql.prepare("SELECT total_cents FROM orders WHERE id='TEST'").get().total_cents, 600);
 assert.equal((await action(1, { action: "identify", label: "" })).status, 200);
