@@ -197,7 +197,20 @@ async function proxyImage(requestUrl) {
   } catch { return brandPlaceholder(); }
 }
 
+// Inicializar apenas uma vez por instância do Worker. Repetir o seed em cada
+// chamada serializa operações de caixa e regrava o catálogo desnecessariamente.
+let seedPromise;
 async function seed(db) {
+  if (!seedPromise) {
+    seedPromise = initializeSeed(db).catch(error => {
+      seedPromise = undefined;
+      throw error;
+    });
+  }
+  return seedPromise;
+}
+
+async function initializeSeed(db) {
   await ensureOperationalColumns(db);
   await ensurePrimeOperationsSchema(db);
   await db.prepare(`CREATE TABLE IF NOT EXISTS deleted_products (product_id INTEGER PRIMARY KEY,category TEXT NOT NULL,name TEXT NOT NULL,deleted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();
