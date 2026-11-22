@@ -1,0 +1,36 @@
+const fs=require('fs');
+const assert=require('assert');
+const {chromium}=require('playwright');
+(async()=>{
+  const source=fs.readFileSync('src/table-operations.js','utf8');
+  const code=source.slice(source.indexOf('function tablePickerCategoryLabel('),source.indexOf("document.addEventListener('click',async event=>{"));
+  const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'});
+  const page=await browser.newPage();
+  await page.setContent('<style>#overlay{padding:40px}</style><div id="layer"></div>');
+  await page.evaluate(code=>{
+    window.state={catalog:{products:[],settings:{self_service_price_per_kg_cents:6990}},admin:{orders:[{id:'A',table_number:1,items:[],subtotal_cents:0,total_cents:0}],tables:null,editOrderCart:[]}};
+    window.tableItemSavesInFlight=new Set();window.$=s=>document.querySelector(s);window.esc=x=>String(x);window.money=x=>'R$ '+(x/100).toFixed(2);window.JW_LOGO='';
+    window.cartTotal=items=>items.reduce((a,x)=>a+x.quantity*x.unit_price_cents,0);window.closeLayer=()=>document.querySelector('#layer').innerHTML='';
+    window.layer=(html,cls)=>{document.querySelector('#layer').innerHTML='<div id="overlay"><section class="'+cls+'">'+html+'</section></div>'};
+    window.renderAdmin=()=>{};window.loadAdminOrders=async()=>{};window.toast=x=>window.lastToast=x;
+    window.api=async(url,opts)=>{if(opts?.method==='PATCH'){window.calls.push(JSON.parse(opts.body));if(window.fail)throw Error('Erro de teste');return {ok:true}}return {tables:[]}};
+    window.calls=[];window.eval(code);
+    window.addTestWeight=()=>state.admin.editOrderCart.push({key:'w1',product:{name:'Açaí Self-service'},quantity:1,unit_price_cents:909,selfService:true,grams:130,capturedAt:'2026-11-22T00:00:00Z',manual:true,pricePerKgCents:6990});
+  },code);
+  await page.evaluate(async()=>{await openTableItemPicker('A');addTestWeight();tableItemPickerMarkup('A')});
+  await page.locator('#overlay [data-close]').click();
+  await page.waitForFunction(()=>window.calls.length===1);
+  assert.equal((await page.evaluate(()=>calls[0])).self_service_items[0].grams,130);
+  await page.evaluate(async()=>{state.admin.orders[0].items=[];await openTableItemPicker('A');addTestWeight();tableItemPickerMarkup('A')});
+  await page.locator('#overlay').click({position:{x:1,y:1},force:true});
+  await page.waitForFunction(()=>window.calls.length===2);
+  await page.evaluate(async()=>{state.admin.orders[0].items=[];await openTableItemPicker('A')});
+  await page.locator('#overlay [data-close]').click();
+  assert.equal(await page.evaluate(()=>calls.length),2);
+  await page.evaluate(async()=>{await openTableItemPicker('A');addTestWeight();tableItemPickerMarkup('A');window.fail=true});
+  await page.locator('#overlay [data-close]').click();
+  await page.waitForFunction(()=>window.lastToast?.includes('Erro de teste'));
+  assert.equal(await page.locator('#table-picker-save').count(),1);
+  assert.equal(await page.evaluate(()=>state.admin.editOrderCart[0].grams),130);
+  await browser.close();console.log('OK: X, clique fora, carrinho vazio e preservação após falha');
+})().catch(error=>{console.error(error);process.exit(1)});
