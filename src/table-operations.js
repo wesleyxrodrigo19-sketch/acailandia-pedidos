@@ -53,7 +53,7 @@ tablesBoardMarkup=function(data,options={}){
   if(!options.admin)return markup;
   const tables=data?.tables||[],selectedNumber=String(state.admin.selectedTableNumber||tables.find(table=>table.occupied)?.number||tables[0]?.number||""),selected=tables.find(table=>String(table.number)===selectedNumber);
   if(!selected?.occupied)return markup;
-  const button=`<button type="button" class="table-reprint-button" data-table-reprint="${esc(selected.order_id)}" aria-label="Reimprimir comanda da mesa ${String(selected.number).padStart(2,"0")}">▣ Reimprimir</button>`;
+  const button=`<div class="table-detail-print-actions"><button type="button" class="table-reprint-button" data-table-reprint="${esc(selected.order_id)}" aria-label="Reimprimir comanda da mesa ${String(selected.number).padStart(2,"0")}">▣ Reimprimir</button><button type="button" class="table-reprint-button" data-print-receipt="${esc(selected.order_id)}" aria-label="Imprimir conta da mesa ${String(selected.number).padStart(2,"0")}">🖨 Imprimir conta</button></div>`;
   return markup.replace('</h2></div></div><div class="table-detail-content">',`</h2></div>${button}</div><div class="table-detail-content">`);
 };
 tablesView=function(){return tablesBoardMarkup(state.admin.tables,{admin:true})};

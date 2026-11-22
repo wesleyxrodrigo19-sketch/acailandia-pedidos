@@ -170,3 +170,4 @@ body.customer-page{--red:#7e319e;--green:#70208c;background:#f7f3fa}
 @media(max-width:560px){.overlay:has(.table-opening-modal){padding:12px}.table-opening-modal{width:100%;max-height:calc(100dvh - 24px)}.table-open-form{padding:15px}.table-open-grid{grid-template-columns:repeat(2,minmax(130px,1fr))}.table-available-grid{grid-template-columns:repeat(4,minmax(58px,1fr))}.table-tile{min-height:112px}.table-tile-title{font-size:13px}}
 
 .table-detail-panel .panel-head{gap:8px}.table-reprint-button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 10px;border:1px solid #dfe3e8;border-radius:9px;background:#fff;color:#28313a;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer}.table-reprint-button:hover{border-color:#7b1688;background:#fbf6fc;color:#70117b}.table-reprint-button:disabled{opacity:.55;cursor:wait}
+.table-detail-print-actions{display:grid;gap:6px;justify-items:stretch;flex:0 0 auto}
