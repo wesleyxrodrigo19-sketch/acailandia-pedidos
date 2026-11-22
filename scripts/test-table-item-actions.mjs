@@ -111,6 +111,7 @@ DB.beforeBatch=()=>sql.exec(`UPDATE orders SET status='concluido' WHERE id='DEST
 assert.equal((await action(1,{action:'transfer',destination_order_id:'DEST'})).status,409);
 assert.equal(sql.prepare(`SELECT order_id FROM order_items WHERE id=1`).get().order_id,'TEST');
 sql.exec(`DELETE FROM orders WHERE id='DEST'`);
+
 const pay = (id, amount = 600) => request("/api/admin/orders/TEST/bill-splits", "POST", {
   items: [{ order_item_id: id, quantity: 1 }],
   payments: [{ method: "pix", amount_cents: amount }]
@@ -295,4 +296,11 @@ assert.equal(sql.prepare("SELECT table_name FROM orders WHERE id='MESAX'").get()
 assert.equal(await asCashier("/api/admin/orders/MESAX/table-name", "PATCH", { table_name: "Varanda" }), 200);
 sql.exec("UPDATE orders SET status='concluido' WHERE id='MESAX'");
 assert.equal((await request("/api/admin/orders/MESAX/table-name", "PATCH", { table_name: "x" })).status, 400);
+sql.exec(`INSERT INTO orders (id,branch_id,channel,table_number,status,payment_status,subtotal_cents,total_cents) VALUES ('MIX','sao-goncalo','counter',3,'novo','aberto',3000,3000); INSERT INTO order_items (order_id,product_name,quantity,unit_price_cents) VALUES('MIX','Teste',1,3000)`);
+const mixItem=sql.prepare(`SELECT id FROM order_items WHERE order_id='MIX'`).get().id;
+const mixed=await request('/api/admin/orders/MIX/bill-splits','POST',{items:[{order_item_id:mixItem,quantity:1}],payments:[{method:'pix',amount_cents:1000},{method:'dinheiro',amount_cents:2000}],cash_received_cents:5000});
+assert.equal(mixed.status,201,JSON.stringify(mixed.body));
+assert.equal(sql.prepare(`SELECT change_for_cents FROM orders WHERE id='MIX'`).get().change_for_cents,3000);
+assert.equal(sql.prepare(`SELECT SUM(amount_cents) n FROM order_payments WHERE order_id='MIX'`).get().n,3000);
+sql.exec(`DELETE FROM order_payments WHERE order_id='MIX'; DELETE FROM order_bill_splits WHERE order_id='MIX'; DELETE FROM order_items WHERE order_id='MIX'; DELETE FROM orders WHERE id='MIX'`);
 console.log("Table item action tests passed");
